@@ -16,7 +16,9 @@ class PropertyResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-building-office-2';
 
-    protected static ?string $navigationGroup = 'Operacoes';
+    protected static ?string $navigationGroup = 'Reservas';
+
+    protected static ?int $navigationSort = 3;
 
     protected static ?string $modelLabel = 'Alojamento';
 
@@ -115,7 +117,7 @@ class PropertyResource extends Resource
                     ]),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()->label('Editar'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

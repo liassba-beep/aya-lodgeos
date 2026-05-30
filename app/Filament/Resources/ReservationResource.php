@@ -21,7 +21,9 @@ class ReservationResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-calendar-days';
 
-    protected static ?string $navigationGroup = 'Operacoes';
+    protected static ?string $navigationGroup = 'Reservas';
+
+    protected static ?int $navigationSort = 1;
 
     protected static ?string $modelLabel = 'Reserva';
 
@@ -227,7 +229,7 @@ class ReservationResource extends Resource
                     ->relationship('property', 'name'),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()->label('Editar'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

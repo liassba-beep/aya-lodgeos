@@ -4,8 +4,11 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ExpenseResource\Pages;
 use App\Models\Expense;
+use App\Models\StockItem;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
+use Filament\Forms\Set;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -17,6 +20,8 @@ class ExpenseResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-receipt-percent';
 
     protected static ?string $navigationGroup = 'Financeiro';
+
+    protected static ?int $navigationSort = 3;
 
     protected static ?string $modelLabel = 'Despesa';
 
@@ -31,6 +36,7 @@ class ExpenseResource extends Resource
                     Forms\Components\Select::make('property_id')->label('Alojamento')->relationship('property', 'name')->searchable()->preload(),
                     Forms\Components\Select::make('category')
                         ->label('Categoria')
+                        ->live()
                         ->options([
                             'energia' => 'Energia',
                             'agua' => 'Agua',
@@ -41,6 +47,30 @@ class ExpenseResource extends Resource
                             'outros' => 'Outros',
                         ])
                         ->required(),
+                    Forms\Components\Select::make('stock_item_id')
+                        ->label('Artigo de stock')
+                        ->relationship('stockItem', 'name')
+                        ->searchable()
+                        ->preload()
+                        ->live()
+                        ->visible(fn (Get $get): bool => $get('category') === 'stock')
+                        ->required(fn (Get $get): bool => $get('category') === 'stock')
+                        ->afterStateUpdated(function (Set $set, ?string $state): void {
+                            $item = $state ? StockItem::find($state) : null;
+                            $set('stock_unit_cost', $item?->unit_cost ?? 0);
+                        }),
+                    Forms\Components\TextInput::make('stock_quantity')
+                        ->label('Quantidade para stock')
+                        ->numeric()
+                        ->minValue(0.01)
+                        ->visible(fn (Get $get): bool => $get('category') === 'stock')
+                        ->required(fn (Get $get): bool => $get('category') === 'stock'),
+                    Forms\Components\TextInput::make('stock_unit_cost')
+                        ->label('Custo unitario')
+                        ->numeric()
+                        ->prefix('MZN')
+                        ->visible(fn (Get $get): bool => $get('category') === 'stock')
+                        ->required(fn (Get $get): bool => $get('category') === 'stock'),
                     Forms\Components\TextInput::make('supplier')->label('Fornecedor')->maxLength(255),
                     Forms\Components\TextInput::make('amount')->label('Valor')->numeric()->prefix('MZN')->required(),
                     Forms\Components\DatePicker::make('expense_date')->label('Data')->default(now())->required(),
@@ -91,7 +121,7 @@ class ExpenseResource extends Resource
                     'outros' => 'Outros',
                 ]),
             ])
-            ->actions([Tables\Actions\EditAction::make()])
+            ->actions([Tables\Actions\EditAction::make()->label('Editar')])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([Tables\Actions\DeleteBulkAction::make()]),
             ]);

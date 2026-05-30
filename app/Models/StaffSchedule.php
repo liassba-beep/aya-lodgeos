@@ -5,26 +5,26 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class StaffMember extends Model
+class StaffSchedule extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'property_id',
-        'name',
-        'role',
-        'phone',
-        'email',
-        'contract_type',
-        'hired_at',
+        'staff_member_id',
+        'schedule_month',
+        'shift_date',
+        'starts_at',
+        'ends_at',
+        'shift_type',
         'status',
         'notes',
     ];
 
     protected $casts = [
-        'hired_at' => 'date',
+        'schedule_month' => 'date',
+        'shift_date' => 'date',
     ];
 
     public function property(): BelongsTo
@@ -32,13 +32,8 @@ class StaffMember extends Model
         return $this->belongsTo(Property::class);
     }
 
-    public function operationalTasks(): HasMany
+    public function staffMember(): BelongsTo
     {
-        return $this->hasMany(OperationalTask::class);
-    }
-
-    public function schedules(): HasMany
-    {
-        return $this->hasMany(StaffSchedule::class);
+        return $this->belongsTo(StaffMember::class);
     }
 }

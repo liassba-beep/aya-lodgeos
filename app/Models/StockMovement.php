@@ -30,15 +30,35 @@ class StockMovement extends Model
     protected static function booted(): void
     {
         static::created(function (StockMovement $movement) {
-            $item = $movement->stockItem;
-
-            if (! $item) {
-                return;
-            }
-
-            $factor = $movement->type === 'out' ? -1 : 1;
-            $item->increment('quantity_on_hand', $factor * (float) $movement->quantity);
+            self::applyQuantity($movement->stock_item_id, self::signedQuantity($movement->type, $movement->quantity));
         });
+
+        static::updated(function (StockMovement $movement) {
+            self::applyQuantity(
+                $movement->getOriginal('stock_item_id'),
+                -1 * self::signedQuantity($movement->getOriginal('type'), $movement->getOriginal('quantity')),
+            );
+
+            self::applyQuantity($movement->stock_item_id, self::signedQuantity($movement->type, $movement->quantity));
+        });
+
+        static::deleted(function (StockMovement $movement) {
+            self::applyQuantity($movement->stock_item_id, -1 * self::signedQuantity($movement->type, $movement->quantity));
+        });
+    }
+
+    private static function signedQuantity(?string $type, mixed $quantity): float
+    {
+        return ($type === 'out' ? -1 : 1) * (float) $quantity;
+    }
+
+    private static function applyQuantity(mixed $stockItemId, float $quantity): void
+    {
+        if (! $stockItemId || $quantity === 0.0) {
+            return;
+        }
+
+        StockItem::query()->whereKey($stockItemId)->increment('quantity_on_hand', $quantity);
     }
 
     public function stockItem(): BelongsTo

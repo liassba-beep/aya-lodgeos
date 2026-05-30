@@ -18,7 +18,9 @@ class PaymentResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';
 
-    protected static ?string $navigationGroup = 'Operacoes';
+    protected static ?string $navigationGroup = 'Financeiro';
+
+    protected static ?int $navigationSort = 2;
 
     protected static ?string $modelLabel = 'Pagamento';
 
@@ -161,7 +163,7 @@ class PaymentResource extends Resource
                     ]),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()->label('Editar'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

@@ -18,6 +18,8 @@ class OperationalTaskResource extends Resource
 
     protected static ?string $navigationGroup = 'Operacional';
 
+    protected static ?int $navigationSort = 1;
+
     protected static ?string $modelLabel = 'Tarefa operacional';
 
     protected static ?string $pluralModelLabel = 'Tarefas operacionais';
@@ -117,7 +119,7 @@ class OperationalTaskResource extends Resource
                         'cancelled' => 'Cancelada',
                     ]),
             ])
-            ->actions([Tables\Actions\EditAction::make()])
+            ->actions([Tables\Actions\EditAction::make()->label('Editar')])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([Tables\Actions\DeleteBulkAction::make()]),
             ]);

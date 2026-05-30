@@ -16,7 +16,9 @@ class StaffMemberResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-identification';
 
-    protected static ?string $navigationGroup = 'Recursos Humanos';
+    protected static ?string $navigationGroup = 'Colaboradores';
+
+    protected static ?int $navigationSort = 1;
 
     protected static ?string $modelLabel = 'Colaborador';
 
@@ -76,7 +78,7 @@ class StaffMemberResource extends Resource
                 Tables\Columns\TextColumn::make('property.name')->label('Alojamento')->toggleable(),
                 Tables\Columns\TextColumn::make('status')->label('Estado')->badge(),
             ])
-            ->actions([Tables\Actions\EditAction::make()])
+            ->actions([Tables\Actions\EditAction::make()->label('Editar')])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([Tables\Actions\DeleteBulkAction::make()]),
             ]);

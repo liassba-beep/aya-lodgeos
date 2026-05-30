@@ -36,6 +36,14 @@ class Payment extends Model
                 $payment->paid_at = now();
             }
         });
+
+        static::saved(function (Payment $payment) {
+            $payment->reservation?->invoices->each(fn (Invoice $invoice) => $invoice->syncPaymentStatus());
+        });
+
+        static::deleted(function (Payment $payment) {
+            $payment->reservation?->invoices->each(fn (Invoice $invoice) => $invoice->syncPaymentStatus());
+        });
     }
 
     public function reservation(): BelongsTo

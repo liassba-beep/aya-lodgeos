@@ -18,6 +18,8 @@ class DirectBookingRequestResource extends Resource
 
     protected static ?string $navigationGroup = 'Reservas diretas';
 
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static ?string $modelLabel = 'Pedido direto';
 
     protected static ?string $pluralModelLabel = 'Pedidos diretos';
@@ -61,7 +63,7 @@ class DirectBookingRequestResource extends Resource
                 Tables\Columns\TextColumn::make('status')->label('Estado')->badge(),
                 Tables\Columns\TextColumn::make('created_at')->label('Criado')->dateTime()->sortable(),
             ])
-            ->actions([Tables\Actions\EditAction::make()])
+            ->actions([Tables\Actions\EditAction::make()->label('Editar')])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([Tables\Actions\DeleteBulkAction::make()]),
             ]);

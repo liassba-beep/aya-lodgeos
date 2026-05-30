@@ -14,9 +14,11 @@ class DailyChecklistResource extends Resource
 {
     protected static ?string $model = DailyChecklist::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-eye';
+    protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
 
-    protected static ?string $navigationGroup = 'Supervisao';
+    protected static ?string $navigationGroup = 'Operacional';
+
+    protected static ?int $navigationSort = 2;
 
     protected static ?string $modelLabel = 'Checklist diaria';
 
@@ -69,7 +71,7 @@ class DailyChecklistResource extends Resource
                 Tables\Columns\TextColumn::make('status')->label('Estado')->badge(),
                 Tables\Columns\TextColumn::make('completed_at')->label('Concluido')->dateTime()->toggleable(),
             ])
-            ->actions([Tables\Actions\EditAction::make()])
+            ->actions([Tables\Actions\EditAction::make()->label('Editar')])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([Tables\Actions\DeleteBulkAction::make()]),
             ]);

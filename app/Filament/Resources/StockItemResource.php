@@ -18,6 +18,8 @@ class StockItemResource extends Resource
 
     protected static ?string $navigationGroup = 'Stock';
 
+    protected static ?int $navigationSort = 1;
+
     protected static ?string $modelLabel = 'Artigo';
 
     protected static ?string $pluralModelLabel = 'Artigos de stock';
@@ -66,7 +68,7 @@ class StockItemResource extends Resource
                     ->state(fn (StockItem $record): bool => (float) $record->quantity_on_hand <= (float) $record->minimum_quantity)
                     ->boolean(),
             ])
-            ->actions([Tables\Actions\EditAction::make()])
+            ->actions([Tables\Actions\EditAction::make()->label('Editar')])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([Tables\Actions\DeleteBulkAction::make()]),
             ]);

@@ -41,6 +41,42 @@ class Invoice extends Model
                 (float) $invoice->subtotal - (float) $invoice->discount_amount + (float) $invoice->tax_amount,
             );
         });
+
+        static::saved(function (Invoice $invoice) {
+            $invoice->syncPaymentStatus();
+        });
+    }
+
+    public function getPaidAmountAttribute(): float
+    {
+        if (! $this->reservation_id) {
+            return 0;
+        }
+
+        return (float) Payment::query()
+            ->where('reservation_id', $this->reservation_id)
+            ->where('status', 'paid')
+            ->sum('amount');
+    }
+
+    public function getBalanceAmountAttribute(): float
+    {
+        return max(0, (float) $this->total_amount - $this->paid_amount);
+    }
+
+    public function syncPaymentStatus(): void
+    {
+        if ($this->status === 'cancelled' || ! $this->exists) {
+            return;
+        }
+
+        $nextStatus = $this->paid_amount >= (float) $this->total_amount && (float) $this->total_amount > 0
+            ? 'paid'
+            : ($this->status === 'paid' ? 'issued' : $this->status);
+
+        if ($nextStatus !== $this->status) {
+            $this->forceFill(['status' => $nextStatus])->saveQuietly();
+        }
     }
 
     public function property(): BelongsTo

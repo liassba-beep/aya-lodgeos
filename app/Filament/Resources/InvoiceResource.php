@@ -21,6 +21,8 @@ class InvoiceResource extends Resource
 
     protected static ?string $navigationGroup = 'Financeiro';
 
+    protected static ?int $navigationSort = 1;
+
     protected static ?string $modelLabel = 'Fatura';
 
     protected static ?string $pluralModelLabel = 'Faturacao';
@@ -67,6 +69,12 @@ class InvoiceResource extends Resource
                     Forms\Components\TextInput::make('discount_amount')->label('Desconto')->numeric()->prefix('MZN')->default(0)->live(onBlur: true)->afterStateUpdated(fn (Set $set, Get $get): null => self::updateTotal($set, $get('discount_amount'), $get('subtotal'), $get('tax_amount')))->required(),
                     Forms\Components\TextInput::make('tax_amount')->label('Imposto')->numeric()->prefix('MZN')->default(0)->live(onBlur: true)->afterStateUpdated(fn (Set $set, Get $get): null => self::updateTotal($set, $get('discount_amount'), $get('subtotal'), $get('tax_amount')))->required(),
                     Forms\Components\TextInput::make('total_amount')->label('Total')->numeric()->prefix('MZN')->readOnly()->dehydrated()->required(),
+                    Forms\Components\Placeholder::make('paid_amount')
+                        ->label('Pago')
+                        ->content(fn (?Invoice $record): string => number_format((float) ($record?->paid_amount ?? 0), 2).' MZN'),
+                    Forms\Components\Placeholder::make('balance_amount')
+                        ->label('Saldo')
+                        ->content(fn (?Invoice $record): string => number_format((float) ($record?->balance_amount ?? 0), 2).' MZN'),
                     Forms\Components\Textarea::make('notes')->label('Notas')->columnSpanFull(),
                 ]),
         ]);
@@ -80,9 +88,11 @@ class InvoiceResource extends Resource
                 Tables\Columns\TextColumn::make('reservation.code')->label('Reserva')->toggleable(),
                 Tables\Columns\TextColumn::make('issued_at')->label('Emissao')->date()->sortable(),
                 Tables\Columns\TextColumn::make('total_amount')->label('Total')->formatStateUsing(fn ($state): string => number_format((float) $state, 2).' MZN')->sortable(),
+                Tables\Columns\TextColumn::make('paid_amount')->label('Pago')->formatStateUsing(fn ($state): string => number_format((float) $state, 2).' MZN'),
+                Tables\Columns\TextColumn::make('balance_amount')->label('Saldo')->formatStateUsing(fn ($state): string => number_format((float) $state, 2).' MZN'),
                 Tables\Columns\TextColumn::make('status')->label('Estado')->badge(),
             ])
-            ->actions([Tables\Actions\EditAction::make()])
+            ->actions([Tables\Actions\EditAction::make()->label('Editar')])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([Tables\Actions\DeleteBulkAction::make()]),
             ]);

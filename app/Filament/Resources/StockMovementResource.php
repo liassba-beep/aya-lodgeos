@@ -20,6 +20,8 @@ class StockMovementResource extends Resource
 
     protected static ?string $navigationGroup = 'Stock';
 
+    protected static ?int $navigationSort = 2;
+
     protected static ?string $modelLabel = 'Movimento de stock';
 
     protected static ?string $pluralModelLabel = 'Movimentos de stock';
@@ -71,7 +73,7 @@ class StockMovementResource extends Resource
                 Tables\Columns\TextColumn::make('unit_cost')->label('Custo')->formatStateUsing(fn ($state): string => number_format((float) $state, 2).' MZN'),
                 Tables\Columns\TextColumn::make('reason')->label('Motivo')->toggleable(),
             ])
-            ->actions([Tables\Actions\EditAction::make()])
+            ->actions([Tables\Actions\EditAction::make()->label('Editar')])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([Tables\Actions\DeleteBulkAction::make()]),
             ]);

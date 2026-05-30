@@ -16,7 +16,9 @@ class RoomResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-home-modern';
 
-    protected static ?string $navigationGroup = 'Operacoes';
+    protected static ?string $navigationGroup = 'Reservas';
+
+    protected static ?int $navigationSort = 4;
 
     protected static ?string $modelLabel = 'Quarto';
 
@@ -124,7 +126,7 @@ class RoomResource extends Resource
                     ]),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()->label('Editar'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
