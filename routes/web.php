@@ -28,10 +28,12 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
-Route::get('/', PublicPropertyController::class)
-    ->domain('{tenant}.lodgesos.com')
-    ->where('tenant', '^(?!app$|www$|admin$)[a-z0-9-]+$')
-    ->name('public.property.subdomain');
+Route::domain('{tenant}.lodgesos.com')
+    ->where(['tenant' => '^(?!app$|www$|admin$)[a-z0-9-]+$'])
+    ->group(function () {
+        Route::get('/', PublicPropertyController::class)
+            ->name('public.property.subdomain');
+    });
 
 Route::get('/p/{tenant}', PublicPropertyController::class)
     ->where('tenant', '[a-z0-9-]+')
