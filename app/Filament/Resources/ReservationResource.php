@@ -10,6 +10,7 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -69,12 +70,12 @@ class ReservationResource extends Resource
                             ->preload()
                             ->required(),
                         Forms\Components\DatePicker::make('check_in')
-                            ->label('Check-in')
+                            ->label('Entrada')
                             ->live()
                             ->afterStateUpdated(fn (Set $set, Get $get): null => self::updateTotal($set, $get))
                             ->required(),
                         Forms\Components\DatePicker::make('check_out')
-                            ->label('Check-out')
+                            ->label('Saida')
                             ->live()
                             ->afterStateUpdated(fn (Set $set, Get $get): null => self::updateTotal($set, $get))
                             ->required()
@@ -89,6 +90,9 @@ class ReservationResource extends Resource
                             ->numeric()
                             ->minValue(0)
                             ->required(),
+                        Forms\Components\Toggle::make('breakfast_included')
+                            ->label('Pequeno almoco incluido')
+                            ->default(false),
                         Forms\Components\TextInput::make('nightly_rate')
                             ->label('Preco por noite')
                             ->numeric()
@@ -109,8 +113,8 @@ class ReservationResource extends Resource
                             ->options([
                                 'pending' => 'Pendente',
                                 'confirmed' => 'Confirmada',
-                                'checked_in' => 'Check-in',
-                                'checked_out' => 'Check-out',
+                                'checked_in' => 'Entrada efetuada',
+                                'checked_out' => 'Saida efetuada',
                                 'cancelled' => 'Cancelada',
                             ])
                             ->required(),
@@ -119,7 +123,7 @@ class ReservationResource extends Resource
                             ->options([
                                 'direct' => 'Direta',
                                 'phone' => 'Telefone',
-                                'walk_in' => 'Walk-in',
+                                'walk_in' => 'Entrada sem reserva previa',
                                 'booking' => 'Booking',
                                 'airbnb' => 'Airbnb',
                                 'other' => 'Outra',
@@ -162,14 +166,17 @@ class ReservationResource extends Resource
                     ->label('Total')
                     ->formatStateUsing(fn ($state): string => number_format((float) $state, 2).' MZN')
                     ->sortable(),
+                Tables\Columns\IconColumn::make('breakfast_included')
+                    ->label('Pequeno almoco')
+                    ->boolean(),
                 Tables\Columns\TextColumn::make('status')
                     ->label('Estado')
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'pending' => 'Pendente',
                         'confirmed' => 'Confirmada',
-                        'checked_in' => 'Check-in',
-                        'checked_out' => 'Check-out',
+                        'checked_in' => 'Entrada efetuada',
+                        'checked_out' => 'Saida efetuada',
                         'cancelled' => 'Cancelada',
                         default => $state,
                     })
@@ -186,8 +193,8 @@ class ReservationResource extends Resource
                     ->options([
                         'pending' => 'Pendente',
                         'confirmed' => 'Confirmada',
-                        'checked_in' => 'Check-in',
-                        'checked_out' => 'Check-out',
+                        'checked_in' => 'Entrada efetuada',
+                        'checked_out' => 'Saida efetuada',
                         'cancelled' => 'Cancelada',
                     ]),
                 Tables\Filters\SelectFilter::make('property_id')
@@ -221,6 +228,33 @@ class ReservationResource extends Resource
             $get('nightly_rate'),
         ));
 
+        self::notifyIfRoomIsUnavailable($get);
+
         return null;
+    }
+
+    private static function notifyIfRoomIsUnavailable(Get $get): void
+    {
+        if (! $get('room_id') || ! $get('check_in') || ! $get('check_out')) {
+            return;
+        }
+
+        $conflict = Reservation::query()
+            ->where('room_id', $get('room_id'))
+            ->where('status', '!=', 'cancelled')
+            ->when($get('id'), fn ($query, $id) => $query->whereKeyNot($id))
+            ->whereDate('check_in', '<', $get('check_out'))
+            ->whereDate('check_out', '>', $get('check_in'))
+            ->exists();
+
+        if (! $conflict) {
+            return;
+        }
+
+        Notification::make()
+            ->title('Quarto indisponivel nestas datas')
+            ->body('Escolha outro quarto ou altere as datas da reserva.')
+            ->danger()
+            ->send();
     }
 }

@@ -20,7 +20,7 @@ APP_KEY=base64:GERAR_COM_ARTISAN_KEY_GENERATE
 APP_DEBUG=false
 APP_URL=https://app.seudominio.com
 APP_TIMEZONE=Africa/Maputo
-APP_LOCALE=pt
+APP_LOCALE=pt_PT
 APP_FALLBACK_LOCALE=en
 
 DB_CONNECTION=pgsql
@@ -61,4 +61,3 @@ php artisan make:filament-user
 ```
 
 No Coolify, isto pode ser executado no terminal da aplicacao.
-
