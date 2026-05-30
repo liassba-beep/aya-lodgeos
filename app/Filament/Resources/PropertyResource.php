@@ -21,9 +21,9 @@ class PropertyResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-building-office-2';
 
-    protected static ?string $navigationGroup = 'Reservas';
+    protected static ?string $navigationGroup = null;
 
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 1;
 
     protected static ?string $modelLabel = 'Alojamento';
 
@@ -57,12 +57,12 @@ class PropertyResource extends Resource
                         Forms\Components\Select::make('status')
                             ->label('Estado')
                             ->options([
-                                'active' => 'Ativo',
-                                'inactive' => 'Inativo',
+                                'active' => 'Activo',
+                                'inactive' => 'Inactivo',
                             ])
                             ->required(),
                         Forms\Components\FileUpload::make('invoice_logo_path')
-                            ->label('Logotipo para faturas')
+                            ->label('Logotipo para facturas')
                             ->image()
                             ->directory('invoice-logos')
                             ->visibility('public')
@@ -70,13 +70,13 @@ class PropertyResource extends Resource
                             ->openable()
                             ->columnSpanFull(),
                         Forms\Components\TextInput::make('legal_name')
-                            ->label('Nome fiscal da instituicao')
+                            ->label('Nome fiscal da instituição')
                             ->maxLength(255),
                         Forms\Components\TextInput::make('nuit')
                             ->label('NUIT')
                             ->maxLength(255),
                         Forms\Components\TextInput::make('country')
-                            ->label('Pais')
+                            ->label('País')
                             ->default('Mozambique')
                             ->required()
                             ->maxLength(255),
@@ -84,7 +84,7 @@ class PropertyResource extends Resource
                             ->label('Cidade')
                             ->maxLength(255),
                         Forms\Components\TextInput::make('address')
-                            ->label('Endereco')
+                            ->label('Endereço')
                             ->maxLength(255),
                         Forms\Components\TextInput::make('email')
                             ->label('Email')
@@ -95,21 +95,21 @@ class PropertyResource extends Resource
                             ->tel()
                             ->maxLength(255),
                         Forms\Components\TextInput::make('invoice_phone')
-                            ->label('Contacto na fatura')
+                            ->label('Contacto na factura')
                             ->tel()
                             ->maxLength(255),
                         Forms\Components\TextInput::make('invoice_email')
-                            ->label('Email na fatura')
+                            ->label('Email na factura')
                             ->email()
                             ->maxLength(255),
                         Forms\Components\Textarea::make('invoice_footer')
-                            ->label('Rodape da fatura')
+                            ->label('Rodapé da factura')
                             ->columnSpanFull(),
                         Forms\Components\Textarea::make('cancellation_policy')
-                            ->label('Politica de cancelamento')
+                            ->label('Política de cancelamento')
                             ->columnSpanFull(),
                         Forms\Components\TextInput::make('deposit_percent')
-                            ->label('Deposito de reserva')
+                            ->label('Depósito de reserva')
                             ->suffix('%')
                             ->numeric()
                             ->default(50),
@@ -121,10 +121,10 @@ class PropertyResource extends Resource
                             ->numeric()
                             ->default(3),
                         Forms\Components\KeyValue::make('room_inventory_template')
-                            ->label('Inventario modelo do quarto')
+                            ->label('Inventário modelo do quarto')
                             ->columnSpanFull(),
                         Forms\Components\KeyValue::make('meals_and_services')
-                            ->label('Refeicoes e servicos uteis')
+                            ->label('Refeições e serviços úteis')
                             ->columnSpanFull(),
                         Forms\Components\Textarea::make('notes')
                             ->label('Notas')
@@ -171,8 +171,8 @@ class PropertyResource extends Resource
                 Tables\Filters\SelectFilter::make('status')
                     ->label('Estado')
                     ->options([
-                        'active' => 'Ativo',
-                        'inactive' => 'Inativo',
+                        'active' => 'Activo',
+                        'inactive' => 'Inactivo',
                     ]),
             ])
             ->actions([

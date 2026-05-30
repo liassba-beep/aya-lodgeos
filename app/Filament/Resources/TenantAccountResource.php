@@ -30,7 +30,7 @@ class TenantAccountResource extends Resource
                 Forms\Components\TextInput::make('slug')->label('Slug')->required()->unique(ignoreRecord: true),
                 Forms\Components\TextInput::make('billing_email')->label('Email de cobranca')->email(),
                 Forms\Components\TextInput::make('billing_phone')->label('Telefone de cobranca'),
-                Forms\Components\Select::make('status')->label('Estado')->options(['active' => 'Ativo', 'suspended' => 'Suspenso'])->required(),
+                Forms\Components\Select::make('status')->label('Estado')->options(['active' => 'Activo', 'suspended' => 'Suspenso'])->required(),
                 Forms\Components\Textarea::make('notes')->label('Notas')->columnSpanFull(),
             ]),
         ]);

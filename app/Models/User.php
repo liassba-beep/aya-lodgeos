@@ -5,6 +5,7 @@ namespace App\Models;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -24,9 +25,16 @@ class User extends Authenticatable implements FilamentUser
     protected $fillable = [
         'name',
         'email',
+        'phone',
         'property_id',
         'role',
+        'mobile_access_enabled',
+        'mobile_pin',
+        'mobile_pin_hash',
+        'last_mobile_login_at',
         'permissions',
+        'locale',
+        'theme_mode',
         'password',
     ];
 
@@ -50,8 +58,17 @@ class User extends Authenticatable implements FilamentUser
         return [
             'email_verified_at' => 'datetime',
             'permissions' => 'array',
+            'mobile_access_enabled' => 'boolean',
+            'last_mobile_login_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    protected function mobilePin(): Attribute
+    {
+        return Attribute::make(
+            set: fn (?string $value): array => filled($value) ? ['mobile_pin_hash' => bcrypt($value)] : [],
+        );
     }
 
     public function canAccessPanel(Panel $panel): bool

@@ -2,8 +2,8 @@ import { Head, router, useForm } from '@inertiajs/react';
 
 const statusLabels = {
     pending: 'Pendente',
-    in_progress: 'Em execucao',
-    done: 'Concluido',
+    in_progress: 'Em execução',
+    done: 'Concluído',
     confirmed: 'Confirmada',
     checked_in: 'Check-in',
     checked_out: 'Check-out',
@@ -57,7 +57,7 @@ function CompleteTaskForm({ task }) {
             <input
                 value={form.data.qr_code}
                 onChange={(event) => form.setData('qr_code', event.target.value)}
-                placeholder="QR ou referencia"
+                placeholder="QR ou referência"
                 className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs"
             />
             <button className="w-full rounded-lg bg-amber-400 px-3 py-2 text-xs font-bold text-zinc-950">
@@ -155,7 +155,7 @@ function ReportForm({ rooms }) {
                     }
                     className="rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
                 >
-                    <option value="">Area geral</option>
+                    <option value="">Área geral</option>
                     {rooms.map((room) => (
                         <option key={room.id} value={room.id}>
                             {room.name}
@@ -177,7 +177,7 @@ function ReportForm({ rooms }) {
                 >
                     <option value="normal">Normal</option>
                     <option value="high">Urgente</option>
-                    <option value="critical">Critico</option>
+                    <option value="critical">Crítico</option>
                 </select>
                 <CameraInput
                     required
@@ -225,7 +225,7 @@ function UtilityForm() {
                     onChange={(event) =>
                         form.setData('meter_number', event.target.value)
                     }
-                    placeholder="Numero do contador"
+                    placeholder="Número do contador"
                     className="rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
                 />
                 <div className="grid grid-cols-2 gap-2">
@@ -251,7 +251,7 @@ function UtilityForm() {
                 <input
                     value={form.data.qr_code}
                     onChange={(event) => form.setData('qr_code', event.target.value)}
-                    placeholder="QR ou referencia"
+                    placeholder="QR ou referência"
                     className="rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
                 />
                 <CameraInput
@@ -307,7 +307,7 @@ function RequisitionForm({ stockItems }) {
                 <textarea
                     value={form.data.notes}
                     onChange={(event) => form.setData('notes', event.target.value)}
-                    placeholder="Justificacao"
+                    placeholder="Justificação"
                     className="min-h-16 rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
                 />
                 <button className="rounded-lg bg-amber-400 px-3 py-2 text-sm font-bold text-zinc-950">
@@ -354,7 +354,7 @@ function ReservationCard({ reservation }) {
                             onChange={(file) => form.setData('photo', file)}
                         />
                         <button className="w-full rounded-lg bg-emerald-400 px-3 py-2 text-xs font-bold text-zinc-950">
-                            Check-in hospede
+                            Check-in hóspede
                         </button>
                     </form>
                 )}
@@ -369,7 +369,7 @@ function ReservationCard({ reservation }) {
                     }
                     className="mt-3 w-full rounded-lg border border-zinc-700 px-3 py-2 text-xs font-bold"
                 >
-                    Check-out hospede
+                    Check-out hóspede
                 </button>
             )}
         </article>
@@ -414,7 +414,7 @@ export default function WorkerApp({
                 </header>
 
                 <section className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
-                    <p className="text-sm font-semibold">Ponto diario</p>
+                    <p className="text-sm font-semibold">Ponto diário</p>
                     {staff.checked_in ? (
                         <div className="mt-3">
                             <p className="text-xs text-emerald-200">
@@ -470,7 +470,7 @@ export default function WorkerApp({
                                             {task.title}
                                         </p>
                                         <p className="mt-1 text-xs text-zinc-400">
-                                            {task.room || 'Area geral'} -{' '}
+                                            {task.room || 'Área geral'} -{' '}
                                             {task.date || 'sem data'}
                                         </p>
                                     </div>
@@ -506,7 +506,7 @@ export default function WorkerApp({
                     ))}
                 </Section>
 
-                <Section title="Check-in e check-out de hospedes">
+                <Section title="Check-in e check-out de hóspedes">
                     {reservations.map((reservation) => (
                         <ReservationCard
                             key={reservation.id}
@@ -523,7 +523,7 @@ export default function WorkerApp({
                     <UtilityForm />
                 </Section>
 
-                <Section title="Requisicao de produtos">
+                <Section title="Requisição de produtos">
                     <RequisitionForm stockItems={stockItems} />
                 </Section>
             </div>

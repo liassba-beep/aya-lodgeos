@@ -70,7 +70,7 @@ class DailyChecklistResource extends Resource
                         ->columnSpanFull(),
                     Forms\Components\TextInput::make('evidence_latitude')->label('Latitude')->numeric(),
                     Forms\Components\TextInput::make('evidence_longitude')->label('Longitude')->numeric(),
-                    Forms\Components\TextInput::make('evidence_qr_code')->label('Codigo QR')->maxLength(255),
+                    Forms\Components\TextInput::make('evidence_qr_code')->label('Código QR')->maxLength(255),
                     Forms\Components\Textarea::make('notes')->label('Notas')->columnSpanFull(),
                 ]),
         ]);

@@ -5,8 +5,8 @@ const statusLabels = {
     in_progress: 'Em execucao',
     done: 'Concluido',
     confirmed: 'Confirmada',
-    checked_in: 'Entrada efetuada',
-    checked_out: 'Saida efetuada',
+    checked_in: 'Entrada efectuada',
+    checked_out: 'Saída efectuada',
     planned: 'Planeada',
 };
 
@@ -114,7 +114,7 @@ function ProofForm({ item }) {
                 <input
                     value={data.qr_code}
                     onChange={(event) => setData('qr_code', event.target.value)}
-                    placeholder="Codigo QR ou referencia"
+                    placeholder="Código QR ou referência"
                     className="rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs text-zinc-200"
                 />
                 <button

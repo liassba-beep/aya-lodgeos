@@ -31,7 +31,7 @@ class AccessControl
         return [
             'super_admin' => 'Super-Admin',
             'admin' => 'Admin',
-            'owner' => 'Proprietario',
+            'owner' => 'Proprietário',
             'manager' => 'Gerente',
             'staff' => 'Staff',
             'security' => 'Guarda',

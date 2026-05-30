@@ -8,7 +8,7 @@
                 tag="a"
                 href="{{ \App\Filament\Pages\ReservationCalendar::getUrl(['month' => $calendar['previous']]) }}"
             >
-                Mes anterior
+                Mês anterior
             </x-filament::button>
 
             <h2 class="text-xl font-semibold text-gray-950 dark:text-white">
@@ -20,7 +20,7 @@
                 tag="a"
                 href="{{ \App\Filament\Pages\ReservationCalendar::getUrl(['month' => $calendar['next']]) }}"
             >
-                Mes seguinte
+                Mês seguinte
             </x-filament::button>
         </div>
 
@@ -73,7 +73,7 @@
                     @empty
                         <tr>
                             <td colspan="{{ count($calendar['days']) + 1 }}" class="px-4 py-8 text-center text-gray-500">
-                                Ainda nao existem quartos para mostrar no calendario.
+                                Ainda não existem quartos para mostrar no calendário.
                             </td>
                         </tr>
                     @endforelse
@@ -83,6 +83,8 @@
     </div>
 
     <script>
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+
         document.querySelectorAll('[data-reservation-id]').forEach((item) => {
             item.addEventListener('dragstart', (event) => {
                 event.dataTransfer.setData('reservationId', item.dataset.reservationId);
@@ -101,11 +103,16 @@
                     return;
                 }
 
+                if (!csrfToken) {
+                    alert('Não foi possível validar a sessão. Actualize a página e tente novamente.');
+                    return;
+                }
+
                 const response = await fetch(`/admin/reservations/${reservationId}/move`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'X-CSRF-TOKEN': csrfToken,
                     },
                     body: JSON.stringify({
                         room_id: cell.dataset.roomId,
@@ -116,7 +123,7 @@
                 if (response.ok) {
                     window.location.reload();
                 } else {
-                    alert('Nao foi possivel mover a reserva. Verifique disponibilidade.');
+                    alert('Não foi possível mover a reserva. Verifique a disponibilidade.');
                 }
             });
         });

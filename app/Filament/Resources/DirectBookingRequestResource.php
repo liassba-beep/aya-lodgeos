@@ -20,7 +20,7 @@ class DirectBookingRequestResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-globe-alt';
 
-    protected static ?string $navigationGroup = 'Reservas diretas';
+    protected static ?string $navigationGroup = 'Reservas directas';
 
     protected static bool $shouldRegisterNavigation = false;
 
@@ -36,13 +36,13 @@ class DirectBookingRequestResource extends Resource
                 ->schema([
                     Forms\Components\Hidden::make('property_id')
                         ->default(fn (): ?int => TenantContext::propertyId()),
-                    Forms\Components\TextInput::make('guest_name')->label('Hospede')->required()->maxLength(255),
+                    Forms\Components\TextInput::make('guest_name')->label('Hóspede')->required()->maxLength(255),
                     Forms\Components\TextInput::make('guest_phone')->label('Telefone')->tel()->maxLength(255),
                     Forms\Components\TextInput::make('guest_email')->label('Email')->email()->maxLength(255),
                     Forms\Components\DatePicker::make('check_in')->label('Entrada')->required(),
-                    Forms\Components\DatePicker::make('check_out')->label('Saida')->required()->after('check_in'),
+                    Forms\Components\DatePicker::make('check_out')->label('Saída')->required()->after('check_in'),
                     Forms\Components\TextInput::make('adults')->label('Adultos')->numeric()->minValue(1)->required(),
-                    Forms\Components\TextInput::make('children')->label('Criancas')->numeric()->minValue(0)->required(),
+                    Forms\Components\TextInput::make('children')->label('Crianças')->numeric()->minValue(0)->required(),
                     Forms\Components\Select::make('status')
                         ->label('Estado')
                         ->options([
@@ -61,10 +61,10 @@ class DirectBookingRequestResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('guest_name')->label('Hospede')->searchable()->sortable(),
+                Tables\Columns\TextColumn::make('guest_name')->label('Hóspede')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('guest_phone')->label('Telefone')->searchable(),
                 Tables\Columns\TextColumn::make('check_in')->label('Entrada')->date()->sortable(),
-                Tables\Columns\TextColumn::make('check_out')->label('Saida')->date()->sortable(),
+                Tables\Columns\TextColumn::make('check_out')->label('Saída')->date()->sortable(),
                 Tables\Columns\TextColumn::make('status')->label('Estado')->badge(),
                 Tables\Columns\TextColumn::make('created_at')->label('Criado')->dateTime()->sortable(),
             ])

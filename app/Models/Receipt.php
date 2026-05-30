@@ -27,6 +27,11 @@ class Receipt extends Model
         return $this->belongsTo(Payment::class);
     }
 
+    public function property(): BelongsTo
+    {
+        return $this->belongsTo(Property::class);
+    }
+
     public function reservation(): BelongsTo
     {
         return $this->belongsTo(Reservation::class);

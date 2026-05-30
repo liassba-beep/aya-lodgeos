@@ -25,7 +25,7 @@ class SimplePdf
         $content .= self::text(48, 805, 22, 'FATURA', 'F2', 1, 1, 1);
         $content .= self::text(48, 764, 11, 'Documento fiscal emitido por AYA LodgeOS', 'F2', 0.08, 0.08, 0.09);
         $content .= self::text(430, 805, 12, 'N. '.$invoice['number'], 'F2', 1, 1, 1);
-        $content .= self::text(430, 785, 9, 'Emissao: '.$invoice['issued_at'], 'F1', 1, 1, 1);
+        $content .= self::text(430, 785, 9, 'Emissão: '.$invoice['issued_at'], 'F1', 1, 1, 1);
         $content .= self::text(430, 770, 9, 'Vencimento: '.$invoice['due_at'], 'F1', 1, 1, 1);
 
         $logoPath = $invoice['logo_path'] ?? null;
@@ -59,7 +59,7 @@ class SimplePdf
 
         $content .= self::rect(48, 487, 500, 38, 1, 1, 1);
         $content .= self::strokeRect(48, 487, 500, 38, 0.86, 0.86, 0.88);
-        $content .= self::text(64, 508, 10, 'Alojamento e servicos da reserva '.$invoice['reservation_code'], 'F1');
+        $content .= self::text(64, 508, 10, 'Alojamento e serviços da reserva '.$invoice['reservation_code'], 'F1');
         $content .= self::text(360, 508, 10, number_format((float) $invoice['tax_rate'], 2).'%');
         $content .= self::text(450, 508, 10, self::money($invoice['subtotal']), 'F2');
 

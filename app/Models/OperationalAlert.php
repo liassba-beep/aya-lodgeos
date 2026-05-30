@@ -10,7 +10,7 @@ class OperationalAlert extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['property_id', 'severity', 'title', 'message', 'status', 'resolved_at'];
+    protected $fillable = ['property_id', 'source_type', 'source_id', 'severity', 'title', 'message', 'status', 'resolved_at'];
 
     protected $casts = ['resolved_at' => 'datetime'];
 

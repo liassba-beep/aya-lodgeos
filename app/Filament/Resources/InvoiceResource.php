@@ -29,7 +29,7 @@ class InvoiceResource extends Resource
 
     protected static ?string $modelLabel = 'Fatura';
 
-    protected static ?string $pluralModelLabel = 'Faturacao';
+    protected static ?string $pluralModelLabel = 'Facturação';
 
     public static function form(Form $form): Form
     {
@@ -37,7 +37,7 @@ class InvoiceResource extends Resource
             Forms\Components\Section::make('Fatura')
                 ->columns(3)
                 ->schema([
-                    Forms\Components\TextInput::make('number')->label('Numero')->required()->maxLength(255),
+                    Forms\Components\TextInput::make('number')->label('Número')->required()->maxLength(255),
                     Forms\Components\Hidden::make('property_id')
                         ->default(fn (): ?int => TenantContext::propertyId()),
                     Forms\Components\Select::make('reservation_id')
@@ -93,9 +93,9 @@ class InvoiceResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('number')->label('Numero')->searchable()->sortable(),
+                Tables\Columns\TextColumn::make('number')->label('Número')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('reservation.code')->label('Reserva')->toggleable(),
-                Tables\Columns\TextColumn::make('issued_at')->label('Emissao')->date()->sortable(),
+                Tables\Columns\TextColumn::make('issued_at')->label('Emissão')->date()->sortable(),
                 Tables\Columns\TextColumn::make('total_amount')->label('Total')->formatStateUsing(fn ($state): string => number_format((float) $state, 2).' MZN')->sortable(),
                 Tables\Columns\TextColumn::make('paid_amount')->label('Pago')->formatStateUsing(fn ($state): string => number_format((float) $state, 2).' MZN'),
                 Tables\Columns\TextColumn::make('balance_amount')->label('Saldo')->formatStateUsing(fn ($state): string => number_format((float) $state, 2).' MZN'),

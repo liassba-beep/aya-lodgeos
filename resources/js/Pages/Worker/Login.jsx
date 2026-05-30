@@ -24,12 +24,12 @@ export default function WorkerLogin() {
                 </p>
                 <h1 className="mt-2 text-2xl font-bold">Perfil mobile</h1>
                 <p className="mt-1 text-sm text-zinc-400">
-                    Entrada para equipas de operacao.
+                    Entrada para equipas de operação.
                 </p>
 
                 <div className="mt-6 space-y-4">
                     <div>
-                        <label className="text-sm font-medium">Telemovel</label>
+                        <label className="text-sm font-medium">Telemóvel</label>
                         <input
                             value={data.phone}
                             onChange={(event) =>

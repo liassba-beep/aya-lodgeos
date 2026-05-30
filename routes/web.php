@@ -16,6 +16,7 @@ use App\Models\UtilityReading;
 use App\Models\OwnerDailyReport;
 use App\Models\OperationalAlert;
 use App\Models\Receipt;
+use App\Models\User;
 use App\Support\ReservationAvailability;
 use App\Support\SimplePdf;
 use App\Support\TenantContext;
@@ -51,18 +52,52 @@ Route::post('/trabalhador/login', function (Request $request) {
         'pin' => ['required', 'string'],
     ]);
 
+    $phone = trim($validated['phone']);
+    $pin = $validated['pin'];
+
     $staff = StaffMember::query()
-        ->where('phone', $validated['phone'])
+        ->where('phone', $phone)
         ->where('status', 'active')
         ->where('mobile_access_enabled', true)
         ->first();
 
-    if (! $staff || ! $staff->mobile_pin_hash || ! Hash::check($validated['pin'], $staff->mobile_pin_hash)) {
-        return back()->withErrors(['phone' => 'Telefone ou PIN invalido.'])->onlyInput('phone');
+    if ($staff && $staff->mobile_pin_hash && Hash::check($pin, $staff->mobile_pin_hash)) {
+        session(['worker_staff_member_id' => $staff->id]);
+        $staff->forceFill(['last_mobile_login_at' => now()])->save();
+
+        return redirect()->route('worker.mobile');
     }
 
+    $user = User::query()
+        ->where('phone', $phone)
+        ->where('mobile_access_enabled', true)
+        ->whereIn('role', ['staff', 'security'])
+        ->first();
+
+    if (! $user || ! $user->property_id || ! $user->mobile_pin_hash || ! Hash::check($pin, $user->mobile_pin_hash)) {
+        return back()->withErrors(['phone' => 'Telemóvel ou PIN inválido.'])->onlyInput('phone');
+    }
+
+    $staff = StaffMember::query()->firstOrCreate(
+        ['phone' => $phone, 'property_id' => $user->property_id],
+        [
+            'name' => $user->name,
+            'role' => $user->role === 'security' ? 'security' : 'staff',
+            'status' => 'active',
+            'mobile_access_enabled' => true,
+            'mobile_pin_hash' => $user->mobile_pin_hash,
+        ],
+    );
+
+    $staff->forceFill([
+        'name' => $staff->name ?: $user->name,
+        'status' => 'active',
+        'mobile_access_enabled' => true,
+        'mobile_pin_hash' => $staff->mobile_pin_hash ?: $user->mobile_pin_hash,
+        'last_mobile_login_at' => now(),
+    ])->save();
+
     session(['worker_staff_member_id' => $staff->id]);
-    $staff->forceFill(['last_mobile_login_at' => now()])->save();
 
     return redirect()->route('worker.mobile');
 })->name('worker.login.store');
@@ -197,6 +232,16 @@ Route::middleware([])->prefix('trabalhador')->name('worker.')->group(function ()
             'evidence_qr_code' => $validated['qr_code'] ?? null,
         ])->save();
 
+        OperationalAlert::create([
+            'property_id' => $task->property_id,
+            'source_type' => OperationalTask::class,
+            'source_id' => $task->id,
+            'severity' => 'info',
+            'title' => 'Tarefa concluída na app mobile',
+            'message' => $task->title.' por '.$staff->name,
+            'status' => 'open',
+        ]);
+
         return back();
     })->name('tasks.complete');
 
@@ -219,6 +264,16 @@ Route::middleware([])->prefix('trabalhador')->name('worker.')->group(function ()
             'evidence_longitude' => $validated['longitude'] ?? null,
             'evidence_qr_code' => $validated['qr_code'] ?? null,
         ])->save();
+
+        OperationalAlert::create([
+            'property_id' => $dailyChecklist->property_id,
+            'source_type' => DailyChecklist::class,
+            'source_id' => $dailyChecklist->id,
+            'severity' => 'info',
+            'title' => 'Checklist concluída na app mobile',
+            'message' => $dailyChecklist->title.' por '.$staff->name,
+            'status' => 'open',
+        ]);
 
         return back();
     })->name('checklists.complete');
@@ -299,6 +354,16 @@ Route::middleware([])->prefix('trabalhador')->name('worker.')->group(function ()
             'mobile_checked_in_at' => now(),
         ])->save();
 
+        OperationalAlert::create([
+            'property_id' => $reservation->property_id,
+            'source_type' => Reservation::class,
+            'source_id' => $reservation->id,
+            'severity' => 'info',
+            'title' => 'Check-in de hóspede pela app mobile',
+            'message' => $reservation->code.' por '.$staff->name,
+            'status' => 'open',
+        ]);
+
         return back();
     })->name('reservations.check-in');
 
@@ -311,6 +376,16 @@ Route::middleware([])->prefix('trabalhador')->name('worker.')->group(function ()
             'mobile_checked_out_by' => $staff->id,
             'mobile_checked_out_at' => now(),
         ])->save();
+
+        OperationalAlert::create([
+            'property_id' => $reservation->property_id,
+            'source_type' => Reservation::class,
+            'source_id' => $reservation->id,
+            'severity' => 'info',
+            'title' => 'Check-out de hóspede pela app mobile',
+            'message' => $reservation->code.' por '.$staff->name,
+            'status' => 'open',
+        ]);
 
         return back();
     })->name('reservations.check-out');
@@ -463,14 +538,14 @@ Route::middleware('auth')->group(function () {
             'balance' => $balanceAmount,
             'status' => $invoice->status,
             'notes' => $invoice->notes ?: '',
-            'footer' => $property?->invoice_footer ?: 'Obrigado pela preferencia. Valores expressos em Meticais.',
+            'footer' => $property?->invoice_footer ?: 'Obrigado pela preferência. Valores expressos em Meticais.',
         ]);
 
         $filename = str($invoice->number)->replaceMatches('/[^A-Za-z0-9_-]/', '-')->lower();
 
         return response($pdf, 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="fatura-'.$filename.'.pdf"',
+            'Content-Disposition' => 'inline; filename="factura-'.$filename.'.pdf"',
         ]);
     })->name('invoices.pdf');
 
@@ -482,7 +557,7 @@ Route::middleware('auth')->group(function () {
             ->orderByDesc('issued_at')
             ->get();
 
-        $csv = "Numero,Data,Cliente,Subtotal,Desconto,IVA,Total,Estado\n";
+        $csv = "Número,Data,Cliente,Subtotal,Desconto,IVA,Total,Estado\n";
 
         foreach ($rows as $invoice) {
             $csv .= implode(',', array_map(fn ($value) => '"'.str_replace('"', '""', (string) $value).'"', [
@@ -499,7 +574,7 @@ Route::middleware('auth')->group(function () {
 
         return response($csv, 200, [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="faturas.csv"',
+            'Content-Disposition' => 'attachment; filename="facturas.csv"',
         ]);
     })->name('exports.invoices');
 
@@ -511,7 +586,7 @@ Route::middleware('auth')->group(function () {
             ->orderByDesc('check_in')
             ->get();
 
-        $csv = "Codigo,Hospede,Quarto,Entrada,Saida,Total,Estado\n";
+        $csv = "Código,Hóspede,Quarto,Entrada,Saída,Total,Estado\n";
 
         foreach ($rows as $reservation) {
             $csv .= implode(',', array_map(fn ($value) => '"'.str_replace('"', '""', (string) $value).'"', [
@@ -587,7 +662,7 @@ Route::middleware('auth')->group(function () {
                 'open_tasks' => OperationalTask::query()->where('property_id', $propertyId)->whereIn('status', ['pending', 'in_progress'])->count(),
                 'open_alerts' => OperationalAlert::query()->where('property_id', $propertyId)->where('status', 'open')->count(),
                 'status' => 'draft',
-                'summary' => 'Relatorio diario gerado automaticamente.',
+                'summary' => 'Relatório diário gerado automaticamente.',
             ],
         );
 
@@ -620,7 +695,17 @@ Route::middleware('auth')->group(function () {
             'evidence_qr_code' => $validated['qr_code'] ?? null,
         ])->save();
 
-        return back()->with('status', 'Checklist concluida com prova.');
+        OperationalAlert::create([
+            'property_id' => $dailyChecklist->property_id,
+            'source_type' => DailyChecklist::class,
+            'source_id' => $dailyChecklist->id,
+            'severity' => 'info',
+            'title' => 'Checklist concluída no mobile',
+            'message' => $dailyChecklist->title.' por '.$request->user()->name,
+            'status' => 'open',
+        ]);
+
+        return back()->with('status', 'Checklist concluída com prova.');
     })->name('mobile.checklists.complete');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

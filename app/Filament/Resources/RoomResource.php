@@ -43,7 +43,7 @@ class RoomResource extends Resource
                             ->required()
                             ->maxLength(255),
                         Forms\Components\TextInput::make('room_number')
-                            ->label('Numero')
+                            ->label('Número')
                             ->maxLength(255),
                         Forms\Components\Select::make('type')
                             ->label('Tipo')
@@ -52,7 +52,7 @@ class RoomResource extends Resource
                                 'double' => 'Duplo',
                                 'suite' => 'Suite',
                                 'family' => 'Familiar',
-                                'dorm' => 'Dormitorio',
+                                'dorm' => 'Dormitório',
                             ])
                             ->required(),
                         Forms\Components\TextInput::make('capacity')
@@ -61,17 +61,17 @@ class RoomResource extends Resource
                             ->minValue(1)
                             ->required(),
                         Forms\Components\TextInput::make('base_rate')
-                            ->label('Preco base')
+                            ->label('Preço base')
                             ->numeric()
                             ->prefix('MZN')
                             ->required(),
                         Forms\Components\Select::make('status')
                             ->label('Estado')
                             ->options([
-                                'available' => 'Disponivel',
+                                'available' => 'Disponível',
                                 'occupied' => 'Ocupado',
-                                'maintenance' => 'Manutencao',
-                                'inactive' => 'Inativo',
+                                'maintenance' => 'Manutenção',
+                                'inactive' => 'Inactivo',
                             ])
                             ->required(),
                         Forms\Components\Textarea::make('notes')
@@ -95,13 +95,13 @@ class RoomResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('room_number')
-                    ->label('Numero')
+                    ->label('Número')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('capacity')
                     ->label('Cap.')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('base_rate')
-                    ->label('Preco')
+                    ->label('Preço')
                     ->formatStateUsing(fn ($state): string => number_format((float) $state, 2).' MZN')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('status')
@@ -118,10 +118,10 @@ class RoomResource extends Resource
                 Tables\Filters\SelectFilter::make('status')
                     ->label('Estado')
                     ->options([
-                        'available' => 'Disponivel',
+                        'available' => 'Disponível',
                         'occupied' => 'Ocupado',
-                        'maintenance' => 'Manutencao',
-                        'inactive' => 'Inativo',
+                        'maintenance' => 'Manutenção',
+                        'inactive' => 'Inactivo',
                     ]),
             ])
             ->actions([

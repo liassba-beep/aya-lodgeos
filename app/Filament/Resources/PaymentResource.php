@@ -64,13 +64,13 @@ class PaymentResource extends Resource
                             ->default(0)
                             ->required(),
                         Forms\Components\Select::make('method')
-                            ->label('Metodo')
+                            ->label('Método')
                             ->options([
                                 'cash' => 'Dinheiro',
                                 'mpesa' => 'M-Pesa',
                                 'emola' => 'e-Mola',
-                                'card' => 'Cartao',
-                                'bank_transfer' => 'Transferencia',
+                                'card' => 'Cartão',
+                                'bank_transfer' => 'Transferência',
                                 'other' => 'Outro',
                             ])
                             ->required(),
@@ -87,7 +87,7 @@ class PaymentResource extends Resource
                             ->label('Data de pagamento')
                             ->seconds(false),
                         Forms\Components\TextInput::make('reference')
-                            ->label('Referencia')
+                            ->label('Referência')
                             ->maxLength(255),
                         Forms\Components\Textarea::make('notes')
                             ->label('Notas')
@@ -105,19 +105,19 @@ class PaymentResource extends Resource
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('reservation.guest.full_name')
-                    ->label('Hospede'),
+                    ->label('Hóspede'),
                 Tables\Columns\TextColumn::make('amount')
                     ->label('Valor')
                     ->formatStateUsing(fn ($state): string => number_format((float) $state, 2).' MZN')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('method')
-                    ->label('Metodo')
+                    ->label('Método')
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'cash' => 'Dinheiro',
                         'mpesa' => 'M-Pesa',
                         'emola' => 'e-Mola',
-                        'card' => 'Cartao',
-                        'bank_transfer' => 'Transferencia',
+                        'card' => 'Cartão',
+                        'bank_transfer' => 'Transferência',
                         'other' => 'Outro',
                         default => $state,
                     })
@@ -143,7 +143,7 @@ class PaymentResource extends Resource
                     ->dateTime()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('reference')
-                    ->label('Referencia')
+                    ->label('Referência')
                     ->searchable()
                     ->toggleable(),
             ])
@@ -157,13 +157,13 @@ class PaymentResource extends Resource
                         'refunded' => 'Reembolsado',
                     ]),
                 Tables\Filters\SelectFilter::make('method')
-                    ->label('Metodo')
+                    ->label('Método')
                     ->options([
                         'cash' => 'Dinheiro',
                         'mpesa' => 'M-Pesa',
                         'emola' => 'e-Mola',
-                        'card' => 'Cartao',
-                        'bank_transfer' => 'Transferencia',
+                        'card' => 'Cartão',
+                        'bank_transfer' => 'Transferência',
                         'other' => 'Outro',
                     ]),
             ])

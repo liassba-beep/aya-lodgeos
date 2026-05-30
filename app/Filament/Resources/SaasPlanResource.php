@@ -26,11 +26,11 @@ class SaasPlanResource extends Resource
         return $form->schema([
             Forms\Components\Section::make('Plano')->columns(3)->schema([
                 Forms\Components\TextInput::make('name')->label('Nome')->required(),
-                Forms\Components\TextInput::make('code')->label('Codigo')->required()->unique(ignoreRecord: true),
+                Forms\Components\TextInput::make('code')->label('Código')->required()->unique(ignoreRecord: true),
                 Forms\Components\TextInput::make('monthly_price')->label('Mensalidade')->prefix('MZN')->numeric()->required(),
                 Forms\Components\TextInput::make('property_limit')->label('Limite propriedades')->numeric(),
                 Forms\Components\TextInput::make('user_limit')->label('Limite utilizadores')->numeric(),
-                Forms\Components\Select::make('status')->label('Estado')->options(['active' => 'Ativo', 'inactive' => 'Inativo'])->required(),
+                Forms\Components\Select::make('status')->label('Estado')->options(['active' => 'Activo', 'inactive' => 'Inactivo'])->required(),
                 Forms\Components\KeyValue::make('features')->label('Funcionalidades')->columnSpanFull(),
             ]),
         ]);

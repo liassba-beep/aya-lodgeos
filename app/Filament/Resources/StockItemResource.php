@@ -53,7 +53,7 @@ class StockItemResource extends Resource
                     Forms\Components\TextInput::make('quantity_on_hand')->label('Quantidade atual')->numeric()->required(),
                     Forms\Components\TextInput::make('minimum_quantity')->label('Stock minimo')->numeric()->required(),
                     Forms\Components\TextInput::make('location')->label('Local')->maxLength(255),
-                    Forms\Components\Select::make('status')->label('Estado')->options(['active' => 'Ativo', 'inactive' => 'Inativo'])->required(),
+                    Forms\Components\Select::make('status')->label('Estado')->options(['active' => 'Activo', 'inactive' => 'Inactivo'])->required(),
                     Forms\Components\Textarea::make('notes')->label('Notas')->columnSpanFull(),
                 ]),
         ]);

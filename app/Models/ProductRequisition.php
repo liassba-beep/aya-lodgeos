@@ -31,6 +31,23 @@ class ProductRequisition extends Model
         static::saving(function (ProductRequisition $requisition) {
             $requisition->property_id = $requisition->property_id ?: TenantContext::propertyId();
         });
+
+        static::created(function (ProductRequisition $requisition) {
+            OperationalAlert::create([
+                'property_id' => $requisition->property_id,
+                'source_type' => ProductRequisition::class,
+                'source_id' => $requisition->id,
+                'severity' => 'info',
+                'title' => 'Requisição de produto',
+                'message' => trim(collect([
+                    $requisition->stockItem?->name ? 'Artigo: '.$requisition->stockItem->name : null,
+                    'Quantidade: '.$requisition->quantity,
+                    $requisition->staffMember?->name ? 'Pedido por: '.$requisition->staffMember->name : null,
+                    $requisition->notes,
+                ])->filter()->implode("\n")),
+                'status' => 'open',
+            ]);
+        });
     }
 
     public function property(): BelongsTo

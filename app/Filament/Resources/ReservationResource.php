@@ -41,7 +41,7 @@ class ReservationResource extends Resource
                     ->columns(3)
                     ->schema([
                         Forms\Components\TextInput::make('code')
-                            ->label('Codigo')
+                            ->label('Código')
                             ->placeholder('Gerado automaticamente se ficar vazio')
                             ->maxLength(255),
                         Forms\Components\Hidden::make('property_id')
@@ -70,11 +70,11 @@ class ReservationResource extends Resource
                             })
                             ->required(),
                     ]),
-                Forms\Components\Section::make('Hospede e estadia')
+                Forms\Components\Section::make('Hóspede e estadia')
                     ->columns(3)
                     ->schema([
                         Forms\Components\Select::make('guest_id')
-                            ->label('Hospede')
+                            ->label('Hóspede')
                             ->relationship('guest', 'first_name', modifyQueryUsing: fn ($query) => $query->where('property_id', TenantContext::propertyId()))
                             ->getOptionLabelFromRecordUsing(fn (Guest $record): string => $record->full_name)
                             ->searchable(['first_name', 'last_name', 'email', 'phone'])
@@ -86,7 +86,7 @@ class ReservationResource extends Resource
                             ->afterStateUpdated(fn (Set $set, Get $get): null => self::updateTotal($set, $get))
                             ->required(),
                         Forms\Components\DatePicker::make('check_out')
-                            ->label('Saida')
+                            ->label('Saída')
                             ->live()
                             ->afterStateUpdated(fn (Set $set, Get $get): null => self::updateTotal($set, $get))
                             ->required()
@@ -97,19 +97,19 @@ class ReservationResource extends Resource
                             ->minValue(1)
                             ->required(),
                         Forms\Components\TextInput::make('children')
-                            ->label('Criancas')
+                            ->label('Crianças')
                             ->numeric()
                             ->minValue(0)
                             ->required(),
                         Forms\Components\Toggle::make('breakfast_included')
-                            ->label('Pequeno almoco incluido')
+                            ->label('Pequeno-almoço incluído')
                             ->default(false),
                     ]),
                 Forms\Components\Section::make('Valores')
                     ->columns(3)
                     ->schema([
                         Forms\Components\TextInput::make('nightly_rate')
-                            ->label('Preco do quarto por noite')
+                            ->label('Preço do quarto por noite')
                             ->numeric()
                             ->prefix('MZN')
                             ->readOnly()
@@ -141,8 +141,8 @@ class ReservationResource extends Resource
                             ->options([
                                 'pending' => 'Pendente',
                                 'confirmed' => 'Confirmada',
-                                'checked_in' => 'Entrada efetuada',
-                                'checked_out' => 'Saida efetuada',
+                                'checked_in' => 'Entrada efectuada',
+                                'checked_out' => 'Saída efectuada',
                                 'cancelled' => 'Cancelada',
                             ])
                             ->required(),
@@ -151,7 +151,7 @@ class ReservationResource extends Resource
                             ->options([
                                 'direct' => 'Direta',
                                 'phone' => 'Telefone',
-                                'walk_in' => 'Entrada sem reserva previa',
+                                'walk_in' => 'Entrada sem reserva prévia',
                                 'booking' => 'Booking',
                                 'airbnb' => 'Airbnb',
                                 'other' => 'Outra',
@@ -169,11 +169,11 @@ class ReservationResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('code')
-                    ->label('Codigo')
+                    ->label('Código')
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('guest.full_name')
-                    ->label('Hospede')
+                    ->label('Hóspede')
                     ->searchable(['first_name', 'last_name']),
                 Tables\Columns\TextColumn::make('property.name')
                     ->label('Alojamento')
@@ -187,7 +187,7 @@ class ReservationResource extends Resource
                     ->date()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('check_out')
-                    ->label('Saida')
+                    ->label('Saída')
                     ->date()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('total_amount')
@@ -199,7 +199,7 @@ class ReservationResource extends Resource
                     ->formatStateUsing(fn ($state): string => number_format((float) $state, 2).' MZN')
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\IconColumn::make('breakfast_included')
-                    ->label('Pequeno almoco')
+                    ->label('Pequeno-almoço')
                     ->boolean(),
                 Tables\Columns\TextColumn::make('status')
                     ->label('Estado')
@@ -207,8 +207,8 @@ class ReservationResource extends Resource
                     ->formatStateUsing(fn (string $state): string => match ($state) {
                         'pending' => 'Pendente',
                         'confirmed' => 'Confirmada',
-                        'checked_in' => 'Entrada efetuada',
-                        'checked_out' => 'Saida efetuada',
+                        'checked_in' => 'Entrada efectuada',
+                        'checked_out' => 'Saída efectuada',
                         'cancelled' => 'Cancelada',
                         default => $state,
                     })
@@ -225,8 +225,8 @@ class ReservationResource extends Resource
                     ->options([
                         'pending' => 'Pendente',
                         'confirmed' => 'Confirmada',
-                        'checked_in' => 'Entrada efetuada',
-                        'checked_out' => 'Saida efetuada',
+                        'checked_in' => 'Entrada efectuada',
+                        'checked_out' => 'Saída efectuada',
                         'cancelled' => 'Cancelada',
                     ]),
             ])
@@ -288,7 +288,7 @@ class ReservationResource extends Resource
         }
 
         Notification::make()
-            ->title('Quarto indisponivel nestas datas')
+            ->title('Quarto indisponível nestas datas')
             ->body('Escolha outro quarto ou altere as datas da reserva.')
             ->danger()
             ->send();

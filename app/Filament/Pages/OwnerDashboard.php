@@ -10,5 +10,5 @@ class OwnerDashboard extends BaseDashboard
 
     protected static ?string $navigationLabel = 'Painel';
 
-    protected static ?string $title = 'Painel do proprietario';
+    protected static ?string $title = 'Painel do proprietário';
 }

@@ -35,6 +35,23 @@ class UtilityReading extends Model
         static::saving(function (UtilityReading $reading) {
             $reading->property_id = $reading->property_id ?: TenantContext::propertyId();
         });
+
+        static::created(function (UtilityReading $reading) {
+            OperationalAlert::create([
+                'property_id' => $reading->property_id,
+                'source_type' => UtilityReading::class,
+                'source_id' => $reading->id,
+                'severity' => 'info',
+                'title' => 'Leitura Credelec registada',
+                'message' => trim(collect([
+                    $reading->meter_number ? 'Contador: '.$reading->meter_number : null,
+                    $reading->balance_kwh !== null ? 'Saldo kWh: '.$reading->balance_kwh : null,
+                    $reading->balance_amount !== null ? 'Saldo MZN: '.$reading->balance_amount : null,
+                    $reading->staffMember?->name ? 'Registado por: '.$reading->staffMember->name : null,
+                ])->filter()->implode("\n")),
+                'status' => 'open',
+            ]);
+        });
     }
 
     public function property(): BelongsTo

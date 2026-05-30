@@ -24,15 +24,15 @@ class GuestResource extends Resource
 
     protected static ?int $navigationSort = 2;
 
-    protected static ?string $modelLabel = 'Hospede';
+    protected static ?string $modelLabel = 'Hóspede';
 
-    protected static ?string $pluralModelLabel = 'Hospedes';
+    protected static ?string $pluralModelLabel = 'Hóspedes';
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                    Forms\Components\Section::make('Dados do hospede')
+                    Forms\Components\Section::make('Dados do hóspede')
                     ->columns(2)
                     ->schema([
                         Forms\Components\Hidden::make('property_id')
@@ -61,14 +61,14 @@ class GuestResource extends Resource
                             ->options([
                                 'bi' => 'BI',
                                 'passport' => 'Passaporte',
-                                'driver_license' => 'Carta de conducao',
+                                'driver_license' => 'Carta de condução',
                                 'other' => 'Outro',
                             ]),
                         Forms\Components\TextInput::make('document_number')
-                            ->label('Numero do documento')
+                            ->label('Número do documento')
                             ->maxLength(255),
                         Forms\Components\TextInput::make('country')
-                            ->label('Pais')
+                            ->label('País')
                             ->default('Mozambique')
                             ->required()
                             ->maxLength(255),
@@ -84,7 +84,7 @@ class GuestResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('full_name')
-                    ->label('Hospede')
+                    ->label('Hóspede')
                     ->searchable(['first_name', 'last_name'])
                     ->sortable(['first_name', 'last_name']),
                 Tables\Columns\TextColumn::make('phone')
@@ -98,7 +98,7 @@ class GuestResource extends Resource
                     ->searchable()
                     ->toggleable(),
                 Tables\Columns\TextColumn::make('country')
-                    ->label('Pais')
+                    ->label('País')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('reservations_count')
                     ->label('Reservas')

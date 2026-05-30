@@ -56,7 +56,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        if (config('app.locale') === 'pt') {
+        if (in_array(config('app.locale'), ['pt', 'pt_PT'], true)) {
             App::setLocale('pt_PT');
         }
 

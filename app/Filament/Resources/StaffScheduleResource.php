@@ -50,7 +50,7 @@ class StaffScheduleResource extends Resource
                     Forms\Components\Hidden::make('property_id')
                         ->default(fn (): ?int => TenantContext::propertyId()),
                     Forms\Components\DatePicker::make('schedule_month')
-                        ->label('Mes da escala')
+                        ->label('Mês da escala')
                         ->default(now()->startOfMonth())
                         ->required(),
                     Forms\Components\DatePicker::make('shift_date')
@@ -61,12 +61,12 @@ class StaffScheduleResource extends Resource
                         ->label('Entrada')
                         ->seconds(false),
                     Forms\Components\TimePicker::make('ends_at')
-                        ->label('Saida')
+                        ->label('Saída')
                         ->seconds(false),
                     Forms\Components\Select::make('shift_type')
                         ->label('Turno')
                         ->options([
-                            'morning' => 'Manha',
+                            'morning' => 'Manhã',
                             'afternoon' => 'Tarde',
                             'night' => 'Noite',
                             'normal' => 'Normal',
@@ -93,12 +93,12 @@ class StaffScheduleResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('schedule_month')->label('Mes')->date('m/Y')->sortable(),
+                Tables\Columns\TextColumn::make('schedule_month')->label('Mês')->date('m/Y')->sortable(),
                 Tables\Columns\TextColumn::make('shift_date')->label('Dia')->date()->sortable(),
                 Tables\Columns\TextColumn::make('staffMember.name')->label('Colaborador')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('shift_type')->label('Turno')->badge(),
                 Tables\Columns\TextColumn::make('starts_at')->label('Entrada'),
-                Tables\Columns\TextColumn::make('ends_at')->label('Saida'),
+                Tables\Columns\TextColumn::make('ends_at')->label('Saída'),
                 Tables\Columns\TextColumn::make('status')->label('Estado')->badge(),
             ])
             ->filters([

@@ -80,7 +80,7 @@ class ExpenseResource extends Resource
                     Forms\Components\TextInput::make('amount')->label('Valor')->numeric()->prefix('MZN')->required(),
                     Forms\Components\DatePicker::make('expense_date')->label('Data')->default(now())->required(),
                     Forms\Components\Select::make('payment_method')
-                        ->label('Metodo de pagamento')
+                        ->label('Método de pagamento')
                         ->options([
                             'cash' => 'Dinheiro',
                             'mpesa' => 'M-Pesa',
@@ -112,7 +112,7 @@ class ExpenseResource extends Resource
                 Tables\Columns\TextColumn::make('category')->label('Categoria')->badge(),
                 Tables\Columns\TextColumn::make('supplier')->label('Fornecedor')->searchable(),
                 Tables\Columns\TextColumn::make('amount')->label('Valor')->formatStateUsing(fn ($state): string => number_format((float) $state, 2).' MZN')->sortable(),
-                Tables\Columns\TextColumn::make('payment_method')->label('Metodo')->badge(),
+                Tables\Columns\TextColumn::make('payment_method')->label('Método')->badge(),
                 Tables\Columns\TextColumn::make('status')->label('Estado')->badge(),
             ])
             ->filters([

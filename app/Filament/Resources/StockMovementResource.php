@@ -54,7 +54,7 @@ class StockMovementResource extends Resource
                         ->label('Tipo')
                         ->options([
                             'in' => 'Entrada',
-                            'out' => 'Saida',
+                            'out' => 'Saída',
                             'adjustment' => 'Ajuste',
                         ])
                         ->required(),

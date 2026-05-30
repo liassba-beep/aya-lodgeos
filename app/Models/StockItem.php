@@ -36,6 +36,36 @@ class StockItem extends Model
         static::saving(function (StockItem $stockItem) {
             $stockItem->property_id = $stockItem->property_id ?: TenantContext::propertyId();
         });
+
+        static::saved(function (StockItem $stockItem) {
+            if ((float) $stockItem->minimum_quantity <= 0) {
+                return;
+            }
+
+            if ((float) $stockItem->quantity_on_hand > (float) $stockItem->minimum_quantity) {
+                return;
+            }
+
+            OperationalAlert::updateOrCreate(
+                [
+                    'property_id' => $stockItem->property_id,
+                    'source_type' => StockItem::class,
+                    'source_id' => $stockItem->id,
+                    'status' => 'open',
+                ],
+                [
+                    'severity' => 'warning',
+                    'title' => 'Stock baixo: '.$stockItem->name,
+                    'message' => sprintf(
+                        'Quantidade actual: %s %s. Mínimo definido: %s %s.',
+                        $stockItem->quantity_on_hand,
+                        $stockItem->unit,
+                        $stockItem->minimum_quantity,
+                        $stockItem->unit,
+                    ),
+                ],
+            );
+        });
     }
 
     public function property(): BelongsTo

@@ -38,12 +38,12 @@ class StaffMemberResource extends Resource
                         ->default(fn (): ?int => TenantContext::propertyId()),
                     Forms\Components\TextInput::make('name')->label('Nome')->required()->maxLength(255),
                     Forms\Components\Select::make('role')
-                        ->label('Funcao')
+                        ->label('Função')
                         ->options([
                             'manager' => 'Gerente',
-                            'reception' => 'Recepcao',
+                            'reception' => 'Recepção',
                             'housekeeping' => 'Camareira',
-                            'maintenance' => 'Manutencao',
+                            'maintenance' => 'Manutenção',
                             'security' => 'Guarda',
                             'kitchen' => 'Cozinha',
                             'staff' => 'Outro',
@@ -56,20 +56,20 @@ class StaffMemberResource extends Resource
                         ->options([
                             'full_time' => 'Tempo inteiro',
                             'part_time' => 'Tempo parcial',
-                            'temporary' => 'Temporario',
+                            'temporary' => 'Temporário',
                             'service' => 'Prestador',
                         ]),
-                    Forms\Components\DatePicker::make('hired_at')->label('Data de admissao'),
+                    Forms\Components\DatePicker::make('hired_at')->label('Data de admissão'),
                     Forms\Components\Select::make('status')
                         ->label('Estado')
                         ->options([
-                            'active' => 'Ativo',
-                            'inactive' => 'Inativo',
+                            'active' => 'Activo',
+                            'inactive' => 'Inactivo',
                             'on_leave' => 'Ausente',
                         ])
                         ->required(),
                     Forms\Components\Toggle::make('mobile_access_enabled')
-                        ->label('Acesso mobile ativo')
+                        ->label('Acesso mobile activo')
                         ->default(false),
                     Forms\Components\TextInput::make('mobile_pin')
                         ->label('PIN mobile')
@@ -81,7 +81,7 @@ class StaffMemberResource extends Resource
                         ->dehydrated(fn (?string $state): bool => filled($state))
                         ->helperText('O trabalhador entra com telefone e este PIN.'),
                     Forms\Components\FileUpload::make('checkin_photo_path')
-                        ->label('Foto do ultimo check-in')
+                        ->label('Foto do último check-in')
                         ->image()
                         ->directory('staff-checkins')
                         ->visibility('public')
@@ -99,7 +99,7 @@ class StaffMemberResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')->label('Nome')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('role')->label('Funcao')->badge(),
+                Tables\Columns\TextColumn::make('role')->label('Função')->badge(),
                 Tables\Columns\TextColumn::make('phone')->label('Telefone')->searchable(),
                 Tables\Columns\TextColumn::make('property.name')->label('Alojamento')->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\IconColumn::make('mobile_access_enabled')->label('Mobile')->boolean(),

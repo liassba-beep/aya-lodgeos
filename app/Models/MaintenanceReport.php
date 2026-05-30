@@ -28,6 +28,22 @@ class MaintenanceReport extends Model
         static::saving(function (MaintenanceReport $report) {
             $report->property_id = $report->property_id ?: TenantContext::propertyId();
         });
+
+        static::created(function (MaintenanceReport $report) {
+            OperationalAlert::create([
+                'property_id' => $report->property_id,
+                'source_type' => MaintenanceReport::class,
+                'source_id' => $report->id,
+                'severity' => $report->priority === 'critical' ? 'critical' : 'warning',
+                'title' => 'Avaria reportada: '.$report->title,
+                'message' => trim(collect([
+                    $report->room?->name ? 'Quarto: '.$report->room->name : null,
+                    $report->staffMember?->name ? 'Reportado por: '.$report->staffMember->name : null,
+                    $report->notes,
+                ])->filter()->implode("\n")),
+                'status' => 'open',
+            ]);
+        });
     }
 
     public function property(): BelongsTo
