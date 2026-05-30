@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\HasResourcePermissions;
 use App\Filament\Resources\GuestResource\Pages;
 use App\Models\Guest;
 use App\Support\TenantContext;
@@ -13,6 +14,8 @@ use Filament\Tables\Table;
 
 class GuestResource extends Resource
 {
+    use HasResourcePermissions;
+
     protected static ?string $model = Guest::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-user-group';

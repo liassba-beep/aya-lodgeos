@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\HasResourcePermissions;
 use App\Filament\Resources\ExpenseResource\Pages;
 use App\Models\Expense;
 use App\Models\StockItem;
@@ -16,6 +17,8 @@ use Filament\Tables\Table;
 
 class ExpenseResource extends Resource
 {
+    use HasResourcePermissions;
+
     protected static ?string $model = Expense::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-receipt-percent';

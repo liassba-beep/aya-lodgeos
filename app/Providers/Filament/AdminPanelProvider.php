@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\OwnerDashboard;
+use App\Filament\Pages\ReservationCalendar;
 use App\Filament\Widgets\OwnerOverview;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -38,10 +39,12 @@ class AdminPanelProvider extends PanelProvider
                 NavigationGroup::make()->label('Operacional'),
                 NavigationGroup::make()->label('Colaboradores'),
                 NavigationGroup::make()->label('Stock'),
+                NavigationGroup::make()->label('SaaS'),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->pages([
                 OwnerDashboard::class,
+                ReservationCalendar::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([

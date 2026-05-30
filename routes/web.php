@@ -3,13 +3,16 @@
 use App\Http\Controllers\ProfileController;
 use App\Models\DailyChecklist;
 use App\Models\Expense;
+use App\Models\Invoice;
 use App\Models\OperationalTask;
 use App\Models\Payment;
 use App\Models\Reservation;
 use App\Models\Room;
 use App\Models\StockItem;
+use App\Support\SimplePdf;
 use App\Support\TenantContext;
 use Illuminate\Foundation\Application;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -74,10 +77,12 @@ Route::get('/mobile', function () {
         ->limit(6)
         ->get()
         ->map(fn (DailyChecklist $checklist): array => [
+            'id' => $checklist->id,
             'title' => $checklist->title,
             'area' => $checklist->area,
             'staff' => $checklist->staffMember?->name,
             'status' => $checklist->status,
+            'has_evidence' => filled($checklist->evidence_photo_path) || filled($checklist->evidence_qr_code),
         ]);
 
     $lowStock = StockItem::query()
@@ -134,6 +139,73 @@ Route::get('/mobile', function () {
 })->middleware(['auth', 'verified'])->name('mobile');
 
 Route::middleware('auth')->group(function () {
+    Route::get('/invoices/{invoice}/pdf', function (Invoice $invoice) {
+        $propertyId = TenantContext::propertyId();
+
+        abort_unless(! $propertyId || (int) $invoice->property_id === $propertyId, 403);
+
+        $invoice->load(['property', 'reservation.guest', 'reservation.room']);
+
+        $reservation = $invoice->reservation;
+        $paidAmount = (float) $invoice->paid_amount;
+        $balanceAmount = (float) $invoice->balance_amount;
+
+        $pdf = SimplePdf::make([
+            'AYA LodgeOS',
+            'Fatura: '.$invoice->number,
+            'Alojamento: '.($invoice->property?->name ?? '-'),
+            'Data de emissao: '.($invoice->issued_at?->format('d/m/Y') ?? '-'),
+            'Vencimento: '.($invoice->due_at?->format('d/m/Y') ?? '-'),
+            'Reserva: '.($reservation?->code ?? '-'),
+            'Hospede: '.($reservation?->guest?->full_name ?? '-'),
+            'Quarto: '.($reservation?->room?->name ?? '-'),
+            'Subtotal: '.number_format((float) $invoice->subtotal, 2).' MZN',
+            'Desconto: '.number_format((float) $invoice->discount_amount, 2).' MZN',
+            'Imposto: '.number_format((float) $invoice->tax_amount, 2).' MZN',
+            'Total: '.number_format((float) $invoice->total_amount, 2).' MZN',
+            'Pago: '.number_format($paidAmount, 2).' MZN',
+            'Saldo: '.number_format($balanceAmount, 2).' MZN',
+            'Estado: '.$invoice->status,
+            'Notas: '.($invoice->notes ?: '-'),
+        ]);
+
+        $filename = str($invoice->number)->replaceMatches('/[^A-Za-z0-9_-]/', '-')->lower();
+
+        return response($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="fatura-'.$filename.'.pdf"',
+        ]);
+    })->name('invoices.pdf');
+
+    Route::post('/mobile/checklists/{dailyChecklist}/complete', function (Request $request, DailyChecklist $dailyChecklist) {
+        $propertyId = TenantContext::propertyId();
+
+        abort_unless(! $propertyId || (int) $dailyChecklist->property_id === $propertyId, 403);
+
+        $validated = $request->validate([
+            'photo' => ['nullable', 'image', 'max:5120'],
+            'latitude' => ['nullable', 'numeric'],
+            'longitude' => ['nullable', 'numeric'],
+            'qr_code' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        if ($request->hasFile('photo')) {
+            $validated['evidence_photo_path'] = $request->file('photo')->store('checklist-evidence', 'public');
+        }
+
+        $dailyChecklist->forceFill([
+            'status' => 'done',
+            'completed_at' => now(),
+            'completed_by_user_id' => $request->user()->id,
+            'evidence_photo_path' => $validated['evidence_photo_path'] ?? $dailyChecklist->evidence_photo_path,
+            'evidence_latitude' => $validated['latitude'] ?? null,
+            'evidence_longitude' => $validated['longitude'] ?? null,
+            'evidence_qr_code' => $validated['qr_code'] ?? null,
+        ])->save();
+
+        return back()->with('status', 'Checklist concluida com prova.');
+    })->name('mobile.checklists.complete');
+
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

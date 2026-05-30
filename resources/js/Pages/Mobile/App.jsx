@@ -1,4 +1,4 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 
 const statusLabels = {
     pending: 'Pendente',
@@ -57,6 +57,90 @@ function Shortcut({ href, label, code }) {
             </span>
             <span className="text-sm font-medium text-zinc-100">{label}</span>
         </Link>
+    );
+}
+
+function ProofForm({ item }) {
+    const { data, setData, post, processing, errors, reset } = useForm({
+        photo: null,
+        latitude: '',
+        longitude: '',
+        qr_code: '',
+    });
+
+    const submit = (event) => {
+        event.preventDefault();
+
+        post(`/mobile/checklists/${item.id}/complete`, {
+            forceFormData: true,
+            preserveScroll: true,
+            onSuccess: () => reset('photo', 'qr_code'),
+        });
+    };
+
+    const captureLocation = () => {
+        if (!navigator.geolocation) {
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition((position) => {
+            setData({
+                ...data,
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+            });
+        });
+    };
+
+    return (
+        <form onSubmit={submit} className="mt-4 space-y-3">
+            <div>
+                <label className="text-xs text-zinc-400">Fotografia</label>
+                <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={(event) =>
+                        setData('photo', event.target.files?.[0] || null)
+                    }
+                    className="mt-1 block w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs text-zinc-200 file:mr-3 file:rounded file:border-0 file:bg-amber-400 file:px-2 file:py-1 file:text-xs file:font-semibold file:text-zinc-950"
+                />
+                {errors.photo && (
+                    <p className="mt-1 text-xs text-red-300">{errors.photo}</p>
+                )}
+            </div>
+
+            <div className="grid grid-cols-[1fr_auto] gap-2">
+                <input
+                    value={data.qr_code}
+                    onChange={(event) => setData('qr_code', event.target.value)}
+                    placeholder="Codigo QR ou referencia"
+                    className="rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs text-zinc-200"
+                />
+                <button
+                    type="button"
+                    onClick={captureLocation}
+                    className="rounded-md border border-zinc-700 px-3 py-2 text-xs font-semibold text-zinc-200"
+                >
+                    GPS
+                </button>
+            </div>
+
+            {(data.latitude || data.longitude) && (
+                <p className="text-xs text-emerald-200">
+                    Localizacao captada: {Number(data.latitude).toFixed(5)},{' '}
+                    {Number(data.longitude).toFixed(5)}
+                </p>
+            )}
+
+            <button
+                type="submit"
+                disabled={processing}
+                className="w-full rounded-md bg-amber-400 px-3 py-2 text-xs font-bold text-zinc-950 disabled:opacity-60"
+            >
+                {processing ? 'A guardar...' : 'Concluir com prova'}
+            </button>
+        </form>
     );
 }
 
@@ -276,7 +360,7 @@ export default function MobileApp({
                                 <div className="space-y-3">
                                     {checklists.map((item) => (
                                         <article
-                                            key={`${item.area}-${item.title}`}
+                                            key={`${item.id}-${item.area}-${item.title}`}
                                             className="rounded-lg border border-zinc-800 bg-zinc-900 p-4"
                                         >
                                             <div className="flex items-start justify-between gap-3">
@@ -292,6 +376,15 @@ export default function MobileApp({
                                                 </div>
                                                 <StatusBadge value={item.status} />
                                             </div>
+                                            {item.status === 'done' ? (
+                                                <p className="mt-3 text-xs text-emerald-200">
+                                                    {item.has_evidence
+                                                        ? 'Prova registada.'
+                                                        : 'Concluido.'}
+                                                </p>
+                                            ) : (
+                                                <ProofForm item={item} />
+                                            )}
                                         </article>
                                     ))}
                                 </div>

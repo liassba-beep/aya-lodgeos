@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\HasResourcePermissions;
 use App\Filament\Resources\StaffScheduleResource\Pages;
 use App\Models\StaffMember;
 use App\Models\StaffSchedule;
@@ -15,6 +16,8 @@ use Filament\Tables\Table;
 
 class StaffScheduleResource extends Resource
 {
+    use HasResourcePermissions;
+
     protected static ?string $model = StaffSchedule::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-calendar';

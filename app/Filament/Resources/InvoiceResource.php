@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\HasResourcePermissions;
 use App\Filament\Resources\InvoiceResource\Pages;
 use App\Models\Invoice;
 use App\Models\Reservation;
@@ -16,6 +17,8 @@ use Filament\Tables\Table;
 
 class InvoiceResource extends Resource
 {
+    use HasResourcePermissions;
+
     protected static ?string $model = Invoice::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
@@ -95,7 +98,14 @@ class InvoiceResource extends Resource
                 Tables\Columns\TextColumn::make('balance_amount')->label('Saldo')->formatStateUsing(fn ($state): string => number_format((float) $state, 2).' MZN'),
                 Tables\Columns\TextColumn::make('status')->label('Estado')->badge(),
             ])
-            ->actions([Tables\Actions\EditAction::make()->label('Editar')])
+            ->actions([
+                Tables\Actions\Action::make('pdf')
+                    ->label('PDF')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->url(fn (Invoice $record): string => route('invoices.pdf', $record))
+                    ->openUrlInNewTab(),
+                Tables\Actions\EditAction::make()->label('Editar'),
+            ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([Tables\Actions\DeleteBulkAction::make()]),
             ]);

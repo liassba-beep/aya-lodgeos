@@ -19,7 +19,12 @@ class DailyChecklist extends Model
         'title',
         'status',
         'completed_at',
+        'completed_by_user_id',
         'evidence_note',
+        'evidence_photo_path',
+        'evidence_latitude',
+        'evidence_longitude',
+        'evidence_qr_code',
         'notes',
     ];
 
@@ -43,5 +48,10 @@ class DailyChecklist extends Model
     public function staffMember(): BelongsTo
     {
         return $this->belongsTo(StaffMember::class);
+    }
+
+    public function completedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'completed_by_user_id');
     }
 }

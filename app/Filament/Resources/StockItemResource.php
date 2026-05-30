@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\HasResourcePermissions;
 use App\Filament\Resources\StockItemResource\Pages;
 use App\Models\StockItem;
 use App\Support\TenantContext;
@@ -13,6 +14,8 @@ use Filament\Tables\Table;
 
 class StockItemResource extends Resource
 {
+    use HasResourcePermissions;
+
     protected static ?string $model = StockItem::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-archive-box';

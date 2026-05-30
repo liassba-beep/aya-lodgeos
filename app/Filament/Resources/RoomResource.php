@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\HasResourcePermissions;
 use App\Filament\Resources\RoomResource\Pages;
 use App\Models\Room;
 use App\Support\TenantContext;
@@ -13,6 +14,8 @@ use Filament\Tables\Table;
 
 class RoomResource extends Resource
 {
+    use HasResourcePermissions;
+
     protected static ?string $model = Room::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-home-modern';

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\HasResourcePermissions;
 use App\Filament\Resources\OperationalTaskResource\Pages;
 use App\Models\OperationalTask;
 use App\Support\TenantContext;
@@ -13,6 +14,8 @@ use Filament\Tables\Table;
 
 class OperationalTaskResource extends Resource
 {
+    use HasResourcePermissions;
+
     protected static ?string $model = OperationalTask::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-check';

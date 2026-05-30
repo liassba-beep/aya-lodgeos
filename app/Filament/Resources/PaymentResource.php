@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\HasResourcePermissions;
 use App\Filament\Resources\PaymentResource\Pages;
 use App\Models\Payment;
 use App\Models\Reservation;
@@ -15,6 +16,8 @@ use Filament\Tables\Table;
 
 class PaymentResource extends Resource
 {
+    use HasResourcePermissions;
+
     protected static ?string $model = Payment::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';

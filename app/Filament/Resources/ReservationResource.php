@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\HasResourcePermissions;
 use App\Filament\Resources\ReservationResource\Pages;
 use App\Models\Guest;
 use App\Models\Reservation;
@@ -18,6 +19,8 @@ use Filament\Tables\Table;
 
 class ReservationResource extends Resource
 {
+    use HasResourcePermissions;
+
     protected static ?string $model = Reservation::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-calendar-days';

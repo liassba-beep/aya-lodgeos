@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\HasResourcePermissions;
 use App\Filament\Resources\StockMovementResource\Pages;
 use App\Models\StockItem;
 use App\Models\StockMovement;
@@ -15,6 +16,8 @@ use Filament\Tables\Table;
 
 class StockMovementResource extends Resource
 {
+    use HasResourcePermissions;
+
     protected static ?string $model = StockMovement::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-arrow-path';

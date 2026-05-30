@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\HasResourcePermissions;
 use App\Filament\Resources\DailyChecklistResource\Pages;
 use App\Models\DailyChecklist;
 use App\Support\TenantContext;
@@ -13,6 +14,8 @@ use Filament\Tables\Table;
 
 class DailyChecklistResource extends Resource
 {
+    use HasResourcePermissions;
+
     protected static ?string $model = DailyChecklist::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
@@ -57,6 +60,17 @@ class DailyChecklistResource extends Resource
                         ->required(),
                     Forms\Components\DateTimePicker::make('completed_at')->label('Concluido em')->seconds(false),
                     Forms\Components\Textarea::make('evidence_note')->label('Evidencia')->columnSpanFull(),
+                    Forms\Components\FileUpload::make('evidence_photo_path')
+                        ->label('Fotografia de prova')
+                        ->image()
+                        ->directory('checklist-evidence')
+                        ->visibility('public')
+                        ->downloadable()
+                        ->openable()
+                        ->columnSpanFull(),
+                    Forms\Components\TextInput::make('evidence_latitude')->label('Latitude')->numeric(),
+                    Forms\Components\TextInput::make('evidence_longitude')->label('Longitude')->numeric(),
+                    Forms\Components\TextInput::make('evidence_qr_code')->label('Codigo QR')->maxLength(255),
                     Forms\Components\Textarea::make('notes')->label('Notas')->columnSpanFull(),
                 ]),
         ]);
@@ -72,6 +86,9 @@ class DailyChecklistResource extends Resource
                 Tables\Columns\TextColumn::make('staffMember.name')->label('Responsavel')->toggleable(),
                 Tables\Columns\TextColumn::make('status')->label('Estado')->badge(),
                 Tables\Columns\TextColumn::make('completed_at')->label('Concluido')->dateTime()->toggleable(),
+                Tables\Columns\ImageColumn::make('evidence_photo_path')->label('Prova')->disk('public')->toggleable(),
+                Tables\Columns\TextColumn::make('completedBy.name')->label('Concluido por')->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('evidence_qr_code')->label('QR')->toggleable(isToggledHiddenByDefault: true),
             ])
             ->actions([Tables\Actions\EditAction::make()->label('Editar')])
             ->bulkActions([

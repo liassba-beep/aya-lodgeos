@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\HasResourcePermissions;
 use App\Filament\Resources\StaffMemberResource\Pages;
 use App\Models\StaffMember;
 use App\Support\TenantContext;
@@ -13,6 +14,8 @@ use Filament\Tables\Table;
 
 class StaffMemberResource extends Resource
 {
+    use HasResourcePermissions;
+
     protected static ?string $model = StaffMember::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-identification';

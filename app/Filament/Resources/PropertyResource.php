@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\HasResourcePermissions;
 use App\Filament\Resources\PropertyResource\Pages;
 use App\Models\Property;
 use App\Support\TenantContext;
@@ -13,6 +14,8 @@ use Filament\Tables\Table;
 
 class PropertyResource extends Resource
 {
+    use HasResourcePermissions;
+
     protected static ?string $model = Property::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-building-office-2';
