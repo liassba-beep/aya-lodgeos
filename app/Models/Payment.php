@@ -50,4 +50,9 @@ class Payment extends Model
     {
         return $this->belongsTo(Reservation::class);
     }
+
+    public function receipt(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(Receipt::class);
+    }
 }

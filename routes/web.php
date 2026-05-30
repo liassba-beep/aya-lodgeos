@@ -13,6 +13,10 @@ use App\Models\Room;
 use App\Models\StaffMember;
 use App\Models\StockItem;
 use App\Models\UtilityReading;
+use App\Models\OwnerDailyReport;
+use App\Models\OperationalAlert;
+use App\Models\Receipt;
+use App\Support\ReservationAvailability;
 use App\Support\SimplePdf;
 use App\Support\TenantContext;
 use Illuminate\Foundation\Application;
@@ -469,6 +473,126 @@ Route::middleware('auth')->group(function () {
             'Content-Disposition' => 'inline; filename="fatura-'.$filename.'.pdf"',
         ]);
     })->name('invoices.pdf');
+
+    Route::get('/admin/exports/invoices.csv', function () {
+        $propertyId = TenantContext::propertyId();
+        $rows = Invoice::query()
+            ->with('reservation.guest')
+            ->when($propertyId, fn ($query) => $query->where('property_id', $propertyId))
+            ->orderByDesc('issued_at')
+            ->get();
+
+        $csv = "Numero,Data,Cliente,Subtotal,Desconto,IVA,Total,Estado\n";
+
+        foreach ($rows as $invoice) {
+            $csv .= implode(',', array_map(fn ($value) => '"'.str_replace('"', '""', (string) $value).'"', [
+                $invoice->number,
+                $invoice->issued_at?->format('Y-m-d'),
+                $invoice->reservation?->guest?->full_name,
+                $invoice->subtotal,
+                $invoice->discount_amount,
+                $invoice->tax_amount,
+                $invoice->total_amount,
+                $invoice->status,
+            ]))."\n";
+        }
+
+        return response($csv, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="faturas.csv"',
+        ]);
+    })->name('exports.invoices');
+
+    Route::get('/admin/exports/reservations.csv', function () {
+        $propertyId = TenantContext::propertyId();
+        $rows = Reservation::query()
+            ->with(['guest', 'room'])
+            ->when($propertyId, fn ($query) => $query->where('property_id', $propertyId))
+            ->orderByDesc('check_in')
+            ->get();
+
+        $csv = "Codigo,Hospede,Quarto,Entrada,Saida,Total,Estado\n";
+
+        foreach ($rows as $reservation) {
+            $csv .= implode(',', array_map(fn ($value) => '"'.str_replace('"', '""', (string) $value).'"', [
+                $reservation->code,
+                $reservation->guest?->full_name,
+                $reservation->room?->name,
+                $reservation->check_in?->format('Y-m-d'),
+                $reservation->check_out?->format('Y-m-d'),
+                $reservation->total_amount,
+                $reservation->status,
+            ]))."\n";
+        }
+
+        return response($csv, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="reservas.csv"',
+        ]);
+    })->name('exports.reservations');
+
+    Route::post('/admin/reservations/{reservation}/move', function (Request $request, Reservation $reservation) {
+        $propertyId = TenantContext::propertyId();
+        abort_unless(! $propertyId || (int) $reservation->property_id === $propertyId, 403);
+
+        $validated = $request->validate([
+            'room_id' => ['required', 'exists:rooms,id'],
+            'check_in' => ['required', 'date'],
+        ]);
+
+        $nights = max(1, $reservation->check_in?->diffInDays($reservation->check_out) ?? 1);
+        $reservation->room_id = (int) $validated['room_id'];
+        $reservation->check_in = Carbon::parse($validated['check_in']);
+        $reservation->check_out = Carbon::parse($validated['check_in'])->addDays($nights);
+
+        ReservationAvailability::assertAvailable($reservation);
+        $reservation->save();
+
+        return response()->json(['ok' => true]);
+    })->name('reservations.move');
+
+    Route::post('/admin/payments/{payment}/receipt', function (Payment $payment) {
+        $payment->load('reservation');
+        $propertyId = TenantContext::propertyId();
+        abort_unless(! $propertyId || (int) $payment->reservation?->property_id === $propertyId, 403);
+
+        Receipt::firstOrCreate(
+            ['payment_id' => $payment->id],
+            [
+                'reservation_id' => $payment->reservation_id,
+                'property_id' => $payment->reservation?->property_id,
+                'number' => 'REC-'.now()->format('ymd').'-'.$payment->id,
+                'issued_at' => now(),
+                'amount' => $payment->amount,
+                'method' => $payment->method,
+                'status' => 'issued',
+            ],
+        );
+
+        return back();
+    })->name('payments.receipt');
+
+    Route::get('/admin/owner-daily-report/generate', function () {
+        $propertyId = TenantContext::propertyId();
+        $today = Carbon::today();
+
+        OwnerDailyReport::updateOrCreate(
+            ['property_id' => $propertyId, 'report_date' => $today],
+            [
+                'revenue' => Payment::query()->whereHas('reservation', fn ($query) => $query->where('property_id', $propertyId))->where('status', 'paid')->whereDate('paid_at', $today)->sum('amount'),
+                'expenses' => Expense::query()->where('property_id', $propertyId)->whereDate('expense_date', $today)->sum('amount'),
+                'arrivals' => Reservation::query()->where('property_id', $propertyId)->whereDate('check_in', $today)->count(),
+                'departures' => Reservation::query()->where('property_id', $propertyId)->whereDate('check_out', $today)->count(),
+                'occupied_rooms' => Reservation::query()->where('property_id', $propertyId)->whereDate('check_in', '<=', $today)->whereDate('check_out', '>', $today)->distinct('room_id')->count('room_id'),
+                'open_tasks' => OperationalTask::query()->where('property_id', $propertyId)->whereIn('status', ['pending', 'in_progress'])->count(),
+                'open_alerts' => OperationalAlert::query()->where('property_id', $propertyId)->where('status', 'open')->count(),
+                'status' => 'draft',
+                'summary' => 'Relatorio diario gerado automaticamente.',
+            ],
+        );
+
+        return back();
+    })->name('owner-daily-report.generate');
 
     Route::post('/mobile/checklists/{dailyChecklist}/complete', function (Request $request, DailyChecklist $dailyChecklist) {
         $propertyId = TenantContext::propertyId();

@@ -1,0 +1,1 @@
+<?php namespace App\Filament\Resources\DamageChargeResource\Pages; use App\Filament\Resources\DamageChargeResource; use Filament\Resources\Pages\EditRecord; class EditDamageCharge extends EditRecord { protected static string $resource = DamageChargeResource::class; }

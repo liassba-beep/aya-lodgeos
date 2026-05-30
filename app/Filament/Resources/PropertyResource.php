@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Concerns\HasResourcePermissions;
 use App\Filament\Resources\PropertyResource\Pages;
 use App\Models\Property;
+use App\Models\TenantAccount;
 use App\Support\TenantContext;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -39,6 +40,11 @@ class PropertyResource extends Resource
                             ->label('Nome')
                             ->required()
                             ->maxLength(255),
+                        Forms\Components\Select::make('tenant_account_id')
+                            ->label('Tenant SaaS')
+                            ->options(fn (): array => TenantAccount::query()->orderBy('name')->pluck('name', 'id')->all())
+                            ->searchable()
+                            ->preload(),
                         Forms\Components\Select::make('type')
                             ->label('Tipo')
                             ->options([
@@ -98,6 +104,27 @@ class PropertyResource extends Resource
                             ->maxLength(255),
                         Forms\Components\Textarea::make('invoice_footer')
                             ->label('Rodape da fatura')
+                            ->columnSpanFull(),
+                        Forms\Components\Textarea::make('cancellation_policy')
+                            ->label('Politica de cancelamento')
+                            ->columnSpanFull(),
+                        Forms\Components\TextInput::make('deposit_percent')
+                            ->label('Deposito de reserva')
+                            ->suffix('%')
+                            ->numeric()
+                            ->default(50),
+                        Forms\Components\Textarea::make('house_rules')
+                            ->label('Regras da casa')
+                            ->columnSpanFull(),
+                        Forms\Components\TextInput::make('cleaning_interval_days')
+                            ->label('Limpeza a cada X dias')
+                            ->numeric()
+                            ->default(3),
+                        Forms\Components\KeyValue::make('room_inventory_template')
+                            ->label('Inventario modelo do quarto')
+                            ->columnSpanFull(),
+                        Forms\Components\KeyValue::make('meals_and_services')
+                            ->label('Refeicoes e servicos uteis')
                             ->columnSpanFull(),
                         Forms\Components\Textarea::make('notes')
                             ->label('Notas')

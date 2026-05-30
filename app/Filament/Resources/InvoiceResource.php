@@ -107,6 +107,16 @@ class InvoiceResource extends Resource
                     ->icon('heroicon-o-document-arrow-down')
                     ->url(fn (Invoice $record): string => route('invoices.pdf', $record))
                     ->openUrlInNewTab(),
+                Tables\Actions\Action::make('email')
+                    ->label('Email')
+                    ->icon('heroicon-o-envelope')
+                    ->url(fn (Invoice $record): string => 'mailto:'.$record->reservation?->guest?->email.'?subject=Fatura '.$record->number.'&body='.urlencode(route('invoices.pdf', $record)))
+                    ->openUrlInNewTab(),
+                Tables\Actions\Action::make('whatsapp')
+                    ->label('WhatsApp')
+                    ->icon('heroicon-o-chat-bubble-left-right')
+                    ->url(fn (Invoice $record): string => 'https://wa.me/'.preg_replace('/\D+/', '', (string) $record->reservation?->guest?->phone).'?text='.urlencode('Fatura '.$record->number.': '.route('invoices.pdf', $record)))
+                    ->openUrlInNewTab(),
                 Tables\Actions\EditAction::make()->label('Editar'),
             ])
             ->bulkActions([

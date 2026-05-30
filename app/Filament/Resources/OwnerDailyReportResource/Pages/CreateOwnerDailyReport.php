@@ -1,0 +1,1 @@
+<?php namespace App\Filament\Resources\OwnerDailyReportResource\Pages; use App\Filament\Resources\OwnerDailyReportResource; use Filament\Resources\Pages\CreateRecord; class CreateOwnerDailyReport extends CreateRecord { protected static string $resource = OwnerDailyReportResource::class; }

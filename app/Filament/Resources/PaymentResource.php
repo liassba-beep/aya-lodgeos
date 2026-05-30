@@ -168,6 +168,25 @@ class PaymentResource extends Resource
                     ]),
             ])
             ->actions([
+                Tables\Actions\Action::make('receipt')
+                    ->label('Gerar recibo')
+                    ->icon('heroicon-o-receipt-percent')
+                    ->action(function (Payment $record): void {
+                        $record->load('reservation');
+                        \App\Models\Receipt::firstOrCreate(
+                            ['payment_id' => $record->id],
+                            [
+                                'reservation_id' => $record->reservation_id,
+                                'property_id' => $record->reservation?->property_id,
+                                'number' => 'REC-'.now()->format('ymd').'-'.$record->id,
+                                'issued_at' => now(),
+                                'amount' => $record->amount,
+                                'method' => $record->method,
+                                'status' => 'issued',
+                            ],
+                        );
+                    })
+                    ->visible(fn (Payment $record): bool => $record->status === 'paid'),
                 Tables\Actions\EditAction::make()->label('Editar'),
             ])
             ->bulkActions([

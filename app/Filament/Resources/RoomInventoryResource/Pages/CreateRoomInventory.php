@@ -1,0 +1,1 @@
+<?php namespace App\Filament\Resources\RoomInventoryResource\Pages; use App\Filament\Resources\RoomInventoryResource; use Filament\Resources\Pages\CreateRecord; class CreateRoomInventory extends CreateRecord { protected static string $resource = RoomInventoryResource::class; }

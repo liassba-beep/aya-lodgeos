@@ -12,6 +12,12 @@ class ListInvoices extends ListRecords
 
     protected function getHeaderActions(): array
     {
-        return [Actions\CreateAction::make()->label('Novo')];
+        return [
+            Actions\Action::make('export')
+                ->label('Exportar CSV')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->url(route('exports.invoices')),
+            Actions\CreateAction::make()->label('Novo'),
+        ];
     }
 }

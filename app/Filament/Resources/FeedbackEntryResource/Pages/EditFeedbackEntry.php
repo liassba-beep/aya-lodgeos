@@ -1,0 +1,1 @@
+<?php namespace App\Filament\Resources\FeedbackEntryResource\Pages; use App\Filament\Resources\FeedbackEntryResource; use Filament\Resources\Pages\EditRecord; class EditFeedbackEntry extends EditRecord { protected static string $resource = FeedbackEntryResource::class; }

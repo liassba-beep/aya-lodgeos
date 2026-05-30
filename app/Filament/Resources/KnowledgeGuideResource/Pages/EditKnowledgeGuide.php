@@ -1,0 +1,1 @@
+<?php namespace App\Filament\Resources\KnowledgeGuideResource\Pages; use App\Filament\Resources\KnowledgeGuideResource; use Filament\Resources\Pages\EditRecord; class EditKnowledgeGuide extends EditRecord { protected static string $resource = KnowledgeGuideResource::class; }

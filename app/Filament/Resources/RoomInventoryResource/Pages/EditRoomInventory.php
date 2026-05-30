@@ -1,0 +1,1 @@
+<?php namespace App\Filament\Resources\RoomInventoryResource\Pages; use App\Filament\Resources\RoomInventoryResource; use Filament\Resources\Pages\EditRecord; class EditRoomInventory extends EditRecord { protected static string $resource = RoomInventoryResource::class; }

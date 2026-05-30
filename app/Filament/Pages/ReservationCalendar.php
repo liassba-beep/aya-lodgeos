@@ -70,10 +70,14 @@ class ReservationCalendar extends Page
                 'name' => $room->name,
                 'number' => $room->room_number,
                 'reservations' => ($reservations[$room->id] ?? collect())->map(fn (Reservation $reservation): array => [
+                    'id' => $reservation->id,
                     'guest' => $reservation->guest?->full_name,
                     'code' => $reservation->code,
                     'check_in' => $reservation->check_in?->format('Y-m-d'),
                     'check_out' => $reservation->check_out?->format('Y-m-d'),
+                    'nights' => $reservation->check_in && $reservation->check_out
+                        ? max(1, $reservation->check_in->diffInDays($reservation->check_out))
+                        : 1,
                     'status' => $reservation->status,
                 ])->values()->all(),
             ])->all(),

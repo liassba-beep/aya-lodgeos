@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
-use Illuminate\Validation\ValidationException;
+use App\Support\ReservationAvailability;
 
 class Reservation extends Model
 {
@@ -71,11 +71,7 @@ class Reservation extends Model
                 $reservation->discount_amount,
             );
 
-            if ($reservation->hasDateConflict()) {
-                throw ValidationException::withMessages([
-                    'room_id' => 'Este quarto ja tem uma reserva ativa para estas datas.',
-                ]);
-            }
+            ReservationAvailability::assertAvailable($reservation);
         });
     }
 
@@ -140,5 +136,10 @@ class Reservation extends Model
     public function invoices(): HasMany
     {
         return $this->hasMany(Invoice::class);
+    }
+
+    public function damageCharges(): HasMany
+    {
+        return $this->hasMany(DamageCharge::class);
     }
 }

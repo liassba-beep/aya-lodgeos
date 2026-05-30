@@ -49,10 +49,17 @@
                                 @php
                                     $reservation = collect($room['reservations'])->first(fn ($reservation) => $reservation['check_in'] <= $day['key'] && $reservation['check_out'] > $day['key']);
                                 @endphp
-                                <td class="border-l border-gray-100 px-1 py-2 text-center dark:border-gray-800">
+                                <td
+                                    class="border-l border-gray-100 px-1 py-2 text-center dark:border-gray-800"
+                                    data-room-id="{{ $room['id'] }}"
+                                    data-date="{{ $day['key'] }}"
+                                >
                                     @if ($reservation)
                                         <div
-                                            class="rounded-md bg-amber-500 px-2 py-1 text-xs font-semibold text-gray-950"
+                                            class="cursor-move rounded-md bg-amber-500 px-2 py-1 text-xs font-semibold text-gray-950"
+                                            draggable="true"
+                                            data-reservation-id="{{ $reservation['id'] }}"
+                                            data-nights="{{ $reservation['nights'] }}"
                                             title="{{ $reservation['code'] }} - {{ $reservation['guest'] }}"
                                         >
                                             {{ \Illuminate\Support\Str::limit($reservation['guest'] ?: $reservation['code'], 8) }}
@@ -74,4 +81,44 @@
             </table>
         </div>
     </div>
+
+    <script>
+        document.querySelectorAll('[data-reservation-id]').forEach((item) => {
+            item.addEventListener('dragstart', (event) => {
+                event.dataTransfer.setData('reservationId', item.dataset.reservationId);
+                event.dataTransfer.setData('nights', item.dataset.nights);
+            });
+        });
+
+        document.querySelectorAll('[data-room-id][data-date]').forEach((cell) => {
+            cell.addEventListener('dragover', (event) => event.preventDefault());
+            cell.addEventListener('drop', async (event) => {
+                event.preventDefault();
+
+                const reservationId = event.dataTransfer.getData('reservationId');
+
+                if (!reservationId) {
+                    return;
+                }
+
+                const response = await fetch(`/admin/reservations/${reservationId}/move`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    },
+                    body: JSON.stringify({
+                        room_id: cell.dataset.roomId,
+                        check_in: cell.dataset.date,
+                    }),
+                });
+
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    alert('Nao foi possivel mover a reserva. Verifique disponibilidade.');
+                }
+            });
+        });
+    </script>
 </x-filament-panels::page>

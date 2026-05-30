@@ -1,0 +1,1 @@
+<?php namespace App\Filament\Resources\StaffLeaveResource\Pages; use App\Filament\Resources\StaffLeaveResource; use Filament\Resources\Pages\CreateRecord; class CreateStaffLeave extends CreateRecord { protected static string $resource = StaffLeaveResource::class; }
