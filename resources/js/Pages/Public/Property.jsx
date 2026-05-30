@@ -18,11 +18,11 @@ const roomType = {
 export default function Property({ property }) {
     const phone = property.phone || '+258842990406';
     const email = property.email || 'reservas@lodgesos.com';
+    const ownerLoginUrl = 'https://app.lodgesos.com/admin/login';
     const whatsapp = `https://wa.me/${phone.replace(/\D/g, '')}?text=${encodeURIComponent(
         `Olá, gostaria de consultar disponibilidade em ${property.name}.`,
     )}`;
-    const heroImage =
-        'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1800&q=85';
+    const heroImage = '/images/mikaya-hero.jpg';
 
     return (
         <>
@@ -34,7 +34,8 @@ export default function Property({ property }) {
                         alt={`${property.name} em ${property.city || 'Moçambique'}`}
                         className="absolute inset-0 h-full w-full object-cover"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/62 to-black/18" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/88 via-black/58 to-black/22" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/62 via-transparent to-black/20" />
                     <div className="absolute inset-x-0 top-0 z-10 border-b border-white/10 bg-black/30 backdrop-blur">
                         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
                             <a href="#topo" className="text-xl font-semibold tracking-wide">
@@ -53,13 +54,24 @@ export default function Property({ property }) {
                                 <a href="#contactos" className="hover:text-white">
                                     Contactos
                                 </a>
+                                <a href={ownerLoginUrl} className="hover:text-white">
+                                    Área do proprietário
+                                </a>
                             </nav>
-                            <a
-                                href={whatsapp}
-                                className="rounded-full bg-amber-400 px-4 py-2 text-sm font-semibold text-black transition hover:bg-amber-300"
-                            >
-                                Reservar
-                            </a>
+                            <div className="flex items-center gap-2">
+                                <a
+                                    href={ownerLoginUrl}
+                                    className="hidden rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10 sm:inline-flex"
+                                >
+                                    Entrar
+                                </a>
+                                <a
+                                    href={whatsapp}
+                                    className="rounded-full bg-amber-400 px-4 py-2 text-sm font-semibold text-black transition hover:bg-amber-300"
+                                >
+                                    Reservar
+                                </a>
+                            </div>
                         </div>
                     </div>
 
@@ -86,10 +98,16 @@ export default function Property({ property }) {
                                     Consultar disponibilidade
                                 </a>
                                 <a
-                                    href={`mailto:${email}`}
+                                    href="#quartos"
                                     className="rounded-full border border-white/25 px-6 py-3 font-semibold text-white transition hover:bg-white/10"
                                 >
-                                    Enviar email
+                                    Ver quartos
+                                </a>
+                                <a
+                                    href={ownerLoginUrl}
+                                    className="rounded-full border border-white/25 px-6 py-3 font-semibold text-white transition hover:bg-white/10"
+                                >
+                                    Entrar no LodgeOS
                                 </a>
                             </div>
                         </div>
