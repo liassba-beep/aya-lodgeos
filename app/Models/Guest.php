@@ -18,6 +18,7 @@ class Guest extends Model
         'last_name',
         'email',
         'phone',
+        'nuit',
         'document_type',
         'document_number',
         'country',

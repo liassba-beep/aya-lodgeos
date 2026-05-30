@@ -55,6 +55,20 @@ class PropertyResource extends Resource
                                 'inactive' => 'Inativo',
                             ])
                             ->required(),
+                        Forms\Components\FileUpload::make('invoice_logo_path')
+                            ->label('Logotipo para faturas')
+                            ->image()
+                            ->directory('invoice-logos')
+                            ->visibility('public')
+                            ->downloadable()
+                            ->openable()
+                            ->columnSpanFull(),
+                        Forms\Components\TextInput::make('legal_name')
+                            ->label('Nome fiscal da instituicao')
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('nuit')
+                            ->label('NUIT')
+                            ->maxLength(255),
                         Forms\Components\TextInput::make('country')
                             ->label('Pais')
                             ->default('Mozambique')
@@ -74,6 +88,17 @@ class PropertyResource extends Resource
                             ->label('Telefone')
                             ->tel()
                             ->maxLength(255),
+                        Forms\Components\TextInput::make('invoice_phone')
+                            ->label('Contacto na fatura')
+                            ->tel()
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('invoice_email')
+                            ->label('Email na fatura')
+                            ->email()
+                            ->maxLength(255),
+                        Forms\Components\Textarea::make('invoice_footer')
+                            ->label('Rodape da fatura')
+                            ->columnSpanFull(),
                         Forms\Components\Textarea::make('notes')
                             ->label('Notas')
                             ->columnSpanFull(),
@@ -95,6 +120,9 @@ class PropertyResource extends Resource
                 Tables\Columns\TextColumn::make('city')
                     ->label('Cidade')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('nuit')
+                    ->label('NUIT')
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('rooms_count')
                     ->label('Quartos')
                     ->counts('rooms')

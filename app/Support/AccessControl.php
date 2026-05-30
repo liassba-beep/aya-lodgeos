@@ -62,6 +62,9 @@ class AccessControl
                 'staff-schedule' => $view,
                 'stock-item' => $view,
                 'stock-movement' => $view,
+                'maintenance-report' => $view,
+                'utility-reading' => $view,
+                'product-requisition' => $view,
                 'audit-log' => $view,
             ],
             'manager' => [
@@ -78,6 +81,9 @@ class AccessControl
                 'staff-schedule' => $manage,
                 'stock-item' => $manage,
                 'stock-movement' => $manage,
+                'maintenance-report' => $manage,
+                'utility-reading' => $manage,
+                'product-requisition' => $manage,
                 'direct-booking-request' => $manage,
             ],
             'staff' => [
@@ -85,12 +91,16 @@ class AccessControl
                 'daily-checklist' => $execute,
                 'stock-item' => $view,
                 'stock-movement' => ['view', 'create'],
+                'maintenance-report' => ['view', 'create'],
+                'utility-reading' => ['view', 'create'],
+                'product-requisition' => ['view', 'create'],
             ],
             'security' => [
                 'reservation' => $view,
                 'guest' => $view,
                 'operational-task' => $execute,
                 'daily-checklist' => $execute,
+                'maintenance-report' => ['view', 'create'],
             ],
         ];
     }

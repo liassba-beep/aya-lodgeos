@@ -4,16 +4,21 @@ use App\Http\Controllers\ProfileController;
 use App\Models\DailyChecklist;
 use App\Models\Expense;
 use App\Models\Invoice;
+use App\Models\MaintenanceReport;
 use App\Models\OperationalTask;
 use App\Models\Payment;
+use App\Models\ProductRequisition;
 use App\Models\Reservation;
 use App\Models\Room;
+use App\Models\StaffMember;
 use App\Models\StockItem;
+use App\Models\UtilityReading;
 use App\Support\SimplePdf;
 use App\Support\TenantContext;
 use Illuminate\Foundation\Application;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -29,6 +34,283 @@ Route::get('/', function () {
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::get('/trabalhador', fn () => redirect()->route('worker.mobile'));
+
+Route::get('/trabalhador/login', function () {
+    return Inertia::render('Worker/Login');
+})->name('worker.login');
+
+Route::post('/trabalhador/login', function (Request $request) {
+    $validated = $request->validate([
+        'phone' => ['required', 'string'],
+        'pin' => ['required', 'string'],
+    ]);
+
+    $staff = StaffMember::query()
+        ->where('phone', $validated['phone'])
+        ->where('status', 'active')
+        ->where('mobile_access_enabled', true)
+        ->first();
+
+    if (! $staff || ! $staff->mobile_pin_hash || ! Hash::check($validated['pin'], $staff->mobile_pin_hash)) {
+        return back()->withErrors(['phone' => 'Telefone ou PIN invalido.'])->onlyInput('phone');
+    }
+
+    session(['worker_staff_member_id' => $staff->id]);
+    $staff->forceFill(['last_mobile_login_at' => now()])->save();
+
+    return redirect()->route('worker.mobile');
+})->name('worker.login.store');
+
+Route::post('/trabalhador/logout', function () {
+    session()->forget('worker_staff_member_id');
+
+    return redirect()->route('worker.login');
+})->name('worker.logout');
+
+Route::get('/trabalhador/app', function () {
+    $staff = StaffMember::query()->with('property')->find(session('worker_staff_member_id'));
+
+    if (! $staff) {
+        return redirect()->route('worker.login');
+    }
+
+    $today = Carbon::today();
+    $propertyId = $staff->property_id;
+
+    $tasks = OperationalTask::query()
+        ->with('room')
+        ->where('property_id', $propertyId)
+        ->whereIn('status', ['pending', 'in_progress'])
+        ->where(fn ($query) => $query->whereNull('staff_member_id')->orWhere('staff_member_id', $staff->id))
+        ->orderBy('due_date')
+        ->limit(8)
+        ->get()
+        ->map(fn (OperationalTask $task): array => [
+            'id' => $task->id,
+            'title' => $task->title,
+            'type' => $task->type,
+            'room' => $task->room?->name,
+            'priority' => $task->priority,
+            'status' => $task->status,
+            'date' => $task->due_date?->format('d/m/Y'),
+        ]);
+
+    $checklists = DailyChecklist::query()
+        ->where('property_id', $propertyId)
+        ->whereDate('checklist_date', $today)
+        ->where(fn ($query) => $query->whereNull('staff_member_id')->orWhere('staff_member_id', $staff->id))
+        ->orderBy('area')
+        ->limit(8)
+        ->get()
+        ->map(fn (DailyChecklist $checklist): array => [
+            'id' => $checklist->id,
+            'title' => $checklist->title,
+            'area' => $checklist->area,
+            'status' => $checklist->status,
+        ]);
+
+    $reservations = Reservation::query()
+        ->with(['guest', 'room'])
+        ->where('property_id', $propertyId)
+        ->where('status', '!=', 'cancelled')
+        ->whereDate('check_in', '<=', $today)
+        ->whereDate('check_out', '>=', $today)
+        ->orderBy('check_in')
+        ->limit(10)
+        ->get()
+        ->map(fn (Reservation $reservation): array => [
+            'id' => $reservation->id,
+            'code' => $reservation->code,
+            'guest' => $reservation->guest?->full_name,
+            'room' => $reservation->room?->name,
+            'status' => $reservation->status,
+            'check_in' => $reservation->check_in?->format('d/m/Y'),
+            'check_out' => $reservation->check_out?->format('d/m/Y'),
+        ]);
+
+    return Inertia::render('Worker/App', [
+        'staff' => [
+            'name' => $staff->name,
+            'role' => $staff->role,
+            'property' => $staff->property?->name,
+            'checked_in' => filled($staff->checked_in_at) && blank($staff->checked_out_at?->greaterThan($staff->checked_in_at) ? $staff->checked_out_at : null),
+            'checked_in_at' => $staff->checked_in_at?->format('d/m/Y H:i'),
+        ],
+        'tasks' => $tasks,
+        'checklists' => $checklists,
+        'reservations' => $reservations,
+        'stockItems' => StockItem::query()
+            ->where('property_id', $propertyId)
+            ->where('status', 'active')
+            ->orderBy('name')
+            ->limit(40)
+            ->get(['id', 'name', 'unit'])
+            ->map(fn (StockItem $item): array => ['id' => $item->id, 'name' => $item->name, 'unit' => $item->unit]),
+        'rooms' => Room::query()
+            ->where('property_id', $propertyId)
+            ->orderBy('room_number')
+            ->get(['id', 'name', 'room_number'])
+            ->map(fn (Room $room): array => ['id' => $room->id, 'name' => trim(($room->room_number ? $room->room_number.' - ' : '').$room->name)]),
+    ]);
+})->name('worker.mobile');
+
+Route::middleware([])->prefix('trabalhador')->name('worker.')->group(function () {
+    Route::post('/check-in', function (Request $request) {
+        $staff = StaffMember::findOrFail(session('worker_staff_member_id'));
+        $validated = $request->validate(['photo' => ['required', 'image', 'max:5120']]);
+
+        $staff->forceFill([
+            'checkin_photo_path' => $request->file('photo')->store('staff-checkins', 'public'),
+            'checked_in_at' => now(),
+            'checked_out_at' => null,
+        ])->save();
+
+        return back();
+    })->name('check-in');
+
+    Route::post('/check-out', function () {
+        StaffMember::findOrFail(session('worker_staff_member_id'))->forceFill(['checked_out_at' => now()])->save();
+
+        return back();
+    })->name('check-out');
+
+    Route::post('/tarefas/{task}/concluir', function (Request $request, OperationalTask $task) {
+        $staff = StaffMember::findOrFail(session('worker_staff_member_id'));
+        abort_unless((int) $task->property_id === (int) $staff->property_id, 403);
+
+        $validated = $request->validate([
+            'photo' => ['nullable', 'image', 'max:5120'],
+            'qr_code' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $task->forceFill([
+            'status' => 'done',
+            'completed_at' => now(),
+            'completed_by_staff_member_id' => $staff->id,
+            'evidence_photo_path' => $request->hasFile('photo') ? $request->file('photo')->store('task-evidence', 'public') : $task->evidence_photo_path,
+            'evidence_qr_code' => $validated['qr_code'] ?? null,
+        ])->save();
+
+        return back();
+    })->name('tasks.complete');
+
+    Route::post('/checklists/{dailyChecklist}/concluir', function (Request $request, DailyChecklist $dailyChecklist) {
+        $staff = StaffMember::findOrFail(session('worker_staff_member_id'));
+        abort_unless((int) $dailyChecklist->property_id === (int) $staff->property_id, 403);
+
+        $validated = $request->validate([
+            'photo' => ['required', 'image', 'max:5120'],
+            'latitude' => ['nullable', 'numeric'],
+            'longitude' => ['nullable', 'numeric'],
+            'qr_code' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $dailyChecklist->forceFill([
+            'status' => 'done',
+            'completed_at' => now(),
+            'evidence_photo_path' => $request->file('photo')->store('checklist-evidence', 'public'),
+            'evidence_latitude' => $validated['latitude'] ?? null,
+            'evidence_longitude' => $validated['longitude'] ?? null,
+            'evidence_qr_code' => $validated['qr_code'] ?? null,
+        ])->save();
+
+        return back();
+    })->name('checklists.complete');
+
+    Route::post('/avarias', function (Request $request) {
+        $staff = StaffMember::findOrFail(session('worker_staff_member_id'));
+        $validated = $request->validate([
+            'room_id' => ['nullable', 'exists:rooms,id'],
+            'title' => ['required', 'string', 'max:255'],
+            'priority' => ['required', 'string', 'max:30'],
+            'qr_code' => ['nullable', 'string', 'max:255'],
+            'notes' => ['nullable', 'string'],
+            'photo' => ['required', 'image', 'max:5120'],
+        ]);
+        unset($validated['photo']);
+
+        MaintenanceReport::create([
+            ...$validated,
+            'property_id' => $staff->property_id,
+            'staff_member_id' => $staff->id,
+            'photo_path' => $request->file('photo')->store('maintenance-reports', 'public'),
+        ]);
+
+        return back();
+    })->name('reports.store');
+
+    Route::post('/credelec', function (Request $request) {
+        $staff = StaffMember::findOrFail(session('worker_staff_member_id'));
+        $validated = $request->validate([
+            'meter_number' => ['nullable', 'string', 'max:255'],
+            'balance_kwh' => ['nullable', 'numeric'],
+            'balance_amount' => ['nullable', 'numeric'],
+            'qr_code' => ['nullable', 'string', 'max:255'],
+            'notes' => ['nullable', 'string'],
+            'photo' => ['required', 'image', 'max:5120'],
+        ]);
+        unset($validated['photo']);
+
+        UtilityReading::create([
+            ...$validated,
+            'property_id' => $staff->property_id,
+            'staff_member_id' => $staff->id,
+            'reading_date' => now(),
+            'photo_path' => $request->file('photo')->store('utility-readings', 'public'),
+        ]);
+
+        return back();
+    })->name('utility.store');
+
+    Route::post('/requisicoes', function (Request $request) {
+        $staff = StaffMember::findOrFail(session('worker_staff_member_id'));
+        $validated = $request->validate([
+            'stock_item_id' => ['required', 'exists:stock_items,id'],
+            'quantity' => ['required', 'numeric', 'min:0.01'],
+            'notes' => ['nullable', 'string'],
+        ]);
+
+        ProductRequisition::create([
+            ...$validated,
+            'property_id' => $staff->property_id,
+            'staff_member_id' => $staff->id,
+            'needed_at' => now(),
+        ]);
+
+        return back();
+    })->name('requisitions.store');
+
+    Route::post('/reservas/{reservation}/check-in', function (Request $request, Reservation $reservation) {
+        $staff = StaffMember::findOrFail(session('worker_staff_member_id'));
+        abort_unless((int) $reservation->property_id === (int) $staff->property_id, 403);
+
+        $request->validate(['photo' => ['nullable', 'image', 'max:5120']]);
+
+        $reservation->forceFill([
+            'status' => 'checked_in',
+            'mobile_checkin_photo_path' => $request->hasFile('photo') ? $request->file('photo')->store('guest-checkins', 'public') : $reservation->mobile_checkin_photo_path,
+            'mobile_checked_in_by' => $staff->id,
+            'mobile_checked_in_at' => now(),
+        ])->save();
+
+        return back();
+    })->name('reservations.check-in');
+
+    Route::post('/reservas/{reservation}/check-out', function (Reservation $reservation) {
+        $staff = StaffMember::findOrFail(session('worker_staff_member_id'));
+        abort_unless((int) $reservation->property_id === (int) $staff->property_id, 403);
+
+        $reservation->forceFill([
+            'status' => 'checked_out',
+            'mobile_checked_out_by' => $staff->id,
+            'mobile_checked_out_at' => now(),
+        ])->save();
+
+        return back();
+    })->name('reservations.check-out');
+});
 
 Route::get('/mobile', function () {
     $today = Carbon::today();
@@ -150,23 +432,34 @@ Route::middleware('auth')->group(function () {
         $paidAmount = (float) $invoice->paid_amount;
         $balanceAmount = (float) $invoice->balance_amount;
 
-        $pdf = SimplePdf::make([
-            'AYA LodgeOS',
-            'Fatura: '.$invoice->number,
-            'Alojamento: '.($invoice->property?->name ?? '-'),
-            'Data de emissao: '.($invoice->issued_at?->format('d/m/Y') ?? '-'),
-            'Vencimento: '.($invoice->due_at?->format('d/m/Y') ?? '-'),
-            'Reserva: '.($reservation?->code ?? '-'),
-            'Hospede: '.($reservation?->guest?->full_name ?? '-'),
-            'Quarto: '.($reservation?->room?->name ?? '-'),
-            'Subtotal: '.number_format((float) $invoice->subtotal, 2).' MZN',
-            'Desconto: '.number_format((float) $invoice->discount_amount, 2).' MZN',
-            'Imposto: '.number_format((float) $invoice->tax_amount, 2).' MZN',
-            'Total: '.number_format((float) $invoice->total_amount, 2).' MZN',
-            'Pago: '.number_format($paidAmount, 2).' MZN',
-            'Saldo: '.number_format($balanceAmount, 2).' MZN',
-            'Estado: '.$invoice->status,
-            'Notas: '.($invoice->notes ?: '-'),
+        $property = $invoice->property;
+        $guest = $reservation?->guest;
+
+        $pdf = SimplePdf::invoice([
+            'number' => $invoice->number,
+            'issued_at' => $invoice->issued_at?->format('d/m/Y') ?? '-',
+            'due_at' => $invoice->due_at?->format('d/m/Y') ?? '-',
+            'logo_path' => $property?->invoice_logo_path,
+            'issuer_name' => $property?->legal_name ?: ($property?->name ?? 'AYA LodgeOS'),
+            'issuer_nuit' => $property?->nuit ?: '-',
+            'issuer_address' => trim(collect([$property?->address, $property?->city, $property?->country])->filter()->implode(', ')) ?: '-',
+            'issuer_contacts' => trim(collect([$property?->invoice_phone ?: $property?->phone, $property?->invoice_email ?: $property?->email])->filter()->implode(' | ')) ?: '-',
+            'client_name' => $guest?->full_name ?: '-',
+            'client_nuit' => $guest?->nuit ?: '-',
+            'client_contact' => $guest?->phone ?: '-',
+            'reservation_code' => $reservation?->code ?? '-',
+            'room' => $reservation?->room?->name ?? '-',
+            'stay_dates' => trim(($reservation?->check_in?->format('d/m/Y') ?? '-').' a '.($reservation?->check_out?->format('d/m/Y') ?? '-')),
+            'subtotal' => (float) $invoice->subtotal,
+            'discount' => (float) $invoice->discount_amount,
+            'tax_rate' => (float) $invoice->tax_rate,
+            'tax' => (float) $invoice->tax_amount,
+            'total' => (float) $invoice->total_amount,
+            'paid' => $paidAmount,
+            'balance' => $balanceAmount,
+            'status' => $invoice->status,
+            'notes' => $invoice->notes ?: '',
+            'footer' => $property?->invoice_footer ?: 'Obrigado pela preferencia. Valores expressos em Meticais.',
         ]);
 
         $filename = str($invoice->number)->replaceMatches('/[^A-Za-z0-9_-]/', '-')->lower();

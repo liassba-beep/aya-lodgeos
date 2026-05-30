@@ -54,11 +54,13 @@ class InvoiceResource extends Resource
                         ->searchable()
                         ->preload()
                         ->live()
-                        ->afterStateUpdated(function (Set $set, ?string $state): void {
+                        ->afterStateUpdated(function (Set $set, Get $get, ?string $state): void {
                             $reservation = $state ? Reservation::find($state) : null;
+                            $subtotal = (float) ($reservation?->total_amount ?? 0);
+
                             $set('property_id', $reservation?->property_id);
-                            $set('subtotal', $reservation?->total_amount ?? 0);
-                            self::updateTotal($set, 0, $reservation?->total_amount ?? 0, 0);
+                            $set('subtotal', $subtotal);
+                            self::updateTaxAndTotal($set, $get);
                         }),
                     Forms\Components\DatePicker::make('issued_at')->label('Data de emissao')->default(now())->required(),
                     Forms\Components\DatePicker::make('due_at')->label('Vencimento'),
@@ -71,9 +73,10 @@ class InvoiceResource extends Resource
                             'cancelled' => 'Anulada',
                         ])
                         ->required(),
-                    Forms\Components\TextInput::make('subtotal')->label('Subtotal')->numeric()->prefix('MZN')->live(onBlur: true)->afterStateUpdated(fn (Set $set, Get $get): null => self::updateTotal($set, $get('discount_amount'), $get('subtotal'), $get('tax_amount')))->required(),
-                    Forms\Components\TextInput::make('discount_amount')->label('Desconto')->numeric()->prefix('MZN')->default(0)->live(onBlur: true)->afterStateUpdated(fn (Set $set, Get $get): null => self::updateTotal($set, $get('discount_amount'), $get('subtotal'), $get('tax_amount')))->required(),
-                    Forms\Components\TextInput::make('tax_amount')->label('Imposto')->numeric()->prefix('MZN')->default(0)->live(onBlur: true)->afterStateUpdated(fn (Set $set, Get $get): null => self::updateTotal($set, $get('discount_amount'), $get('subtotal'), $get('tax_amount')))->required(),
+                    Forms\Components\TextInput::make('subtotal')->label('Subtotal')->numeric()->prefix('MZN')->live(onBlur: true)->afterStateUpdated(fn (Set $set, Get $get): null => self::updateTaxAndTotal($set, $get))->required(),
+                    Forms\Components\TextInput::make('discount_amount')->label('Desconto')->numeric()->prefix('MZN')->default(0)->live(onBlur: true)->afterStateUpdated(fn (Set $set, Get $get): null => self::updateTaxAndTotal($set, $get))->required(),
+                    Forms\Components\TextInput::make('tax_rate')->label('IVA')->numeric()->suffix('%')->default(16)->live(onBlur: true)->afterStateUpdated(fn (Set $set, Get $get): null => self::updateTaxAndTotal($set, $get))->required(),
+                    Forms\Components\TextInput::make('tax_amount')->label('Valor do IVA')->numeric()->prefix('MZN')->default(0)->live(onBlur: true)->afterStateUpdated(fn (Set $set, Get $get): null => self::updateTotal($set, $get('discount_amount'), $get('subtotal'), $get('tax_amount')))->required(),
                     Forms\Components\TextInput::make('total_amount')->label('Total')->numeric()->prefix('MZN')->readOnly()->dehydrated()->required(),
                     Forms\Components\Placeholder::make('paid_amount')
                         ->label('Pago')
@@ -124,6 +127,16 @@ class InvoiceResource extends Resource
             'create' => Pages\CreateInvoice::route('/create'),
             'edit' => Pages\EditInvoice::route('/{record}/edit'),
         ];
+    }
+
+    private static function updateTaxAndTotal(Set $set, Get $get): null
+    {
+        $taxable = max(0, (float) ($get('subtotal') ?: 0) - (float) ($get('discount_amount') ?: 0));
+        $tax = $taxable * ((float) ($get('tax_rate') ?: 0) / 100);
+
+        $set('tax_amount', round($tax, 2));
+
+        return self::updateTotal($set, $get('discount_amount'), $get('subtotal'), $tax);
     }
 
     private static function updateTotal(Set $set, mixed $discount, mixed $subtotal, mixed $tax): null

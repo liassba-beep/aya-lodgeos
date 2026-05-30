@@ -7,37 +7,26 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class OperationalTask extends Model
+class MaintenanceReport extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'property_id',
         'room_id',
-        'reservation_id',
         'staff_member_id',
-        'type',
         'title',
-        'due_date',
-        'due_time',
         'priority',
         'status',
-        'completed_at',
-        'evidence_photo_path',
-        'evidence_qr_code',
-        'completed_by_staff_member_id',
+        'photo_path',
+        'qr_code',
         'notes',
-    ];
-
-    protected $casts = [
-        'due_date' => 'date',
-        'completed_at' => 'datetime',
     ];
 
     protected static function booted(): void
     {
-        static::saving(function (OperationalTask $task) {
-            $task->property_id = $task->property_id ?: ($task->room?->property_id ?: TenantContext::propertyId());
+        static::saving(function (MaintenanceReport $report) {
+            $report->property_id = $report->property_id ?: TenantContext::propertyId();
         });
     }
 
@@ -51,18 +40,8 @@ class OperationalTask extends Model
         return $this->belongsTo(Room::class);
     }
 
-    public function reservation(): BelongsTo
-    {
-        return $this->belongsTo(Reservation::class);
-    }
-
     public function staffMember(): BelongsTo
     {
         return $this->belongsTo(StaffMember::class);
-    }
-
-    public function completedByStaffMember(): BelongsTo
-    {
-        return $this->belongsTo(StaffMember::class, 'completed_by_staff_member_id');
     }
 }

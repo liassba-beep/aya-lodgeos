@@ -30,6 +30,11 @@ class Reservation extends Model
         'status',
         'source',
         'notes',
+        'mobile_checkin_photo_path',
+        'mobile_checked_in_by',
+        'mobile_checked_out_by',
+        'mobile_checked_in_at',
+        'mobile_checked_out_at',
     ];
 
     protected $casts = [
@@ -39,6 +44,8 @@ class Reservation extends Model
         'nightly_rate' => 'decimal:2',
         'discount_amount' => 'decimal:2',
         'total_amount' => 'decimal:2',
+        'mobile_checked_in_at' => 'datetime',
+        'mobile_checked_out_at' => 'datetime',
     ];
 
     protected static function booted(): void

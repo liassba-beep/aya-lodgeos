@@ -53,6 +53,9 @@ class GuestResource extends Resource
                             ->label('Telefone')
                             ->tel()
                             ->maxLength(255),
+                        Forms\Components\TextInput::make('nuit')
+                            ->label('NUIT')
+                            ->maxLength(255),
                         Forms\Components\Select::make('document_type')
                             ->label('Documento')
                             ->options([
@@ -87,6 +90,9 @@ class GuestResource extends Resource
                 Tables\Columns\TextColumn::make('phone')
                     ->label('Telefone')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('nuit')
+                    ->label('NUIT')
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('email')
                     ->label('Email')
                     ->searchable()

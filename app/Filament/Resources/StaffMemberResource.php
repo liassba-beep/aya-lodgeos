@@ -68,6 +68,27 @@ class StaffMemberResource extends Resource
                             'on_leave' => 'Ausente',
                         ])
                         ->required(),
+                    Forms\Components\Toggle::make('mobile_access_enabled')
+                        ->label('Acesso mobile ativo')
+                        ->default(false),
+                    Forms\Components\TextInput::make('mobile_pin')
+                        ->label('PIN mobile')
+                        ->password()
+                        ->revealable()
+                        ->numeric()
+                        ->minLength(4)
+                        ->maxLength(8)
+                        ->dehydrated(fn (?string $state): bool => filled($state))
+                        ->helperText('O trabalhador entra com telefone e este PIN.'),
+                    Forms\Components\FileUpload::make('checkin_photo_path')
+                        ->label('Foto do ultimo check-in')
+                        ->image()
+                        ->directory('staff-checkins')
+                        ->visibility('public')
+                        ->downloadable()
+                        ->openable()
+                        ->disabled()
+                        ->columnSpanFull(),
                     Forms\Components\Textarea::make('notes')->label('Notas')->columnSpanFull(),
                 ]),
         ]);
@@ -81,6 +102,8 @@ class StaffMemberResource extends Resource
                 Tables\Columns\TextColumn::make('role')->label('Funcao')->badge(),
                 Tables\Columns\TextColumn::make('phone')->label('Telefone')->searchable(),
                 Tables\Columns\TextColumn::make('property.name')->label('Alojamento')->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\IconColumn::make('mobile_access_enabled')->label('Mobile')->boolean(),
+                Tables\Columns\TextColumn::make('checked_in_at')->label('Check-in')->dateTime()->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('status')->label('Estado')->badge(),
             ])
             ->actions([Tables\Actions\EditAction::make()->label('Editar')])

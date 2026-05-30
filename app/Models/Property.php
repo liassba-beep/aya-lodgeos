@@ -14,11 +14,17 @@ class Property extends Model
         'name',
         'type',
         'status',
+        'invoice_logo_path',
+        'legal_name',
+        'nuit',
         'email',
         'phone',
+        'invoice_phone',
+        'invoice_email',
         'address',
         'city',
         'country',
+        'invoice_footer',
         'notes',
     ];
 
