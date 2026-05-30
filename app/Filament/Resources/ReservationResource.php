@@ -1,0 +1,183 @@
+<?php
+
+namespace App\Filament\Resources;
+
+use App\Filament\Resources\ReservationResource\Pages;
+use App\Models\Guest;
+use App\Models\Reservation;
+use Filament\Forms;
+use Filament\Forms\Form;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Table;
+
+class ReservationResource extends Resource
+{
+    protected static ?string $model = Reservation::class;
+
+    protected static ?string $navigationIcon = 'heroicon-o-calendar-days';
+
+    protected static ?string $navigationGroup = 'Operacoes';
+
+    protected static ?string $modelLabel = 'Reserva';
+
+    protected static ?string $pluralModelLabel = 'Reservas';
+
+    public static function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                Forms\Components\Section::make('Reserva')
+                    ->columns(3)
+                    ->schema([
+                        Forms\Components\TextInput::make('code')
+                            ->label('Codigo')
+                            ->placeholder('Gerado automaticamente se ficar vazio')
+                            ->maxLength(255),
+                        Forms\Components\Select::make('property_id')
+                            ->label('Alojamento')
+                            ->relationship('property', 'name')
+                            ->searchable()
+                            ->preload()
+                            ->required(),
+                        Forms\Components\Select::make('room_id')
+                            ->label('Quarto')
+                            ->relationship('room', 'name')
+                            ->searchable()
+                            ->preload()
+                            ->required(),
+                        Forms\Components\Select::make('guest_id')
+                            ->label('Hospede')
+                            ->relationship('guest', 'first_name')
+                            ->getOptionLabelFromRecordUsing(fn (Guest $record): string => $record->full_name)
+                            ->searchable(['first_name', 'last_name', 'email', 'phone'])
+                            ->preload()
+                            ->required(),
+                        Forms\Components\DatePicker::make('check_in')
+                            ->label('Check-in')
+                            ->required(),
+                        Forms\Components\DatePicker::make('check_out')
+                            ->label('Check-out')
+                            ->required()
+                            ->after('check_in'),
+                        Forms\Components\TextInput::make('adults')
+                            ->label('Adultos')
+                            ->numeric()
+                            ->minValue(1)
+                            ->required(),
+                        Forms\Components\TextInput::make('children')
+                            ->label('Criancas')
+                            ->numeric()
+                            ->minValue(0)
+                            ->required(),
+                        Forms\Components\TextInput::make('nightly_rate')
+                            ->label('Preco por noite')
+                            ->numeric()
+                            ->prefix('MZN')
+                            ->required(),
+                        Forms\Components\TextInput::make('total_amount')
+                            ->label('Total')
+                            ->numeric()
+                            ->prefix('MZN')
+                            ->required(),
+                        Forms\Components\Select::make('status')
+                            ->label('Estado')
+                            ->options([
+                                'pending' => 'Pendente',
+                                'confirmed' => 'Confirmada',
+                                'checked_in' => 'Check-in',
+                                'checked_out' => 'Check-out',
+                                'cancelled' => 'Cancelada',
+                            ])
+                            ->required(),
+                        Forms\Components\Select::make('source')
+                            ->label('Origem')
+                            ->options([
+                                'direct' => 'Direta',
+                                'phone' => 'Telefone',
+                                'walk_in' => 'Walk-in',
+                                'booking' => 'Booking',
+                                'airbnb' => 'Airbnb',
+                                'other' => 'Outra',
+                            ])
+                            ->required(),
+                        Forms\Components\Textarea::make('notes')
+                            ->label('Notas')
+                            ->columnSpanFull(),
+                    ]),
+            ]);
+    }
+
+    public static function table(Table $table): Table
+    {
+        return $table
+            ->columns([
+                Tables\Columns\TextColumn::make('code')
+                    ->label('Codigo')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('guest.full_name')
+                    ->label('Hospede')
+                    ->searchable(['first_name', 'last_name']),
+                Tables\Columns\TextColumn::make('property.name')
+                    ->label('Alojamento')
+                    ->searchable()
+                    ->toggleable(),
+                Tables\Columns\TextColumn::make('room.name')
+                    ->label('Quarto')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('check_in')
+                    ->label('Entrada')
+                    ->date()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('check_out')
+                    ->label('Saida')
+                    ->date()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('total_amount')
+                    ->label('Total')
+                    ->formatStateUsing(fn ($state): string => number_format((float) $state, 2).' MZN')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('status')
+                    ->label('Estado')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'confirmed', 'checked_in' => 'success',
+                        'pending' => 'warning',
+                        'cancelled' => 'danger',
+                        default => 'gray',
+                    }),
+            ])
+            ->filters([
+                Tables\Filters\SelectFilter::make('status')
+                    ->label('Estado')
+                    ->options([
+                        'pending' => 'Pendente',
+                        'confirmed' => 'Confirmada',
+                        'checked_in' => 'Check-in',
+                        'checked_out' => 'Check-out',
+                        'cancelled' => 'Cancelada',
+                    ]),
+                Tables\Filters\SelectFilter::make('property_id')
+                    ->label('Alojamento')
+                    ->relationship('property', 'name'),
+            ])
+            ->actions([
+                Tables\Actions\EditAction::make(),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make(),
+                ]),
+            ]);
+    }
+
+    public static function getPages(): array
+    {
+        return [
+            'index' => Pages\ListReservations::route('/'),
+            'create' => Pages\CreateReservation::route('/create'),
+            'edit' => Pages\EditReservation::route('/{record}/edit'),
+        ];
+    }
+}
