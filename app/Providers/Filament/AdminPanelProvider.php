@@ -6,6 +6,7 @@ use App\Filament\Pages\OwnerDashboard;
 use App\Filament\Pages\ReservationCalendar;
 use App\Filament\Pages\StaffScheduleCalendar;
 use App\Filament\Widgets\OwnerOverview;
+use App\Http\Middleware\AdminIpAllowlist;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -54,6 +55,7 @@ class AdminPanelProvider extends PanelProvider
                 OwnerOverview::class,
             ])
             ->middleware([
+                AdminIpAllowlist::class,
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
                 StartSession::class,

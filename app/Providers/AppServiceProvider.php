@@ -38,6 +38,7 @@ use App\Models\UtilityReading;
 use App\Models\User;
 use App\Support\AuditTrail;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 
@@ -58,6 +59,10 @@ class AppServiceProvider extends ServiceProvider
     {
         if (in_array(config('app.locale'), ['pt', 'pt_PT'], true)) {
             App::setLocale('pt_PT');
+        }
+
+        if ($this->app->environment('production')) {
+            URL::forceScheme('https');
         }
 
         Vite::prefetch(concurrency: 3);

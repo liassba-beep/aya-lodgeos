@@ -33,6 +33,7 @@ RUN apt-get update \
         libicu-dev \
         libpq-dev \
         libzip-dev \
+        curl \
         nginx \
         supervisor \
         unzip \
@@ -56,6 +57,8 @@ RUN chmod +x /usr/local/bin/entrypoint \
 
 EXPOSE 8080
 
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 --start-period=40s \
+    CMD curl -fsS http://localhost:8080/up || exit 1
+
 ENTRYPOINT ["entrypoint"]
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
-
