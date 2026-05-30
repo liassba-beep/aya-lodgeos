@@ -62,6 +62,10 @@ class ReservationResource extends Resource
                                 self::updateTotal($set, $get);
                             })
                             ->required(),
+                    ]),
+                Forms\Components\Section::make('Hospede e estadia')
+                    ->columns(3)
+                    ->schema([
                         Forms\Components\Select::make('guest_id')
                             ->label('Hospede')
                             ->relationship('guest', 'first_name')
@@ -93,10 +97,23 @@ class ReservationResource extends Resource
                         Forms\Components\Toggle::make('breakfast_included')
                             ->label('Pequeno almoco incluido')
                             ->default(false),
+                    ]),
+                Forms\Components\Section::make('Valores')
+                    ->columns(3)
+                    ->schema([
                         Forms\Components\TextInput::make('nightly_rate')
-                            ->label('Preco por noite')
+                            ->label('Preco do quarto por noite')
                             ->numeric()
                             ->prefix('MZN')
+                            ->readOnly()
+                            ->dehydrated()
+                            ->required(),
+                        Forms\Components\TextInput::make('discount_amount')
+                            ->label('Desconto')
+                            ->numeric()
+                            ->prefix('MZN')
+                            ->default(0)
+                            ->minValue(0)
                             ->live(onBlur: true)
                             ->afterStateUpdated(fn (Set $set, Get $get): null => self::updateTotal($set, $get))
                             ->required(),
@@ -108,6 +125,10 @@ class ReservationResource extends Resource
                             ->dehydrated()
                             ->default(0)
                             ->required(),
+                    ]),
+                Forms\Components\Section::make('Estado e origem')
+                    ->columns(2)
+                    ->schema([
                         Forms\Components\Select::make('status')
                             ->label('Estado')
                             ->options([
@@ -166,6 +187,10 @@ class ReservationResource extends Resource
                     ->label('Total')
                     ->formatStateUsing(fn ($state): string => number_format((float) $state, 2).' MZN')
                     ->sortable(),
+                Tables\Columns\TextColumn::make('discount_amount')
+                    ->label('Desconto')
+                    ->formatStateUsing(fn ($state): string => number_format((float) $state, 2).' MZN')
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\IconColumn::make('breakfast_included')
                     ->label('Pequeno almoco')
                     ->boolean(),
@@ -226,6 +251,7 @@ class ReservationResource extends Resource
             $get('check_in'),
             $get('check_out'),
             $get('nightly_rate'),
+            $get('discount_amount'),
         ));
 
         self::notifyIfRoomIsUnavailable($get);

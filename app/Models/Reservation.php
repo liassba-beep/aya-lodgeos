@@ -25,6 +25,7 @@ class Reservation extends Model
         'children',
         'breakfast_included',
         'nightly_rate',
+        'discount_amount',
         'total_amount',
         'status',
         'source',
@@ -36,6 +37,7 @@ class Reservation extends Model
         'check_out' => 'date',
         'breakfast_included' => 'boolean',
         'nightly_rate' => 'decimal:2',
+        'discount_amount' => 'decimal:2',
         'total_amount' => 'decimal:2',
     ];
 
@@ -52,16 +54,14 @@ class Reservation extends Model
 
             if ($room) {
                 $reservation->property_id = $room->property_id;
-
-                if (! $reservation->nightly_rate || (float) $reservation->nightly_rate <= 0) {
-                    $reservation->nightly_rate = $room->base_rate;
-                }
+                $reservation->nightly_rate = $room->base_rate;
             }
 
             $reservation->total_amount = static::calculateTotal(
                 $reservation->check_in,
                 $reservation->check_out,
                 $reservation->nightly_rate,
+                $reservation->discount_amount,
             );
 
             if ($reservation->hasDateConflict()) {
@@ -72,7 +72,7 @@ class Reservation extends Model
         });
     }
 
-    public static function calculateTotal(mixed $checkIn, mixed $checkOut, mixed $nightlyRate): float
+    public static function calculateSubtotal(mixed $checkIn, mixed $checkOut, mixed $nightlyRate): float
     {
         if (! $checkIn || ! $checkOut || ! $nightlyRate) {
             return 0;
@@ -82,6 +82,17 @@ class Reservation extends Model
             ->diffInDays(Carbon::parse($checkOut)->startOfDay(), false);
 
         return max(0, $nights) * (float) $nightlyRate;
+    }
+
+    public static function calculateTotal(
+        mixed $checkIn,
+        mixed $checkOut,
+        mixed $nightlyRate,
+        mixed $discountAmount = 0,
+    ): float {
+        $subtotal = static::calculateSubtotal($checkIn, $checkOut, $nightlyRate);
+
+        return max(0, $subtotal - (float) ($discountAmount ?: 0));
     }
 
     public function hasDateConflict(): bool
