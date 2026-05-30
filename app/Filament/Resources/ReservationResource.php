@@ -6,6 +6,7 @@ use App\Filament\Resources\ReservationResource\Pages;
 use App\Models\Guest;
 use App\Models\Reservation;
 use App\Models\Room;
+use App\Support\TenantContext;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
@@ -46,6 +47,7 @@ class ReservationResource extends Resource
                             ->label('Quarto')
                             ->options(fn (): array => Room::query()
                                 ->with('property')
+                                ->where('property_id', TenantContext::propertyId())
                                 ->orderBy('name')
                                 ->get()
                                 ->mapWithKeys(fn (Room $room): array => [
@@ -70,7 +72,7 @@ class ReservationResource extends Resource
                     ->schema([
                         Forms\Components\Select::make('guest_id')
                             ->label('Hospede')
-                            ->relationship('guest', 'first_name')
+                            ->relationship('guest', 'first_name', modifyQueryUsing: fn ($query) => $query->where('property_id', TenantContext::propertyId()))
                             ->getOptionLabelFromRecordUsing(fn (Guest $record): string => $record->full_name)
                             ->searchable(['first_name', 'last_name', 'email', 'phone'])
                             ->preload()
@@ -173,7 +175,7 @@ class ReservationResource extends Resource
                 Tables\Columns\TextColumn::make('property.name')
                     ->label('Alojamento')
                     ->searchable()
-                    ->toggleable(),
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('room.name')
                     ->label('Quarto')
                     ->searchable(),
@@ -224,9 +226,6 @@ class ReservationResource extends Resource
                         'checked_out' => 'Saida efetuada',
                         'cancelled' => 'Cancelada',
                     ]),
-                Tables\Filters\SelectFilter::make('property_id')
-                    ->label('Alojamento')
-                    ->relationship('property', 'name'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make()->label('Editar'),
@@ -236,6 +235,12 @@ class ReservationResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return parent::getEloquentQuery()
+            ->when(TenantContext::propertyId(), fn ($query, int $propertyId) => $query->where('property_id', $propertyId));
     }
 
     public static function getPages(): array

@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\ExpenseResource\Pages;
 use App\Models\Expense;
 use App\Models\StockItem;
+use App\Support\TenantContext;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
@@ -33,7 +34,8 @@ class ExpenseResource extends Resource
             Forms\Components\Section::make('Despesa')
                 ->columns(3)
                 ->schema([
-                    Forms\Components\Select::make('property_id')->label('Alojamento')->relationship('property', 'name')->searchable()->preload(),
+                    Forms\Components\Hidden::make('property_id')
+                        ->default(fn (): ?int => TenantContext::propertyId()),
                     Forms\Components\Select::make('category')
                         ->label('Categoria')
                         ->live()
@@ -49,7 +51,7 @@ class ExpenseResource extends Resource
                         ->required(),
                     Forms\Components\Select::make('stock_item_id')
                         ->label('Artigo de stock')
-                        ->relationship('stockItem', 'name')
+                        ->relationship('stockItem', 'name', modifyQueryUsing: fn ($query) => $query->where('property_id', TenantContext::propertyId()))
                         ->searchable()
                         ->preload()
                         ->live()
@@ -125,6 +127,12 @@ class ExpenseResource extends Resource
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([Tables\Actions\DeleteBulkAction::make()]),
             ]);
+    }
+
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return parent::getEloquentQuery()
+            ->when(TenantContext::propertyId(), fn ($query, int $propertyId) => $query->where('property_id', $propertyId));
     }
 
     public static function getPages(): array

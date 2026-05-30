@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\OperationalTaskResource\Pages;
 use App\Models\OperationalTask;
+use App\Support\TenantContext;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -30,19 +31,16 @@ class OperationalTaskResource extends Resource
             Forms\Components\Section::make('Tarefa')
                 ->columns(3)
                 ->schema([
-                    Forms\Components\Select::make('property_id')
-                        ->label('Alojamento')
-                        ->relationship('property', 'name')
-                        ->searchable()
-                        ->preload(),
+                    Forms\Components\Hidden::make('property_id')
+                        ->default(fn (): ?int => TenantContext::propertyId()),
                     Forms\Components\Select::make('room_id')
                         ->label('Quarto')
-                        ->relationship('room', 'name')
+                        ->relationship('room', 'name', modifyQueryUsing: fn ($query) => $query->where('property_id', TenantContext::propertyId()))
                         ->searchable()
                         ->preload(),
                     Forms\Components\Select::make('staff_member_id')
                         ->label('Responsavel')
-                        ->relationship('staffMember', 'name')
+                        ->relationship('staffMember', 'name', modifyQueryUsing: fn ($query) => $query->where('property_id', TenantContext::propertyId()))
                         ->searchable()
                         ->preload(),
                     Forms\Components\Select::make('type')
@@ -123,6 +121,12 @@ class OperationalTaskResource extends Resource
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([Tables\Actions\DeleteBulkAction::make()]),
             ]);
+    }
+
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return parent::getEloquentQuery()
+            ->when(TenantContext::propertyId(), fn ($query, int $propertyId) => $query->where('property_id', $propertyId));
     }
 
     public static function getPages(): array

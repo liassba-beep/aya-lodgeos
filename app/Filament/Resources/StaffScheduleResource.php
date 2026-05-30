@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\StaffScheduleResource\Pages;
 use App\Models\StaffMember;
 use App\Models\StaffSchedule;
+use App\Support\TenantContext;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Forms\Set;
@@ -34,7 +35,7 @@ class StaffScheduleResource extends Resource
                 ->schema([
                     Forms\Components\Select::make('staff_member_id')
                         ->label('Colaborador')
-                        ->relationship('staffMember', 'name')
+                        ->relationship('staffMember', 'name', modifyQueryUsing: fn ($query) => $query->where('property_id', TenantContext::propertyId()))
                         ->searchable()
                         ->preload()
                         ->live()
@@ -43,7 +44,8 @@ class StaffScheduleResource extends Resource
                             $set('property_id', $staffMember?->property_id);
                         })
                         ->required(),
-                    Forms\Components\Hidden::make('property_id'),
+                    Forms\Components\Hidden::make('property_id')
+                        ->default(fn (): ?int => TenantContext::propertyId()),
                     Forms\Components\DatePicker::make('schedule_month')
                         ->label('Mes da escala')
                         ->default(now()->startOfMonth())
@@ -113,6 +115,12 @@ class StaffScheduleResource extends Resource
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([Tables\Actions\DeleteBulkAction::make()]),
             ]);
+    }
+
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return parent::getEloquentQuery()
+            ->when(TenantContext::propertyId(), fn ($query, int $propertyId) => $query->where('property_id', $propertyId));
     }
 
     public static function getPages(): array

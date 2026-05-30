@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\TenantContext;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -26,6 +27,13 @@ class StaffSchedule extends Model
         'schedule_month' => 'date',
         'shift_date' => 'date',
     ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (StaffSchedule $schedule) {
+            $schedule->property_id = $schedule->property_id ?: ($schedule->staffMember?->property_id ?: TenantContext::propertyId());
+        });
+    }
 
     public function property(): BelongsTo
     {

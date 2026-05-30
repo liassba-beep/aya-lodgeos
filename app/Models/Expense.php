@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\TenantContext;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -35,6 +36,10 @@ class Expense extends Model
 
     protected static function booted(): void
     {
+        static::saving(function (Expense $expense) {
+            $expense->property_id = $expense->property_id ?: ($expense->stockItem?->property_id ?: TenantContext::propertyId());
+        });
+
         static::saved(function (Expense $expense) {
             $expense->syncStockMovement();
         });

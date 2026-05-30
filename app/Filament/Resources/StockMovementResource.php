@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\StockMovementResource\Pages;
 use App\Models\StockItem;
 use App\Models\StockMovement;
+use App\Support\TenantContext;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Forms\Set;
@@ -34,7 +35,7 @@ class StockMovementResource extends Resource
                 ->schema([
                     Forms\Components\Select::make('stock_item_id')
                         ->label('Artigo')
-                        ->relationship('stockItem', 'name')
+                        ->relationship('stockItem', 'name', modifyQueryUsing: fn ($query) => $query->where('property_id', TenantContext::propertyId()))
                         ->searchable()
                         ->preload()
                         ->live()
@@ -44,7 +45,8 @@ class StockMovementResource extends Resource
                             $set('unit_cost', $item?->unit_cost ?? 0);
                         })
                         ->required(),
-                    Forms\Components\Hidden::make('property_id'),
+                    Forms\Components\Hidden::make('property_id')
+                        ->default(fn (): ?int => TenantContext::propertyId()),
                     Forms\Components\Select::make('type')
                         ->label('Tipo')
                         ->options([
@@ -77,6 +79,12 @@ class StockMovementResource extends Resource
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([Tables\Actions\DeleteBulkAction::make()]),
             ]);
+    }
+
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return parent::getEloquentQuery()
+            ->when(TenantContext::propertyId(), fn ($query, int $propertyId) => $query->where('property_id', $propertyId));
     }
 
     public static function getPages(): array

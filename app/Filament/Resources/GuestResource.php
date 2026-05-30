@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\GuestResource\Pages;
 use App\Models\Guest;
+use App\Support\TenantContext;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -28,9 +29,11 @@ class GuestResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Section::make('Dados do hospede')
+                    Forms\Components\Section::make('Dados do hospede')
                     ->columns(2)
                     ->schema([
+                        Forms\Components\Hidden::make('property_id')
+                            ->default(fn (): ?int => TenantContext::propertyId()),
                         Forms\Components\TextInput::make('first_name')
                             ->label('Nome')
                             ->required()
@@ -107,6 +110,12 @@ class GuestResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return parent::getEloquentQuery()
+            ->when(TenantContext::propertyId(), fn ($query, int $propertyId) => $query->where('property_id', $propertyId));
     }
 
     public static function getPages(): array

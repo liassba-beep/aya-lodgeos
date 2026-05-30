@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\StaffMemberResource\Pages;
 use App\Models\StaffMember;
+use App\Support\TenantContext;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -30,7 +31,8 @@ class StaffMemberResource extends Resource
             Forms\Components\Section::make('Colaborador')
                 ->columns(3)
                 ->schema([
-                    Forms\Components\Select::make('property_id')->label('Alojamento')->relationship('property', 'name')->searchable()->preload(),
+                    Forms\Components\Hidden::make('property_id')
+                        ->default(fn (): ?int => TenantContext::propertyId()),
                     Forms\Components\TextInput::make('name')->label('Nome')->required()->maxLength(255),
                     Forms\Components\Select::make('role')
                         ->label('Funcao')
@@ -75,13 +77,19 @@ class StaffMemberResource extends Resource
                 Tables\Columns\TextColumn::make('name')->label('Nome')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('role')->label('Funcao')->badge(),
                 Tables\Columns\TextColumn::make('phone')->label('Telefone')->searchable(),
-                Tables\Columns\TextColumn::make('property.name')->label('Alojamento')->toggleable(),
+                Tables\Columns\TextColumn::make('property.name')->label('Alojamento')->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('status')->label('Estado')->badge(),
             ])
             ->actions([Tables\Actions\EditAction::make()->label('Editar')])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([Tables\Actions\DeleteBulkAction::make()]),
             ]);
+    }
+
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return parent::getEloquentQuery()
+            ->when(TenantContext::propertyId(), fn ($query, int $propertyId) => $query->where('property_id', $propertyId));
     }
 
     public static function getPages(): array

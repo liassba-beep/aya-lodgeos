@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\DailyChecklistResource\Pages;
 use App\Models\DailyChecklist;
+use App\Support\TenantContext;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -30,8 +31,9 @@ class DailyChecklistResource extends Resource
             Forms\Components\Section::make('Supervisao diaria')
                 ->columns(3)
                 ->schema([
-                    Forms\Components\Select::make('property_id')->label('Alojamento')->relationship('property', 'name')->searchable()->preload(),
-                    Forms\Components\Select::make('staff_member_id')->label('Responsavel')->relationship('staffMember', 'name')->searchable()->preload(),
+                    Forms\Components\Hidden::make('property_id')
+                        ->default(fn (): ?int => TenantContext::propertyId()),
+                    Forms\Components\Select::make('staff_member_id')->label('Responsavel')->relationship('staffMember', 'name', modifyQueryUsing: fn ($query) => $query->where('property_id', TenantContext::propertyId()))->searchable()->preload(),
                     Forms\Components\DatePicker::make('checklist_date')->label('Data')->default(now())->required(),
                     Forms\Components\Select::make('area')
                         ->label('Area')
@@ -75,6 +77,12 @@ class DailyChecklistResource extends Resource
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([Tables\Actions\DeleteBulkAction::make()]),
             ]);
+    }
+
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return parent::getEloquentQuery()
+            ->when(TenantContext::propertyId(), fn ($query, int $propertyId) => $query->where('property_id', $propertyId));
     }
 
     public static function getPages(): array

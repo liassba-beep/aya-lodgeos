@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\TenantContext;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -26,6 +27,13 @@ class StaffMember extends Model
     protected $casts = [
         'hired_at' => 'date',
     ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (StaffMember $staffMember) {
+            $staffMember->property_id = $staffMember->property_id ?: TenantContext::propertyId();
+        });
+    }
 
     public function property(): BelongsTo
     {

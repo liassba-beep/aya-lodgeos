@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\TenantContext;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -27,6 +28,13 @@ class DirectBookingRequest extends Model
         'check_in' => 'date',
         'check_out' => 'date',
     ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (DirectBookingRequest $request) {
+            $request->property_id = $request->property_id ?: TenantContext::propertyId();
+        });
+    }
 
     public function property(): BelongsTo
     {

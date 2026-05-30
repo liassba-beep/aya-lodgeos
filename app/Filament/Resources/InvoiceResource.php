@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\InvoiceResource\Pages;
 use App\Models\Invoice;
 use App\Models\Reservation;
+use App\Support\TenantContext;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
@@ -34,11 +35,13 @@ class InvoiceResource extends Resource
                 ->columns(3)
                 ->schema([
                     Forms\Components\TextInput::make('number')->label('Numero')->required()->maxLength(255),
-                    Forms\Components\Select::make('property_id')->label('Alojamento')->relationship('property', 'name')->searchable()->preload(),
+                    Forms\Components\Hidden::make('property_id')
+                        ->default(fn (): ?int => TenantContext::propertyId()),
                     Forms\Components\Select::make('reservation_id')
                         ->label('Reserva')
                         ->options(fn (): array => Reservation::query()
                             ->with('guest')
+                            ->where('property_id', TenantContext::propertyId())
                             ->orderByDesc('created_at')
                             ->get()
                             ->mapWithKeys(fn (Reservation $reservation): array => [
@@ -96,6 +99,12 @@ class InvoiceResource extends Resource
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([Tables\Actions\DeleteBulkAction::make()]),
             ]);
+    }
+
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return parent::getEloquentQuery()
+            ->when(TenantContext::propertyId(), fn ($query, int $propertyId) => $query->where('property_id', $propertyId));
     }
 
     public static function getPages(): array

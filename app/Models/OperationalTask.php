@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\TenantContext;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -29,6 +30,13 @@ class OperationalTask extends Model
         'due_date' => 'date',
         'completed_at' => 'datetime',
     ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (OperationalTask $task) {
+            $task->property_id = $task->property_id ?: ($task->room?->property_id ?: TenantContext::propertyId());
+        });
+    }
 
     public function property(): BelongsTo
     {

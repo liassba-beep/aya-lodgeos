@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\TenantContext;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -29,6 +30,13 @@ class StockItem extends Model
         'quantity_on_hand' => 'decimal:2',
         'minimum_quantity' => 'decimal:2',
     ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (StockItem $stockItem) {
+            $stockItem->property_id = $stockItem->property_id ?: TenantContext::propertyId();
+        });
+    }
 
     public function property(): BelongsTo
     {

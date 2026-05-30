@@ -1,0 +1,9 @@
+{
+    "name": "AYA LodgeOS",
+    "short_name": "AYA LodgeOS",
+    "start_url": "/mobile",
+    "display": "standalone",
+    "background_color": "#09090b",
+    "theme_color": "#09090b",
+    "description": "App mobile para operacao diaria de alojamentos."
+}

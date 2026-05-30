@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\TenantContext;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -25,6 +26,13 @@ class Room extends Model
     protected $casts = [
         'base_rate' => 'decimal:2',
     ];
+
+    protected static function booted(): void
+    {
+        static::saving(function (Room $room) {
+            $room->property_id = $room->property_id ?: TenantContext::propertyId();
+        });
+    }
 
     public function property(): BelongsTo
     {

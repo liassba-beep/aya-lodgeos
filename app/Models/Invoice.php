@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\TenantContext;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -36,6 +37,8 @@ class Invoice extends Model
     protected static function booted(): void
     {
         static::saving(function (Invoice $invoice) {
+            $invoice->property_id = $invoice->property_id ?: ($invoice->reservation?->property_id ?: TenantContext::propertyId());
+
             $invoice->total_amount = max(
                 0,
                 (float) $invoice->subtotal - (float) $invoice->discount_amount + (float) $invoice->tax_amount,

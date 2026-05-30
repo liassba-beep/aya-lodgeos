@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\PaymentResource\Pages;
 use App\Models\Payment;
 use App\Models\Reservation;
+use App\Support\TenantContext;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Forms\Set;
@@ -37,6 +38,7 @@ class PaymentResource extends Resource
                             ->label('Reserva')
                             ->options(fn (): array => Reservation::query()
                                 ->with('guest')
+                                ->where('property_id', TenantContext::propertyId())
                                 ->orderByDesc('created_at')
                                 ->get()
                                 ->mapWithKeys(fn (Reservation $reservation): array => [
@@ -170,6 +172,12 @@ class PaymentResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return parent::getEloquentQuery()
+            ->when(TenantContext::propertyId(), fn ($query, int $propertyId) => $query->whereHas('reservation', fn ($reservationQuery) => $reservationQuery->where('property_id', $propertyId)));
     }
 
     public static function getPages(): array

@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\RoomResource\Pages;
 use App\Models\Room;
+use App\Support\TenantContext;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -31,11 +32,8 @@ class RoomResource extends Resource
                 Forms\Components\Section::make('Dados do quarto')
                     ->columns(2)
                     ->schema([
-                        Forms\Components\Select::make('property_id')
-                            ->label('Alojamento')
-                            ->relationship('property', 'name')
-                            ->searchable()
-                            ->preload()
+                        Forms\Components\Hidden::make('property_id')
+                            ->default(fn (): ?int => TenantContext::propertyId())
                             ->required(),
                         Forms\Components\TextInput::make('name')
                             ->label('Nome')
@@ -91,7 +89,8 @@ class RoomResource extends Resource
                 Tables\Columns\TextColumn::make('property.name')
                     ->label('Alojamento')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('room_number')
                     ->label('Numero')
                     ->searchable(),
@@ -113,9 +112,6 @@ class RoomResource extends Resource
                     }),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('property_id')
-                    ->label('Alojamento')
-                    ->relationship('property', 'name'),
                 Tables\Filters\SelectFilter::make('status')
                     ->label('Estado')
                     ->options([
@@ -133,6 +129,12 @@ class RoomResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
+    }
+
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return parent::getEloquentQuery()
+            ->when(TenantContext::propertyId(), fn ($query, int $propertyId) => $query->where('property_id', $propertyId));
     }
 
     public static function getPages(): array
