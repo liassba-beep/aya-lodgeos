@@ -25,6 +25,19 @@ class Payment extends Model
         'paid_at' => 'datetime',
     ];
 
+    protected static function booted(): void
+    {
+        static::saving(function (Payment $payment) {
+            if ((! $payment->amount || (float) $payment->amount <= 0) && $payment->reservation) {
+                $payment->amount = $payment->reservation->total_amount;
+            }
+
+            if ($payment->status === 'paid' && ! $payment->paid_at) {
+                $payment->paid_at = now();
+            }
+        });
+    }
+
     public function reservation(): BelongsTo
     {
         return $this->belongsTo(Reservation::class);

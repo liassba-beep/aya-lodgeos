@@ -5,8 +5,11 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\ReservationResource\Pages;
 use App\Models\Guest;
 use App\Models\Reservation;
+use App\Models\Room;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
+use Filament\Forms\Set;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -34,17 +37,29 @@ class ReservationResource extends Resource
                             ->label('Codigo')
                             ->placeholder('Gerado automaticamente se ficar vazio')
                             ->maxLength(255),
-                        Forms\Components\Select::make('property_id')
-                            ->label('Alojamento')
-                            ->relationship('property', 'name')
-                            ->searchable()
-                            ->preload()
+                        Forms\Components\Hidden::make('property_id')
                             ->required(),
                         Forms\Components\Select::make('room_id')
                             ->label('Quarto')
-                            ->relationship('room', 'name')
+                            ->options(fn (): array => Room::query()
+                                ->with('property')
+                                ->orderBy('name')
+                                ->get()
+                                ->mapWithKeys(fn (Room $room): array => [
+                                    $room->id => $room->name.' - '.$room->property?->name,
+                                ])
+                                ->all())
                             ->searchable()
                             ->preload()
+                            ->live()
+                            ->afterStateUpdated(function (Set $set, Get $get, ?string $state): void {
+                                $room = $state ? Room::find($state) : null;
+
+                                $set('property_id', $room?->property_id);
+                                $set('nightly_rate', $room?->base_rate ?? 0);
+
+                                self::updateTotal($set, $get);
+                            })
                             ->required(),
                         Forms\Components\Select::make('guest_id')
                             ->label('Hospede')
@@ -55,9 +70,13 @@ class ReservationResource extends Resource
                             ->required(),
                         Forms\Components\DatePicker::make('check_in')
                             ->label('Check-in')
+                            ->live()
+                            ->afterStateUpdated(fn (Set $set, Get $get): null => self::updateTotal($set, $get))
                             ->required(),
                         Forms\Components\DatePicker::make('check_out')
                             ->label('Check-out')
+                            ->live()
+                            ->afterStateUpdated(fn (Set $set, Get $get): null => self::updateTotal($set, $get))
                             ->required()
                             ->after('check_in'),
                         Forms\Components\TextInput::make('adults')
@@ -74,11 +93,16 @@ class ReservationResource extends Resource
                             ->label('Preco por noite')
                             ->numeric()
                             ->prefix('MZN')
+                            ->live(onBlur: true)
+                            ->afterStateUpdated(fn (Set $set, Get $get): null => self::updateTotal($set, $get))
                             ->required(),
                         Forms\Components\TextInput::make('total_amount')
                             ->label('Total')
                             ->numeric()
                             ->prefix('MZN')
+                            ->readOnly()
+                            ->dehydrated()
+                            ->default(0)
                             ->required(),
                         Forms\Components\Select::make('status')
                             ->label('Estado')
@@ -141,6 +165,14 @@ class ReservationResource extends Resource
                 Tables\Columns\TextColumn::make('status')
                     ->label('Estado')
                     ->badge()
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'pending' => 'Pendente',
+                        'confirmed' => 'Confirmada',
+                        'checked_in' => 'Check-in',
+                        'checked_out' => 'Check-out',
+                        'cancelled' => 'Cancelada',
+                        default => $state,
+                    })
                     ->color(fn (string $state): string => match ($state) {
                         'confirmed', 'checked_in' => 'success',
                         'pending' => 'warning',
@@ -179,5 +211,16 @@ class ReservationResource extends Resource
             'create' => Pages\CreateReservation::route('/create'),
             'edit' => Pages\EditReservation::route('/{record}/edit'),
         ];
+    }
+
+    private static function updateTotal(Set $set, Get $get): null
+    {
+        $set('total_amount', Reservation::calculateTotal(
+            $get('check_in'),
+            $get('check_out'),
+            $get('nightly_rate'),
+        ));
+
+        return null;
     }
 }

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 class Reservation extends Model
@@ -42,6 +43,36 @@ class Reservation extends Model
                 $reservation->code = 'RSV-'.now()->format('ymd').'-'.Str::upper(Str::random(5));
             }
         });
+
+        static::saving(function (Reservation $reservation) {
+            $room = $reservation->room;
+
+            if ($room) {
+                $reservation->property_id = $room->property_id;
+
+                if (! $reservation->nightly_rate || (float) $reservation->nightly_rate <= 0) {
+                    $reservation->nightly_rate = $room->base_rate;
+                }
+            }
+
+            $reservation->total_amount = static::calculateTotal(
+                $reservation->check_in,
+                $reservation->check_out,
+                $reservation->nightly_rate,
+            );
+        });
+    }
+
+    public static function calculateTotal(mixed $checkIn, mixed $checkOut, mixed $nightlyRate): float
+    {
+        if (! $checkIn || ! $checkOut || ! $nightlyRate) {
+            return 0;
+        }
+
+        $nights = Carbon::parse($checkIn)->startOfDay()
+            ->diffInDays(Carbon::parse($checkOut)->startOfDay(), false);
+
+        return max(0, $nights) * (float) $nightlyRate;
     }
 
     public function property(): BelongsTo

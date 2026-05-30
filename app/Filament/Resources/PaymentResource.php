@@ -4,8 +4,10 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\PaymentResource\Pages;
 use App\Models\Payment;
+use App\Models\Reservation;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Set;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -31,14 +33,28 @@ class PaymentResource extends Resource
                     ->schema([
                         Forms\Components\Select::make('reservation_id')
                             ->label('Reserva')
-                            ->relationship('reservation', 'code')
+                            ->options(fn (): array => Reservation::query()
+                                ->with('guest')
+                                ->orderByDesc('created_at')
+                                ->get()
+                                ->mapWithKeys(fn (Reservation $reservation): array => [
+                                    $reservation->id => $reservation->code.' - '.$reservation->guest?->full_name.' - '.number_format((float) $reservation->total_amount, 2).' MZN',
+                                ])
+                                ->all())
                             ->searchable()
                             ->preload()
+                            ->live()
+                            ->afterStateUpdated(function (Set $set, ?string $state): void {
+                                $reservation = $state ? Reservation::find($state) : null;
+
+                                $set('amount', $reservation?->total_amount ?? 0);
+                            })
                             ->required(),
                         Forms\Components\TextInput::make('amount')
                             ->label('Valor')
                             ->numeric()
                             ->prefix('MZN')
+                            ->default(0)
                             ->required(),
                         Forms\Components\Select::make('method')
                             ->label('Metodo')
@@ -89,10 +105,26 @@ class PaymentResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('method')
                     ->label('Metodo')
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'cash' => 'Dinheiro',
+                        'mpesa' => 'M-Pesa',
+                        'emola' => 'e-Mola',
+                        'card' => 'Cartao',
+                        'bank_transfer' => 'Transferencia',
+                        'other' => 'Outro',
+                        default => $state,
+                    })
                     ->badge(),
                 Tables\Columns\TextColumn::make('status')
                     ->label('Estado')
                     ->badge()
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'pending' => 'Pendente',
+                        'paid' => 'Pago',
+                        'failed' => 'Falhou',
+                        'refunded' => 'Reembolsado',
+                        default => $state,
+                    })
                     ->color(fn (string $state): string => match ($state) {
                         'paid' => 'success',
                         'pending' => 'warning',
