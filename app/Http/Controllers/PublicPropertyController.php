@@ -3,14 +3,25 @@
 namespace App\Http\Controllers;
 
 use App\Models\Property;
+use App\Models\DirectBookingRequest;
+use App\Models\OperationalAlert;
+use App\Models\Room;
 use App\Models\TenantAccount;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class PublicPropertyController extends Controller
 {
     public function __invoke(Request $request, string $tenant): Response
+    {
+        return $this->show($request, $tenant);
+    }
+
+    public function show(Request $request, string $tenant): Response
     {
         $tenantAccount = TenantAccount::query()
             ->where('slug', $tenant)
@@ -68,6 +79,153 @@ class PublicPropertyController extends Controller
                 'rooms' => $rooms,
                 'services' => $services,
             ],
+            'booking' => [
+                'availability_url' => $this->publicPath($request, $tenant, 'availability'),
+                'store_url' => $this->publicPath($request, $tenant, 'booking-requests'),
+            ],
         ]);
+    }
+
+    public function availability(Request $request, string $tenant): JsonResponse
+    {
+        $validated = $request->validate([
+            'check_in' => ['required', 'date', 'after_or_equal:today'],
+            'check_out' => ['required', 'date', 'after:check_in'],
+            'adults' => ['required', 'integer', 'min:1', 'max:20'],
+            'children' => ['required', 'integer', 'min:0', 'max:20'],
+        ]);
+
+        $property = $this->propertyForTenant($tenant);
+        $offer = $this->availableOffer($property, $validated['check_in'], $validated['check_out']);
+
+        if (! $offer) {
+            return response()->json([
+                'available' => false,
+                'message' => 'Não há quartos disponíveis para estas datas.',
+            ]);
+        }
+
+        return response()->json([
+            'available' => true,
+            'room' => $offer['room'],
+            'nights' => $offer['nights'],
+            'nightly_rate' => $offer['nightly_rate'],
+            'total' => $offer['total'],
+        ]);
+    }
+
+    public function storeBookingRequest(Request $request, string $tenant): JsonResponse
+    {
+        $validated = $request->validate([
+            'guest_name' => ['required', 'string', 'max:255'],
+            'guest_phone' => ['required', 'string', 'max:255'],
+            'guest_email' => ['nullable', 'email', 'max:255'],
+            'check_in' => ['required', 'date', 'after_or_equal:today'],
+            'check_out' => ['required', 'date', 'after:check_in'],
+            'adults' => ['required', 'integer', 'min:1', 'max:20'],
+            'children' => ['required', 'integer', 'min:0', 'max:20'],
+            'message' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $property = $this->propertyForTenant($tenant);
+        $offer = $this->availableOffer($property, $validated['check_in'], $validated['check_out']);
+
+        if (! $offer) {
+            throw ValidationException::withMessages([
+                'check_in' => 'Não há quartos disponíveis para estas datas.',
+            ]);
+        }
+
+        $requestRecord = DirectBookingRequest::query()->create([
+            'property_id' => $property->id,
+            'guest_name' => $validated['guest_name'],
+            'guest_phone' => $validated['guest_phone'],
+            'guest_email' => $validated['guest_email'] ?? null,
+            'check_in' => $validated['check_in'],
+            'check_out' => $validated['check_out'],
+            'adults' => $validated['adults'],
+            'children' => $validated['children'],
+            'status' => 'new',
+            'message' => trim(implode("\n", array_filter([
+                $validated['message'] ?? null,
+                'Quarto sugerido: '.$offer['room']['name'],
+                'Noites: '.$offer['nights'],
+                'Preço por noite: '.number_format($offer['nightly_rate'], 2, '.', ',').' MZN',
+                'Total estimado: '.number_format($offer['total'], 2, '.', ',').' MZN',
+            ]))),
+        ]);
+
+        OperationalAlert::query()->create([
+            'property_id' => $property->id,
+            'source_type' => DirectBookingRequest::class,
+            'source_id' => $requestRecord->id,
+            'severity' => 'info',
+            'title' => 'Novo pedido de reserva directa',
+            'message' => $validated['guest_name'].' pediu disponibilidade de '.$validated['check_in'].' a '.$validated['check_out'].'; total estimado '.number_format($offer['total'], 2, '.', ',').' MZN.',
+            'status' => 'open',
+        ]);
+
+        return response()->json([
+            'ok' => true,
+            'message' => 'Pedido enviado. A equipa da MiKaya vai entrar em contacto consigo.',
+            'total' => $offer['total'],
+        ], 201);
+    }
+
+    private function propertyForTenant(string $tenant): Property
+    {
+        $tenantAccount = TenantAccount::query()
+            ->where('slug', $tenant)
+            ->where('status', 'active')
+            ->firstOrFail();
+
+        return Property::query()
+            ->where('tenant_account_id', $tenantAccount->id)
+            ->where('status', 'active')
+            ->orderBy('id')
+            ->firstOrFail();
+    }
+
+    private function availableOffer(Property $property, string $checkIn, string $checkOut): ?array
+    {
+        $start = Carbon::parse($checkIn)->toDateString();
+        $end = Carbon::parse($checkOut)->toDateString();
+        $nights = max(1, Carbon::parse($start)->diffInDays(Carbon::parse($end)));
+
+        $room = Room::query()
+            ->where('property_id', $property->id)
+            ->where('status', '!=', 'maintenance')
+            ->whereDoesntHave('reservations', function ($query) use ($start, $end) {
+                $query
+                    ->where('status', '!=', 'cancelled')
+                    ->whereDate('check_in', '<', $end)
+                    ->whereDate('check_out', '>', $start);
+            })
+            ->orderBy('base_rate')
+            ->orderBy('room_number')
+            ->first();
+
+        if (! $room) {
+            return null;
+        }
+
+        $nightlyRate = (float) $room->base_rate;
+
+        return [
+            'room' => [
+                'id' => $room->id,
+                'name' => $room->name,
+            ],
+            'nights' => $nights,
+            'nightly_rate' => $nightlyRate,
+            'total' => $nightlyRate * $nights,
+        ];
+    }
+
+    private function publicPath(Request $request, string $tenant, string $path): string
+    {
+        return $request->routeIs('public.property.preview')
+            ? "/p/{$tenant}/{$path}"
+            : "/{$path}";
     }
 }

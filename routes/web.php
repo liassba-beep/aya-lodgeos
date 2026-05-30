@@ -33,11 +33,21 @@ Route::domain('{tenant}.lodgesos.com')
     ->group(function () {
         Route::get('/', PublicPropertyController::class)
             ->name('public.property.subdomain');
+        Route::get('/availability', [PublicPropertyController::class, 'availability'])
+            ->name('public.property.availability');
+        Route::post('/booking-requests', [PublicPropertyController::class, 'storeBookingRequest'])
+            ->name('public.property.booking-requests.store');
     });
 
 Route::get('/p/{tenant}', PublicPropertyController::class)
     ->where('tenant', '[a-z0-9-]+')
     ->name('public.property.preview');
+Route::get('/p/{tenant}/availability', [PublicPropertyController::class, 'availability'])
+    ->where('tenant', '[a-z0-9-]+')
+    ->name('public.property.preview.availability');
+Route::post('/p/{tenant}/booking-requests', [PublicPropertyController::class, 'storeBookingRequest'])
+    ->where('tenant', '[a-z0-9-]+')
+    ->name('public.property.preview.booking-requests.store');
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
