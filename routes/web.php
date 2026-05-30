@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PublicPropertyController;
 use App\Models\DailyChecklist;
 use App\Models\Expense;
 use App\Models\Invoice;
@@ -26,6 +27,15 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+
+Route::domain('{tenant}.lodgesos.com')
+    ->where('tenant', '^(?!app$|www$|admin$)[a-z0-9-]+$')
+    ->get('/', PublicPropertyController::class)
+    ->name('public.property.subdomain');
+
+Route::get('/p/{tenant}', PublicPropertyController::class)
+    ->where('tenant', '[a-z0-9-]+')
+    ->name('public.property.preview');
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
