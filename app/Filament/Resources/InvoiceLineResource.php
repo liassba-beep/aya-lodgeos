@@ -17,6 +17,7 @@ class InvoiceLineResource extends Resource
     protected static ?string $model = InvoiceLine::class;
     protected static ?string $navigationIcon = 'heroicon-o-list-bullet';
     protected static ?string $navigationGroup = 'Financeiro';
+    protected static bool $shouldRegisterNavigation = false;
     protected static ?string $modelLabel = 'Linha de factura';
     protected static ?string $pluralModelLabel = 'Linhas de factura';
 

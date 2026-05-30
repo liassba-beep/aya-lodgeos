@@ -51,13 +51,6 @@ class UserResource extends Resource
                         ->searchable()
                         ->preload()
                         ->default(fn (): ?int => TenantContext::propertyId()),
-                    Forms\Components\Select::make('properties')
-                        ->label('Propriedades com acesso')
-                        ->relationship('properties', 'name')
-                        ->multiple()
-                        ->searchable()
-                        ->preload()
-                        ->columnSpanFull(),
                     Forms\Components\Select::make('role')
                         ->label('Perfil')
                         ->options(AccessControl::roleLabels())

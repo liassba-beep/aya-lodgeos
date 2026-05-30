@@ -1,5 +1,7 @@
 <x-filament-panels::page>
-    @php($calendar = $this->calendarData())
+    @php
+        $calendar = $this->calendarData();
+    @endphp
 
     <div class="space-y-4">
         <div class="flex items-center justify-between gap-3">
