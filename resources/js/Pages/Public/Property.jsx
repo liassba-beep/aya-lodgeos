@@ -10,6 +10,15 @@ const money = (value) =>
 
 const today = new Date().toISOString().slice(0, 10);
 
+const xsrfToken = () => {
+    const token = document.cookie
+        .split('; ')
+        .find((row) => row.startsWith('XSRF-TOKEN='))
+        ?.split('=')[1];
+
+    return token ? decodeURIComponent(token) : null;
+};
+
 export default function Property({ property, booking }) {
     const phone = property.phone || '+258842990406';
     const email = property.email || 'reservas@lodgesos.com';
@@ -257,12 +266,14 @@ function BookingSection({ property, booking }) {
             const csrfToken = document
                 .querySelector('meta[name="csrf-token"]')
                 ?.getAttribute('content');
+            const xsrf = xsrfToken();
             const response = await fetch(booking.store_url, {
                 method: 'POST',
                 headers: {
                     Accept: 'application/json',
                     'Content-Type': 'application/json',
                     ...(csrfToken ? { 'X-CSRF-TOKEN': csrfToken } : {}),
+                    ...(xsrf ? { 'X-XSRF-TOKEN': xsrf } : {}),
                 },
                 body: JSON.stringify(form),
             });
