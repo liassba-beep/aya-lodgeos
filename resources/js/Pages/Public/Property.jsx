@@ -215,6 +215,22 @@ const tenantTextTranslations = {
     'Praia da Barra': 'Barra Beach',
     'Aeroporto de Inhambane': 'Inhambane Airport',
     'Centro de Inhambane': 'Inhambane City Centre',
+    'RESERVAS E PAGAMENTOS': 'BOOKINGS AND PAYMENTS',
+    'Registo: Todos os hóspedes devem fornecer identificação válida emitida pelo governo, por exemplo passaporte ou ID, e registar os seus dados de contacto na chegada.': 'Registration: All guests must provide valid government-issued identification, such as a passport or ID, and register their contact details on arrival.',
+    'Pagamentos: O pagamento completo ou um depósito, normalmente 50%, é necessário para garantir a reserva.': 'Payments: Full payment or a deposit, usually 50%, is required to guarantee the booking.',
+    'Cancelamentos: O reembolso pós-cancelamento seguirá a percentagem abaixo:': 'Cancellations: Refunds after cancellation follow the percentages below:',
+    '7 dias: 75% do valor da reserva.': '7 days: 75% of the booking value.',
+    '3 dias: 35% do valor da reserva.': '3 days: 35% of the booking value.',
+    '24h: sem reembolso.': '24h: no refund.',
+    'Check-in inicia às 12:00 horas. Ajustes podem ser efectuados caso a reserva tenha sido combinada antecipadamente.': 'Check-in starts at 12:00. Adjustments may be made if arranged with the property in advance.',
+    'Check-out deverá ser efectuado até às 10:00 horas.': 'Check-out must be completed by 10:00.',
+    'ACOMODAÇÃO': 'ACCOMMODATION',
+    'Não é permitido cozinhar ou comer nos quartos, sendo o uso da cozinha comum regulamentado.': 'Cooking or eating in the rooms is not allowed; use of the shared kitchen is regulated.',
+    'Fumar e danos: Fumar é estritamente proibido no interior dos quartos, com multas por violações. Os hóspedes são responsáveis por qualquer dano ou perda de propriedade. É expressamente proibida a confecção de refeições no interior dos quartos ou em qualquer outra área da MiKaya.': 'Smoking and damages: Smoking is strictly forbidden inside the rooms, with fines for violations. Guests are responsible for any damage or loss of property. Preparing meals inside the rooms or in any other MiKaya area is expressly forbidden.',
+    'Festas: Festas e eventos não são autorizados. O nosso ambiente é de paz e tranquilidade. Apelamos para que cada hóspede seja consciente e respeite os vizinhos, para que todos possam ter uma estadia agradável, relaxante e sem barulho.': 'Parties: Parties and events are not allowed. Our environment is peaceful and quiet. We ask each guest to be mindful and respect neighbours so everyone can enjoy a pleasant, relaxing and quiet stay.',
+    'Animais de estimação: Os hóspedes não podem trazer animais de estimação de qualquer tipo para a guest house.': 'Pets: Guests may not bring pets of any kind to the guest house.',
+    'SERVIÇOS E LIMPEZA': 'SERVICES AND CLEANING',
+    'A MiKaya está comprometida com a preservação ambiental e conservação de recursos; agradecemos desde já o seu suporte. A limpeza é diária. A troca de lençóis e toalhas pode ser ajustada conforme a necessidade da estadia.': 'MiKaya is committed to environmental preservation and resource conservation; we appreciate your support. Cleaning is daily. Linen and towel changes can be adjusted according to the needs of the stay.',
 };
 
 const PublicLanguageContext = createContext({
@@ -236,6 +252,17 @@ const translateTenantText = (value, locale) => {
     }
 
     return tenantTextTranslations[value] || value;
+};
+
+const translateMultilineTenantText = (value, locale) => {
+    if (locale !== 'en' || !value) {
+        return value;
+    }
+
+    return String(value)
+        .split('\n')
+        .map((line) => translateTenantText(line.trim(), locale) || line)
+        .join('\n');
 };
 
 export default function Property({ tenant, property, website = {}, booking }) {
@@ -289,7 +316,7 @@ export default function Property({ tenant, property, website = {}, booking }) {
                         href={website.whatsapp_url}
                         target="_blank"
                         rel="noreferrer"
-                        className="fixed bottom-5 right-5 z-50 rounded-full bg-emerald-400 px-5 py-3 text-sm font-bold text-emerald-950 shadow-2xl shadow-emerald-950/40 transition hover:bg-emerald-300"
+                        className="fixed bottom-5 right-5 z-50 rounded-full bg-emerald-400 px-5 py-3 text-sm font-bold text-emerald-950 shadow-2xl shadow-emerald-950/40 transition hover:bg-emerald-300 lg:hidden"
                     >
                         {text.whatsapp}
                     </a>
@@ -823,12 +850,12 @@ function Testimonials({ testimonials }) {
 }
 
 function Policies({ property }) {
-    const { text } = usePublicLanguage();
+    const { locale, text } = usePublicLanguage();
 
     return (
         <section id="politicas" className="mx-auto grid max-w-7xl scroll-mt-28 gap-6 px-6 py-20 lg:grid-cols-2">
-            <Policy title={text.cancellationPolicy} text={property.cancellation_policy} fallback={text.fallbackPolicy} />
-            <Policy title={text.houseRules} text={property.house_rules} fallback={text.fallbackPolicy} />
+            <Policy title={text.cancellationPolicy} text={translateMultilineTenantText(property.cancellation_policy, locale)} fallback={text.fallbackPolicy} />
+            <Policy title={text.houseRules} text={translateMultilineTenantText(property.house_rules, locale)} fallback={text.fallbackPolicy} />
         </section>
     );
 }
@@ -856,6 +883,11 @@ function Contact({ property, website, phone, email }) {
                     {phone && (
                         <a href={phoneHref(phone) || '#'} className="rounded-full border border-white/20 px-6 py-3 text-center font-semibold text-white transition hover:bg-white/10">
                             {text.call}
+                        </a>
+                    )}
+                    {website.whatsapp_url && (
+                        <a href={website.whatsapp_url} target="_blank" rel="noreferrer" className="rounded-full bg-emerald-400 px-6 py-3 text-center font-semibold text-emerald-950 transition hover:bg-emerald-300">
+                            {text.whatsapp}
                         </a>
                     )}
                     <a href="#reservar" className="rounded-full bg-amber-400 px-6 py-3 text-center font-semibold text-black transition hover:bg-amber-300">
