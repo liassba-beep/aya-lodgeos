@@ -663,7 +663,7 @@ function Contact({ property, website, phone, email }) {
                         </a>
                     )}
                     {email && <a className="mt-1 block text-white/65 hover:text-white" href={`mailto:${email}`}>{email}</a>}
-                    <a className="mt-5 inline-block text-sm text-white/35 hover:text-white/70" href="https://app.lodgesos.com/admin/login">
+                    <a className="mt-5 inline-block text-sm font-medium text-white/55 underline decoration-white/20 underline-offset-4 transition hover:text-white hover:decoration-white/70" href="https://app.lodgesos.com/admin/login">
                         {text.ownerArea}
                     </a>
                 </div>
@@ -671,11 +671,6 @@ function Contact({ property, website, phone, email }) {
                     {phone && (
                         <a href={phoneHref(phone) || '#'} className="rounded-full border border-white/20 px-6 py-3 text-center font-semibold text-white transition hover:bg-white/10">
                             {text.call}
-                        </a>
-                    )}
-                    {website.whatsapp_url && (
-                        <a href={website.whatsapp_url} target="_blank" rel="noreferrer" className="rounded-full bg-emerald-400 px-6 py-3 text-center font-semibold text-emerald-950 transition hover:bg-emerald-300">
-                            {text.whatsapp}
                         </a>
                     )}
                     <a href="#reservar" className="rounded-full bg-amber-400 px-6 py-3 text-center font-semibold text-black transition hover:bg-amber-300">
