@@ -1,4 +1,5 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import MobileNotifier from '@/Components/MobileNotifier';
 
 const statusLabels = {
     pending: 'Pendente',
@@ -193,6 +194,12 @@ export default function MobileApp({
                             {summary.date}
                         </p>
                     </header>
+
+                    <MobileNotifier
+                        endpoint="/mobile/novidades"
+                        storageKey="aya-lodgeos-owner-mobile-notifications"
+                        intervalMs={60000}
+                    />
 
                     <div className="mt-5 grid grid-cols-2 gap-3">
                         <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">

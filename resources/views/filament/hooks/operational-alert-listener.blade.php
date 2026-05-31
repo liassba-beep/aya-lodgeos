@@ -5,6 +5,7 @@
         }
 
         const storageKey = 'aya-lodgeos:last-operational-alert-id';
+        const overdueStorageKey = 'aya-lodgeos:last-overdue-alert-signature';
         let audioContext = null;
 
         const playAlertSound = () => {
@@ -30,7 +31,7 @@
             }
         };
 
-        const showPopup = (alert) => {
+        const showPopup = (alert, heading = 'Novo alerta operacional') => {
             const previous = document.querySelector('[data-aya-alert-popup]');
 
             if (previous) {
@@ -59,7 +60,7 @@
                 <div style="display:flex;gap:12px;align-items:flex-start">
                     <div style="height:34px;width:34px;border-radius:999px;background:#f59e0b;color:#111827;display:grid;place-items:center;font-weight:800">!</div>
                     <div>
-                        <div style="font-size:14px;font-weight:700;margin-bottom:4px">Novo alerta operacional</div>
+                        <div style="font-size:14px;font-weight:700;margin-bottom:4px">${heading}</div>
                         <div style="font-size:15px;font-weight:800;margin-bottom:4px">${alert.title || 'Alerta'}</div>
                         <div style="font-size:13px;line-height:1.45;color:rgba(255,255,255,.72)">${alert.message || 'Clique para abrir os alertas.'}</div>
                     </div>
@@ -83,20 +84,28 @@
 
                 const data = await response.json();
                 const latest = data.latest;
+                const overdue = data.overdue;
 
-                if (!latest?.id) {
-                    return;
+                if (latest?.id) {
+                    const lastSeen = Number(window.localStorage.getItem(storageKey) || 0);
+
+                    if (Number(latest.id) > lastSeen) {
+                        window.localStorage.setItem(storageKey, latest.id);
+                        showPopup(latest);
+                        playAlertSound();
+                        return;
+                    }
                 }
 
-                const lastSeen = Number(window.localStorage.getItem(storageKey) || 0);
+                if (overdue?.count > 0 && overdue.signature) {
+                    const lastOverdueSeen = window.localStorage.getItem(overdueStorageKey);
 
-                if (Number(latest.id) <= lastSeen) {
-                    return;
+                    if (lastOverdueSeen !== overdue.signature) {
+                        window.localStorage.setItem(overdueStorageKey, overdue.signature);
+                        showPopup(overdue, 'Atividade atrasada');
+                        playAlertSound();
+                    }
                 }
-
-                window.localStorage.setItem(storageKey, latest.id);
-                showPopup(latest);
-                playAlertSound();
             } catch (error) {
                 // Alert polling is best-effort and must not disturb the panel.
             }

@@ -19,6 +19,7 @@ use App\Models\OwnerDailyReport;
 use App\Models\OperationalAlert;
 use App\Models\Receipt;
 use App\Models\User;
+use App\Support\OperationalNotificationSummary;
 use App\Support\ReservationAvailability;
 use App\Support\SimplePdf;
 use App\Support\TenantContext;
@@ -248,6 +249,19 @@ Route::get('/trabalhador/app', function () {
 })->name('worker.mobile');
 
 Route::middleware([])->prefix('trabalhador')->name('worker.')->group(function () {
+    Route::get('/novidades', function () {
+        $staff = StaffMember::query()->find(session('worker_staff_member_id'));
+
+        if (! $staff) {
+            return response()->json(['message' => 'Sessão expirada.'], 401);
+        }
+
+        return response()->json(OperationalNotificationSummary::forProperty(
+            propertyId: $staff->property_id,
+            staffMemberId: $staff->id,
+        ));
+    })->name('notifications');
+
     Route::post('/check-in', function (Request $request) {
         $staff = StaffMember::findOrFail(session('worker_staff_member_id'));
         $validated = $request->validate(['photo' => ['required', 'image', 'max:5120']]);
@@ -592,6 +606,7 @@ Route::get('/mobile', function () {
 Route::middleware('auth')->group(function () {
     Route::get('/operational-alerts/latest', function () {
         $propertyId = TenantContext::propertyId();
+        $summary = OperationalNotificationSummary::forProperty($propertyId);
         $query = OperationalAlert::query()
             ->when($propertyId, fn ($query) => $query->where('property_id', $propertyId))
             ->where('status', 'open');
@@ -609,8 +624,13 @@ Route::middleware('auth')->group(function () {
                 'message' => $latest->message,
                 'created_at' => $latest->created_at?->toIso8601String(),
             ] : null,
+            'overdue' => $summary['overdue'],
         ]);
     })->name('operational-alerts.latest');
+
+    Route::get('/mobile/novidades', function () {
+        return response()->json(OperationalNotificationSummary::forProperty(TenantContext::propertyId()));
+    })->name('mobile.notifications');
 
     Route::get('/admin/rooms/qr-labels', function () {
         $propertyId = TenantContext::propertyId();
