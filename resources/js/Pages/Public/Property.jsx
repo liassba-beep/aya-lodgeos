@@ -19,11 +19,26 @@ const xsrfToken = () => {
     return token ? decodeURIComponent(token) : null;
 };
 
+const highlightServices = [
+    {
+        name: 'Café da manhã',
+        description: 'Disponível para começar o dia com calma.',
+    },
+    {
+        name: 'Wi-Fi',
+        description: 'Internet disponível para hóspedes.',
+    },
+    {
+        name: 'Parque privativo',
+        description: 'Estacionamento reservado no alojamento.',
+    },
+];
+
 export default function Property({ property, booking }) {
     const phone = property.phone || '+258842990406';
     const email = property.email || 'reservas@lodgesos.com';
     const ownerLoginUrl = 'https://app.lodgesos.com/admin/login';
-    const heroImage = '/images/mikaya-showcase.jpg';
+    const heroImage = '/images/mikaya-hero.jpg';
 
     const goToOwnerLogin = () => {
         window.location.assign(ownerLoginUrl);
@@ -60,18 +75,8 @@ export default function Property({ property, booking }) {
                                 <a href="#contactos" className="hover:text-white">
                                     Contactos
                                 </a>
-                                <button type="button" onClick={goToOwnerLogin} className="hover:text-white">
-                                    Área do proprietário
-                                </button>
                             </nav>
                             <div className="flex items-center gap-2">
-                                <button
-                                    type="button"
-                                    onClick={goToOwnerLogin}
-                                    className="hidden rounded-full border border-white/20 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10 sm:inline-flex"
-                                >
-                                    Entrar
-                                </button>
                                 <a
                                     href="#reservar"
                                     className="rounded-full bg-amber-400 px-4 py-2 text-sm font-semibold text-black transition hover:bg-amber-300"
@@ -104,13 +109,6 @@ export default function Property({ property, booking }) {
                                 >
                                     Consultar disponibilidade
                                 </a>
-                                <button
-                                    type="button"
-                                    onClick={goToOwnerLogin}
-                                    className="rounded-full border border-white/25 px-6 py-3 font-semibold text-white transition hover:bg-white/10"
-                                >
-                                    Entrar no LodgeOS
-                                </button>
                             </div>
                         </div>
                     </div>
@@ -134,8 +132,8 @@ export default function Property({ property, booking }) {
                             </p>
                             <h2 className="mt-3 text-3xl font-bold">Conforto simples, claro e bem localizado</h2>
                             <p className="mt-5 leading-7 text-stone-600">
-                                A disponibilidade e o preço são calculados pelo LodgeOS a partir dos quartos reais
-                                do alojamento, antes de o pedido chegar ao proprietário.
+                                Café da manhã, Wi-Fi e parque privativo fazem parte da experiência preparada para
+                                estadias tranquilas entre a cidade e as praias de Inhambane.
                             </p>
                         </div>
                         <div className="grid gap-4 sm:grid-cols-2">
@@ -144,14 +142,7 @@ export default function Property({ property, booking }) {
                                 label="Limpeza"
                                 value={`A cada ${property.cleaning_interval_days || 3} dias`}
                             />
-                            {(property.services.length > 0
-                                ? property.services
-                                : [
-                                      { name: 'Pequeno-almoço', description: 'Disponível sob consulta' },
-                                      { name: 'Wi-Fi', description: 'Disponível para hóspedes' },
-                                      { name: 'Parque privativo', description: 'Disponível no alojamento' },
-                                  ]
-                            ).map((service) => (
+                            {highlightServices.map((service) => (
                                 <Info
                                     key={service.name}
                                     label={service.name}
@@ -177,12 +168,21 @@ export default function Property({ property, booking }) {
                             <p className="mt-1 text-white/65">{phone}</p>
                             <p className="mt-1 text-white/65">{email}</p>
                         </div>
-                        <a
-                            href="#reservar"
-                            className="w-full rounded-full bg-amber-400 px-6 py-3 text-center font-semibold text-black transition hover:bg-amber-300 md:w-auto"
-                        >
-                            Fazer pedido de reserva
-                        </a>
+                        <div className="flex w-full flex-col gap-3 sm:flex-row md:w-auto">
+                            <a
+                                href="#reservar"
+                                className="rounded-full bg-amber-400 px-6 py-3 text-center font-semibold text-black transition hover:bg-amber-300"
+                            >
+                                Fazer pedido de reserva
+                            </a>
+                            <button
+                                type="button"
+                                onClick={goToOwnerLogin}
+                                className="rounded-full border border-white/20 px-6 py-3 text-center font-semibold text-white transition hover:bg-white/10"
+                            >
+                                Área do proprietário
+                            </button>
+                        </div>
                     </div>
                 </section>
             </main>
@@ -311,8 +311,8 @@ function BookingSection({ property, booking }) {
                     </p>
                     <h2 className="mt-3 text-3xl font-bold">Confirme disponibilidade antes de enviar o pedido</h2>
                     <p className="mt-5 leading-7 text-white/68">
-                        Escolha as datas, informe os seus contactos e o LodgeOS calcula o preço com base nos
-                        quartos disponíveis da {property.name}. O proprietário recebe um alerta no painel web.
+                        Escolha as datas e informe os seus contactos. O preço estimado aparece automaticamente
+                        antes do envio.
                     </p>
                     <div className="mt-8 rounded-lg border border-white/10 bg-white/[0.05] p-5">
                         <p className="text-sm text-white/55">Preço estimado</p>
