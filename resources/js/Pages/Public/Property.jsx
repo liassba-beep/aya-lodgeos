@@ -108,6 +108,7 @@ export default function Property({ tenant, property, website = {}, booking }) {
     const heroImage = imageUrl(website.hero_image) || imageUrl(website.photos?.[0]?.src);
     const roomRates = (website.room_types || []).map((room) => Number(room.price_from || 0)).filter(Boolean);
     const lowestRate = roomRates.length ? Math.min(...roomRates) : property.lowest_rate;
+    const languages = (property.services || []).find((service) => service.name === 'Idiomas')?.description;
 
     return (
         <>
@@ -191,10 +192,11 @@ export default function Property({ tenant, property, website = {}, booking }) {
                 </section>
 
                 <section className="border-y border-white/10 bg-black px-6 py-6">
-                    <div className="mx-auto grid max-w-7xl gap-4 sm:grid-cols-3">
+                    <div className="mx-auto grid max-w-7xl gap-4 sm:grid-cols-2 lg:grid-cols-4">
                         <Metric label="Alojamento" value={property.legal_name || property.name} />
                         <Metric label={text.directBookings} value={property.city || tenant?.name} />
                         <Metric label={text.from} value={lowestRate ? money(lowestRate) : 'Sob consulta'} />
+                        {languages && <Metric label="Idiomas" value={languages} />}
                     </div>
                 </section>
 
