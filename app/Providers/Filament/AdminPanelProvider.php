@@ -63,6 +63,10 @@ class AdminPanelProvider extends PanelProvider
                 'panels::body.end',
                 fn (): View => view('filament.hooks.operational-alert-listener'),
             )
+            ->renderHook(
+                'panels::body.end',
+                fn (): View => view('filament.hooks.logout-button'),
+            )
             ->middleware([
                 AdminIpAllowlist::class,
                 EncryptCookies::class,
