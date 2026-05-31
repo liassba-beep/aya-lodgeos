@@ -171,18 +171,6 @@ export default function Property({ property, booking }) {
     const ownerLoginUrl = 'https://app.lodgesos.com/admin/login';
     const heroImage = '/images/mikaya-hero.jpg';
 
-    const sectionLink = (sectionId) => (event) => {
-        const target = document.getElementById(sectionId);
-
-        if (!target) {
-            return;
-        }
-
-        event.preventDefault();
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        window.history.replaceState(null, '', `#${sectionId}`);
-    };
-
     const goToOwnerLogin = () => {
         window.location.assign(ownerLoginUrl);
     };
@@ -204,22 +192,21 @@ export default function Property({ property, booking }) {
                         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
                             <a
                                 href="#topo"
-                                onClick={sectionLink('topo')}
                                 className="text-xl font-semibold tracking-wide"
                             >
                                 {property.name}
                             </a>
                             <nav className="hidden items-center gap-8 text-sm text-white/80 md:flex">
-                                <a href="#reservar" onClick={sectionLink('reservar')} className="hover:text-white">
+                                <a href="#reservar" className="hover:text-white">
                                     {text.navReserve}
                                 </a>
-                                <a href="#servicos" onClick={sectionLink('servicos')} className="hover:text-white">
+                                <a href="#servicos" className="hover:text-white">
                                     {text.navServices}
                                 </a>
-                                <a href="#politicas" onClick={sectionLink('politicas')} className="hover:text-white">
+                                <a href="#politicas" className="hover:text-white">
                                     {text.navPolicies}
                                 </a>
-                                <a href="#contactos" onClick={sectionLink('contactos')} className="hover:text-white">
+                                <a href="#contactos" className="hover:text-white">
                                     {text.navContacts}
                                 </a>
                             </nav>
@@ -240,7 +227,6 @@ export default function Property({ property, booking }) {
                                 </div>
                                 <a
                                     href="#reservar"
-                                    onClick={sectionLink('reservar')}
                                     className="rounded-full bg-amber-400 px-4 py-2 text-sm font-semibold text-black transition hover:bg-amber-300"
                                 >
                                     {text.navReserve}
@@ -266,7 +252,6 @@ export default function Property({ property, booking }) {
                             <div className="mt-8 flex flex-wrap gap-3">
                                 <a
                                     href="#reservar"
-                                    onClick={sectionLink('reservar')}
                                     className="rounded-full bg-amber-400 px-6 py-3 font-semibold text-black transition hover:bg-amber-300"
                                 >
                                     {text.checkAvailability}
@@ -329,7 +314,6 @@ export default function Property({ property, booking }) {
                         <div className="flex w-full flex-col gap-3 sm:flex-row md:w-auto">
                             <a
                                 href="#reservar"
-                                onClick={sectionLink('reservar')}
                                 className="rounded-full bg-amber-400 px-6 py-3 text-center font-semibold text-black transition hover:bg-amber-300"
                             >
                                 {text.bookingRequest}
