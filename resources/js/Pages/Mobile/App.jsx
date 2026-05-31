@@ -48,7 +48,7 @@ function EmptyState({ children }) {
 
 function Shortcut({ href, label, code }) {
     return (
-        <Link
+        <a
             href={href}
             className="flex min-h-20 flex-col justify-between rounded-lg border border-zinc-800 bg-zinc-900 p-3 text-left active:border-amber-400"
         >
@@ -56,7 +56,7 @@ function Shortcut({ href, label, code }) {
                 {code}
             </span>
             <span className="text-sm font-medium text-zinc-100">{label}</span>
-        </Link>
+        </a>
     );
 }
 
@@ -95,11 +95,12 @@ function ProofForm({ item }) {
     return (
         <form onSubmit={submit} className="mt-4 space-y-3">
             <div>
-                <label className="text-xs text-zinc-400">Fotografia</label>
+                <label className="text-xs text-zinc-400">Fotografia de prova</label>
                 <input
                     type="file"
                     accept="image/*"
                     capture="environment"
+                    required
                     onChange={(event) =>
                         setData('photo', event.target.files?.[0] || null)
                     }
@@ -114,7 +115,8 @@ function ProofForm({ item }) {
                 <input
                     value={data.qr_code}
                     onChange={(event) => setData('qr_code', event.target.value)}
-                    placeholder="Código QR ou referência"
+                    required={item.requires_qr}
+                    placeholder={item.requires_qr ? 'QR do quarto' : 'Código QR ou referência'}
                     className="rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs text-zinc-200"
                 />
                 <button
@@ -125,6 +127,14 @@ function ProofForm({ item }) {
                     GPS
                 </button>
             </div>
+            {item.requires_qr && (
+                <p className="text-xs text-amber-200">
+                    QR do quarto obrigatório para validar esta limpeza.
+                </p>
+            )}
+            {errors.qr_code && (
+                <p className="text-xs text-red-300">{errors.qr_code}</p>
+            )}
 
             {(data.latitude || data.longitude) && (
                 <p className="text-xs text-emerald-200">
@@ -266,12 +276,12 @@ export default function MobileApp({
                         <Section
                             title="Reservas de hoje"
                             action={
-                                <Link
+                                <a
                                     href="/admin/reservations"
                                     className="text-xs font-medium text-amber-300"
                                 >
                                     Ver todas
-                                </Link>
+                                </a>
                             }
                         >
                             {reservations.length === 0 ? (
@@ -369,7 +379,7 @@ export default function MobileApp({
                                                         {item.title}
                                                     </p>
                                                     <p className="mt-1 text-xs text-zinc-400">
-                                                        {item.area} -{' '}
+                                                        {item.room || item.area} -{' '}
                                                         {item.staff ||
                                                             'Sem responsavel'}
                                                     </p>
@@ -428,15 +438,15 @@ export default function MobileApp({
                         <Link href="/mobile" className="text-amber-300">
                             Hoje
                         </Link>
-                        <Link href="/admin/reservations" className="text-zinc-400">
+                        <a href="/admin/reservations" className="text-zinc-400">
                             Reservas
-                        </Link>
-                        <Link href="/admin/payments" className="text-zinc-400">
+                        </a>
+                        <a href="/admin/payments" className="text-zinc-400">
                             Caixa
-                        </Link>
-                        <Link href="/admin" className="text-zinc-400">
+                        </a>
+                        <a href="/admin" className="text-zinc-400">
                             Admin
-                        </Link>
+                        </a>
                     </div>
                 </nav>
             </main>
