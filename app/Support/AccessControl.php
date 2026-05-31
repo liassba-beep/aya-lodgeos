@@ -62,6 +62,7 @@ class AccessControl
         return [
             'property' => 'Alojamentos',
             'user' => 'Equipa e acessos',
+            'mobile-app' => 'App mobile',
             'room' => 'Quartos',
             'guest' => 'Hóspedes',
             'reservation' => 'Reservas',
@@ -152,6 +153,7 @@ class AccessControl
             'owner' => [
                 'property' => $view,
                 'user' => ['view', 'create', 'update'],
+                'mobile-app' => ['view', 'update'],
                 'room' => $view,
                 'guest' => $view,
                 'reservation' => ['view', 'update'],
@@ -184,6 +186,8 @@ class AccessControl
             ],
             'manager' => [
                 'property' => $manage,
+                'user' => ['view', 'create', 'update'],
+                'mobile-app' => $manage,
                 'room' => $manage,
                 'guest' => $manage,
                 'reservation' => $manage,
@@ -215,6 +219,7 @@ class AccessControl
                 'direct-booking-request' => $manage,
             ],
             'staff' => [
+                'mobile-app' => $view,
                 'operational-task' => $execute,
                 'daily-checklist' => $execute,
                 'stock-item' => $view,
@@ -226,6 +231,7 @@ class AccessControl
                 'knowledge-guide' => $view,
             ],
             'security' => [
+                'mobile-app' => $view,
                 'reservation' => $view,
                 'guest' => $view,
                 'operational-task' => $execute,

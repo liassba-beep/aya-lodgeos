@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Pages\OwnerDashboard;
+use App\Filament\Pages\MobileAccess;
 use App\Filament\Pages\ReservationCalendar;
 use App\Filament\Pages\StaffScheduleCalendar;
 use App\Filament\Widgets\OwnerOverview;
@@ -42,6 +43,7 @@ class AdminPanelProvider extends PanelProvider
                 NavigationGroup::make()->label('Operacional'),
                 NavigationGroup::make()->label('Colaboradores'),
                 NavigationGroup::make()->label('Stock'),
+                NavigationGroup::make()->label('Administração'),
                 NavigationGroup::make()->label('SaaS'),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
@@ -49,6 +51,7 @@ class AdminPanelProvider extends PanelProvider
                 OwnerDashboard::class,
                 ReservationCalendar::class,
                 StaffScheduleCalendar::class,
+                MobileAccess::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([

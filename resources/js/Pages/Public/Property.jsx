@@ -21,51 +21,166 @@ const xsrfToken = () => {
 
 const highlightServices = [
     {
-        name: '4 quartos',
-        description: 'Com casa de banho privativa e kitnet.',
+        name: { pt: '4 quartos', en: '4 rooms' },
+        description: { pt: 'Com casa de banho privativa e kitnet.', en: 'With private bathroom and kitchenette.' },
     },
     {
-        name: 'Café da manhã',
-        description: 'Disponível para começar o dia com calma.',
+        name: { pt: 'Café da manhã', en: 'Breakfast' },
+        description: { pt: 'Disponível para começar o dia com calma.', en: 'Available for an easy start to the day.' },
     },
     {
-        name: 'Starlink Wi-Fi gratuito',
-        description: 'Internet estável para trabalho e lazer.',
+        name: { pt: 'Starlink Wi-Fi gratuito', en: 'Free Starlink Wi-Fi' },
+        description: { pt: 'Internet estável para trabalho e lazer.', en: 'Stable internet for work and leisure.' },
     },
     {
-        name: 'Parque privativo',
-        description: 'Estacionamento reservado no alojamento.',
+        name: { pt: 'Parque privativo', en: 'Private parking' },
+        description: { pt: 'Estacionamento reservado no alojamento.', en: 'Reserved parking at the property.' },
     },
     {
-        name: 'DSTV',
-        description: 'Entretenimento disponível nos quartos.',
+        name: { pt: 'DSTV', en: 'DSTV' },
+        description: { pt: 'Entretenimento disponível nos quartos.', en: 'Entertainment available in the rooms.' },
     },
     {
-        name: 'Ar condicionado',
-        description: 'Conforto térmico durante a estadia.',
+        name: { pt: 'Ar condicionado', en: 'Air conditioning' },
+        description: { pt: 'Conforto térmico durante a estadia.', en: 'Thermal comfort throughout your stay.' },
     },
     {
-        name: 'Geleira',
-        description: 'Apoio prático para estadias curtas ou prolongadas.',
+        name: { pt: 'Geleira', en: 'Fridge' },
+        description: { pt: 'Apoio prático para estadias curtas ou prolongadas.', en: 'Practical support for short or longer stays.' },
     },
     {
-        name: 'CCTV',
-        description: 'Câmaras nas áreas públicas.',
+        name: { pt: 'CCTV', en: 'CCTV' },
+        description: { pt: 'Câmaras nas áreas públicas.', en: 'Cameras in public areas.' },
     },
     {
-        name: 'Localização estratégica',
-        description: 'A poucos minutos do centro da cidade e das praias do Tofo e Barra.',
+        name: { pt: 'Localização estratégica', en: 'Strategic location' },
+        description: {
+            pt: 'A poucos minutos do centro da cidade e das praias do Tofo e Barra.',
+            en: 'A few minutes from the city centre and the Tofo and Barra beaches.',
+        },
     },
 ];
 
+const publicText = {
+    pt: {
+        navReserve: 'Reservar',
+        navServices: 'Serviços',
+        navPolicies: 'Políticas',
+        navContacts: 'Contactos',
+        heroTitle: 'O seu refúgio entre as praias de Inhambane e a cidade.',
+        heroSubtitle: 'Guest house em Inhambane para estadias tranquilas, reservas directas e atendimento próximo.',
+        checkAvailability: 'Consultar disponibilidade',
+        accommodation: 'Alojamento',
+        bookings: 'Reservas',
+        onlineDirect: 'Online e directas',
+        from: 'Desde',
+        onRequest: 'Sob consulta',
+        servicesEyebrow: 'Serviços',
+        servicesTitle: 'Conforto simples, claro e bem localizado',
+        servicesBody:
+            'Estendemos as boas-vindas para que desfrute da melhor estadia. A MiKaya reúne comodidades essenciais para quem procura tranquilidade entre as praias e a cidade.',
+        deposit: 'Depósito de reserva',
+        cleaning: 'Limpeza',
+        daily: 'Diária',
+        cancellationPolicy: 'Política de cancelamento',
+        houseRules: 'Regras da casa',
+        fallbackPolicy: 'Informação a confirmar directamente com o alojamento.',
+        bookingRequest: 'Fazer pedido de reserva',
+        ownerArea: 'Área do proprietário',
+    },
+    en: {
+        navReserve: 'Book',
+        navServices: 'Services',
+        navPolicies: 'Policies',
+        navContacts: 'Contacts',
+        heroTitle: 'Your refuge between Inhambane’s beaches and the city.',
+        heroSubtitle: 'Guest house in Inhambane for peaceful stays, direct bookings and close hospitality.',
+        checkAvailability: 'Check availability',
+        accommodation: 'Property',
+        bookings: 'Bookings',
+        onlineDirect: 'Online and direct',
+        from: 'From',
+        onRequest: 'On request',
+        servicesEyebrow: 'Services',
+        servicesTitle: 'Simple comfort in a convenient location',
+        servicesBody:
+            'We welcome you to enjoy your best stay. MiKaya brings together essential comforts for travellers seeking calm between the beaches and the city.',
+        deposit: 'Booking deposit',
+        cleaning: 'Cleaning',
+        daily: 'Daily',
+        cancellationPolicy: 'Cancellation policy',
+        houseRules: 'House rules',
+        fallbackPolicy: 'Information to be confirmed directly with the property.',
+        bookingRequest: 'Send booking request',
+        ownerArea: 'Owner area',
+    },
+};
+
+const bookingText = {
+    pt: {
+        eyebrow: 'Reservas directas',
+        title: 'Confirme disponibilidade antes de enviar o pedido',
+        body: 'Escolha as datas e informe os seus contactos. O preço estimado aparece automaticamente antes do envio.',
+        estimatedPrice: 'Preço estimado',
+        checking: 'A verificar...',
+        nights: 'noite(s)',
+        perNight: 'por noite',
+        selectDates: 'Seleccione entrada e saída.',
+        unavailable: 'Não foi possível verificar a disponibilidade. Tente novamente.',
+        submitError: 'Não foi possível enviar o pedido.',
+        name: 'Nome',
+        phone: 'Telemóvel',
+        email: 'Email',
+        adults: 'Adultos',
+        children: 'Crianças',
+        checkIn: 'Entrada',
+        checkOut: 'Saída',
+        message: 'Mensagem',
+        sending: 'A enviar...',
+        submit: 'Enviar pedido de reserva',
+    },
+    en: {
+        eyebrow: 'Direct bookings',
+        title: 'Check availability before sending your request',
+        body: 'Choose your dates and share your contact details. The estimated price appears automatically before sending.',
+        estimatedPrice: 'Estimated price',
+        checking: 'Checking...',
+        nights: 'night(s)',
+        perNight: 'per night',
+        selectDates: 'Select check-in and check-out.',
+        unavailable: 'Could not check availability. Please try again.',
+        submitError: 'Could not send the request.',
+        name: 'Name',
+        phone: 'Phone',
+        email: 'Email',
+        adults: 'Adults',
+        children: 'Children',
+        checkIn: 'Check-in',
+        checkOut: 'Check-out',
+        message: 'Message',
+        sending: 'Sending...',
+        submit: 'Send booking request',
+    },
+};
+
 export default function Property({ property, booking }) {
+    const [locale, setLocale] = useState('pt');
+    const text = publicText[locale];
     const phone = property.phone || '+258842990406';
     const email = property.email || 'reservas@lodgesos.com';
     const ownerLoginUrl = 'https://app.lodgesos.com/admin/login';
     const heroImage = '/images/mikaya-hero.jpg';
 
-    const scrollToSection = (sectionId) => {
-        document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const sectionLink = (sectionId) => (event) => {
+        const target = document.getElementById(sectionId);
+
+        if (!target) {
+            return;
+        }
+
+        event.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        window.history.replaceState(null, '', `#${sectionId}`);
     };
 
     const goToOwnerLogin = () => {
@@ -87,35 +202,49 @@ export default function Property({ property, booking }) {
 
                     <div className="absolute inset-x-0 top-0 z-10 border-b border-white/10 bg-black/35 backdrop-blur">
                         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
-                            <button
-                                type="button"
-                                onClick={() => scrollToSection('topo')}
+                            <a
+                                href="#topo"
+                                onClick={sectionLink('topo')}
                                 className="text-xl font-semibold tracking-wide"
                             >
                                 {property.name}
-                            </button>
+                            </a>
                             <nav className="hidden items-center gap-8 text-sm text-white/80 md:flex">
-                                <button type="button" onClick={() => scrollToSection('reservar')} className="hover:text-white">
-                                    Reservar
-                                </button>
-                                <button type="button" onClick={() => scrollToSection('servicos')} className="hover:text-white">
-                                    Serviços
-                                </button>
-                                <button type="button" onClick={() => scrollToSection('politicas')} className="hover:text-white">
-                                    Políticas
-                                </button>
-                                <button type="button" onClick={() => scrollToSection('contactos')} className="hover:text-white">
-                                    Contactos
-                                </button>
+                                <a href="#reservar" onClick={sectionLink('reservar')} className="hover:text-white">
+                                    {text.navReserve}
+                                </a>
+                                <a href="#servicos" onClick={sectionLink('servicos')} className="hover:text-white">
+                                    {text.navServices}
+                                </a>
+                                <a href="#politicas" onClick={sectionLink('politicas')} className="hover:text-white">
+                                    {text.navPolicies}
+                                </a>
+                                <a href="#contactos" onClick={sectionLink('contactos')} className="hover:text-white">
+                                    {text.navContacts}
+                                </a>
                             </nav>
-                            <div className="flex items-center gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => scrollToSection('reservar')}
+                            <div className="flex items-center gap-3">
+                                <div className="flex rounded-full border border-white/15 bg-white/10 p-1 text-xs font-semibold">
+                                    {['pt', 'en'].map((option) => (
+                                        <button
+                                            key={option}
+                                            type="button"
+                                            onClick={() => setLocale(option)}
+                                            className={`rounded-full px-3 py-1 uppercase transition ${
+                                                locale === option ? 'bg-white text-stone-950' : 'text-white/70 hover:text-white'
+                                            }`}
+                                        >
+                                            {option}
+                                        </button>
+                                    ))}
+                                </div>
+                                <a
+                                    href="#reservar"
+                                    onClick={sectionLink('reservar')}
                                     className="rounded-full bg-amber-400 px-4 py-2 text-sm font-semibold text-black transition hover:bg-amber-300"
                                 >
-                                    Reservar
-                                </button>
+                                    {text.navReserve}
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -129,20 +258,19 @@ export default function Property({ property, booking }) {
                                 {property.city || 'Inhambane'}, {property.country || 'Moçambique'}
                             </p>
                             <h1 className="max-w-4xl text-5xl font-bold leading-tight sm:text-6xl lg:text-7xl">
-                                O seu refúgio entre as praias de Inhambane e a cidade.
+                                {text.heroTitle}
                             </h1>
                             <p className="mt-6 max-w-2xl text-lg leading-8 text-white/82">
-                                {property.notes ||
-                                    'Guest house em Inhambane para estadias tranquilas, reservas directas e atendimento próximo.'}
+                                {property.notes || text.heroSubtitle}
                             </p>
                             <div className="mt-8 flex flex-wrap gap-3">
-                                <button
-                                    type="button"
-                                    onClick={() => scrollToSection('reservar')}
+                                <a
+                                    href="#reservar"
+                                    onClick={sectionLink('reservar')}
                                     className="rounded-full bg-amber-400 px-6 py-3 font-semibold text-black transition hover:bg-amber-300"
                                 >
-                                    Consultar disponibilidade
-                                </button>
+                                    {text.checkAvailability}
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -150,34 +278,33 @@ export default function Property({ property, booking }) {
 
                 <section className="border-y border-white/10 bg-black px-6 py-6">
                     <div className="mx-auto grid max-w-7xl gap-4 sm:grid-cols-3">
-                        <Metric label="Alojamento" value={property.legal_name || property.name} />
-                        <Metric label="Reservas" value="Online e directas" />
-                        <Metric label="Desde" value={property.lowest_rate ? money(property.lowest_rate) : 'Sob consulta'} />
+                        <Metric label={text.accommodation} value={property.legal_name || property.name} />
+                        <Metric label={text.bookings} value={text.onlineDirect} />
+                        <Metric label={text.from} value={property.lowest_rate ? money(property.lowest_rate) : text.onRequest} />
                     </div>
                 </section>
 
-                <BookingSection property={property} booking={booking} />
+                <BookingSection property={property} booking={booking} locale={locale} />
 
                 <section id="servicos" className="scroll-mt-28 bg-white px-6 py-20 text-stone-950">
                     <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.9fr_1.1fr]">
                         <div>
                             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-600">
-                                Serviços
+                                {text.servicesEyebrow}
                             </p>
-                            <h2 className="mt-3 text-3xl font-bold">Conforto simples, claro e bem localizado</h2>
+                            <h2 className="mt-3 text-3xl font-bold">{text.servicesTitle}</h2>
                             <p className="mt-5 leading-7 text-stone-600">
-                                Estendemos as boas-vindas para que desfrute da melhor estadia. A MiKaya reúne
-                                comodidades essenciais para quem procura tranquilidade entre as praias e a cidade.
+                                {text.servicesBody}
                             </p>
                         </div>
                         <div className="grid gap-4 sm:grid-cols-2">
-                            <Info label="Depósito de reserva" value={`${property.deposit_percent || 50}%`} />
-                            <Info label="Limpeza" value="Diária" />
+                            <Info label={text.deposit} value={`${property.deposit_percent || 50}%`} />
+                            <Info label={text.cleaning} value={text.daily} />
                             {highlightServices.map((service) => (
                                 <Info
-                                    key={service.name}
-                                    label={service.name}
-                                    value={service.description || 'Disponível'}
+                                    key={service.name.pt}
+                                    label={service.name[locale]}
+                                    value={service.description[locale]}
                                 />
                             ))}
                         </div>
@@ -185,8 +312,8 @@ export default function Property({ property, booking }) {
                 </section>
 
                 <section id="politicas" className="mx-auto grid max-w-7xl scroll-mt-28 gap-6 px-6 py-20 lg:grid-cols-2">
-                    <Policy title="Política de cancelamento" text={property.cancellation_policy} />
-                    <Policy title="Regras da casa" text={property.house_rules} />
+                    <Policy title={text.cancellationPolicy} text={property.cancellation_policy} fallback={text.fallbackPolicy} />
+                    <Policy title={text.houseRules} text={property.house_rules} fallback={text.fallbackPolicy} />
                 </section>
 
                 <section id="contactos" className="scroll-mt-28 border-t border-white/10 bg-black px-6 py-14">
@@ -200,19 +327,19 @@ export default function Property({ property, booking }) {
                             <p className="mt-1 text-white/65">{email}</p>
                         </div>
                         <div className="flex w-full flex-col gap-3 sm:flex-row md:w-auto">
-                            <button
-                                type="button"
-                                onClick={() => scrollToSection('reservar')}
+                            <a
+                                href="#reservar"
+                                onClick={sectionLink('reservar')}
                                 className="rounded-full bg-amber-400 px-6 py-3 text-center font-semibold text-black transition hover:bg-amber-300"
                             >
-                                Fazer pedido de reserva
-                            </button>
+                                {text.bookingRequest}
+                            </a>
                             <button
                                 type="button"
                                 onClick={goToOwnerLogin}
                                 className="rounded-full border border-white/20 px-6 py-3 text-center font-semibold text-white transition hover:bg-white/10"
                             >
-                                Área do proprietário
+                                {text.ownerArea}
                             </button>
                         </div>
                     </div>
@@ -222,7 +349,8 @@ export default function Property({ property, booking }) {
     );
 }
 
-function BookingSection({ property, booking }) {
+function BookingSection({ property, booking, locale }) {
+    const text = bookingText[locale] || bookingText.pt;
     const [form, setForm] = useState({
         guest_name: '',
         guest_phone: '',
@@ -273,7 +401,7 @@ function BookingSection({ property, booking }) {
                     setAvailability(null);
                     setNotice({
                         type: 'error',
-                        message: 'Não foi possível verificar a disponibilidade. Tente novamente.',
+                        message: text.unavailable,
                     });
                 }
             } finally {
@@ -285,7 +413,7 @@ function BookingSection({ property, booking }) {
             window.clearTimeout(timer);
             controller.abort();
         };
-    }, [booking.availability_url, canCheck, form.adults, form.check_in, form.check_out, form.children]);
+    }, [booking.availability_url, canCheck, form.adults, form.check_in, form.check_out, form.children, text.unavailable]);
 
     const update = (field) => (event) => {
         setForm((current) => ({ ...current, [field]: event.target.value }));
@@ -318,7 +446,7 @@ function BookingSection({ property, booking }) {
 
             if (!response.ok) {
                 setErrors(data.errors || {});
-                setNotice({ type: 'error', message: data.message || 'Não foi possível enviar o pedido.' });
+                setNotice({ type: 'error', message: data.message || text.submitError });
                 return;
             }
 
@@ -344,57 +472,56 @@ function BookingSection({ property, booking }) {
             <div className="grid gap-10 lg:grid-cols-[0.85fr_1.15fr]">
                 <div>
                     <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-300">
-                        Reservas directas
+                        {text.eyebrow}
                     </p>
-                    <h2 className="mt-3 text-3xl font-bold">Confirme disponibilidade antes de enviar o pedido</h2>
+                    <h2 className="mt-3 text-3xl font-bold">{text.title}</h2>
                     <p className="mt-5 leading-7 text-white/68">
-                        Escolha as datas e informe os seus contactos. O preço estimado aparece automaticamente
-                        antes do envio.
+                        {text.body}
                     </p>
                     <div className="mt-8 rounded-lg border border-white/10 bg-white/[0.05] p-5">
-                        <p className="text-sm text-white/55">Preço estimado</p>
+                        <p className="text-sm text-white/55">{text.estimatedPrice}</p>
                         {checking ? (
-                            <p className="mt-2 text-xl font-semibold text-amber-300">A verificar...</p>
+                            <p className="mt-2 text-xl font-semibold text-amber-300">{text.checking}</p>
                         ) : availability?.available ? (
                             <div className="mt-2">
                                 <p className="text-3xl font-bold text-amber-300">{money(availability.total)}</p>
                                 <p className="mt-1 text-sm text-white/60">
-                                    {availability.nights} noite(s), {money(availability.nightly_rate)} por noite.
+                                    {availability.nights} {text.nights}, {money(availability.nightly_rate)} {text.perNight}.
                                 </p>
                             </div>
                         ) : availability?.available === false ? (
                             <p className="mt-2 text-lg font-semibold text-red-300">{availability.message}</p>
                         ) : (
-                            <p className="mt-2 text-lg font-semibold text-white/65">Seleccione entrada e saída.</p>
+                            <p className="mt-2 text-lg font-semibold text-white/65">{text.selectDates}</p>
                         )}
                     </div>
                 </div>
 
                 <form onSubmit={submit} className="rounded-lg border border-white/10 bg-white/[0.06] p-6">
                     <div className="grid gap-4 md:grid-cols-2">
-                        <Field label="Nome" error={errors.guest_name}>
+                        <Field label={text.name} error={errors.guest_name}>
                             <input value={form.guest_name} onChange={update('guest_name')} required className="input" />
                         </Field>
-                        <Field label="Telemóvel" error={errors.guest_phone}>
+                        <Field label={text.phone} error={errors.guest_phone}>
                             <input value={form.guest_phone} onChange={update('guest_phone')} required className="input" />
                         </Field>
-                        <Field label="Email" error={errors.guest_email}>
+                        <Field label={text.email} error={errors.guest_email}>
                             <input type="email" value={form.guest_email} onChange={update('guest_email')} className="input" />
                         </Field>
-                        <Field label="Adultos" error={errors.adults}>
+                        <Field label={text.adults} error={errors.adults}>
                             <input type="number" min="1" value={form.adults} onChange={update('adults')} required className="input" />
                         </Field>
-                        <Field label="Entrada" error={errors.check_in}>
+                        <Field label={text.checkIn} error={errors.check_in}>
                             <input type="date" min={today} value={form.check_in} onChange={update('check_in')} required className="input" />
                         </Field>
-                        <Field label="Saída" error={errors.check_out}>
+                        <Field label={text.checkOut} error={errors.check_out}>
                             <input type="date" min={form.check_in || today} value={form.check_out} onChange={update('check_out')} required className="input" />
                         </Field>
-                        <Field label="Crianças" error={errors.children}>
+                        <Field label={text.children} error={errors.children}>
                             <input type="number" min="0" value={form.children} onChange={update('children')} required className="input" />
                         </Field>
                     </div>
-                    <Field label="Mensagem" error={errors.message} className="mt-4">
+                    <Field label={text.message} error={errors.message} className="mt-4">
                         <textarea value={form.message} onChange={update('message')} rows="4" className="input resize-none" />
                     </Field>
                     {notice && (
@@ -413,7 +540,7 @@ function BookingSection({ property, booking }) {
                         disabled={submitting || availability?.available === false}
                         className="mt-6 w-full rounded-full bg-amber-400 px-6 py-3 font-semibold text-black transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                        {submitting ? 'A enviar...' : 'Enviar pedido de reserva'}
+                        {submitting ? text.sending : text.submit}
                     </button>
                 </form>
             </div>
@@ -449,12 +576,12 @@ function Info({ label, value }) {
     );
 }
 
-function Policy({ title, text }) {
+function Policy({ title, text, fallback }) {
     return (
         <article className="rounded-lg border border-white/10 bg-white/[0.06] p-6">
             <h3 className="text-xl font-semibold">{title}</h3>
             <p className="mt-4 whitespace-pre-line leading-7 text-white/68">
-                {text || 'Informação a confirmar directamente com o alojamento.'}
+                {text || fallback}
             </p>
         </article>
     );
