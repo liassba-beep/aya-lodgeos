@@ -188,7 +188,7 @@ export default function Property({ property, booking }) {
                     <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/55 to-black/10" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/76 via-transparent to-black/24" />
 
-                    <div className="absolute inset-x-0 top-0 z-10 border-b border-white/10 bg-black/35 backdrop-blur">
+                    <div className="absolute inset-x-0 top-0 z-30 border-b border-white/10 bg-black/35 backdrop-blur">
                         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
                             <a
                                 href="#topo"
