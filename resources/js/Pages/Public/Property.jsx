@@ -85,6 +85,33 @@ const publicText = {
         cancellationPolicy: 'Política de cancelamento',
         houseRules: 'Regras da casa',
         fallbackPolicy: 'Informação a confirmar directamente com o alojamento.',
+        cancellationPolicyBody: `RESERVAS E PAGAMENTOS
+
+Registo: todos os hóspedes devem fornecer identificação válida emitida pelo governo, por exemplo passaporte ou ID, e registar os seus dados de contacto na chegada.
+
+Pagamentos: o pagamento completo ou um depósito, normalmente 50%, é necessário para garantir a reserva.
+
+Cancelamentos: o reembolso pós-cancelamento seguirá a percentagem abaixo:
+7 dias: 75% do valor da reserva.
+3 dias: 35% do valor da reserva.
+24h: sem reembolso.
+
+Check-in inicia às 12:00 horas. Ajustes podem ser efectuados caso a reserva tenha sido combinada antecipadamente.
+
+Check-out deverá ser efectuado até às 10:00 horas.`,
+        houseRulesBody: `ACOMODAÇÃO
+
+Não é permitido cozinhar ou comer nos quartos, sendo o uso da cozinha comum regulamentado.
+
+Fumar e danos: fumar é estritamente proibido no interior dos quartos, com multas por violações. Os hóspedes são responsáveis por qualquer dano ou perda de propriedade. É expressamente proibida a confecção de refeições no interior dos quartos ou em qualquer outra área da MiKaya.
+
+Festas: festas e eventos não são autorizados. O nosso ambiente é de paz e tranquilidade. Apelamos para que cada hóspede seja consciente e respeite os vizinhos, para que todos possam ter uma estadia agradável, relaxante e sem barulho.
+
+Animais de estimação: os hóspedes não podem trazer animais de estimação de qualquer tipo para a guest house.
+
+SERVIÇOS E LIMPEZA
+
+A MiKaya está comprometida com a preservação ambiental e conservação de recursos; agradecemos desde já o seu suporte. A limpeza é diária, salvo combinação diferente com o alojamento.`,
         bookingRequest: 'Fazer pedido de reserva',
         ownerArea: 'Área do proprietário',
     },
@@ -111,6 +138,33 @@ const publicText = {
         cancellationPolicy: 'Cancellation policy',
         houseRules: 'House rules',
         fallbackPolicy: 'Information to be confirmed directly with the property.',
+        cancellationPolicyBody: `BOOKINGS AND PAYMENTS
+
+Registration: all guests must provide valid government-issued identification, such as a passport or ID card, and register their contact details on arrival.
+
+Payments: full payment or a deposit, usually 50%, is required to secure a booking.
+
+Cancellations: post-cancellation refunds follow the percentages below:
+7 days: 75% of the booking value.
+3 days: 35% of the booking value.
+24h: no refund.
+
+Check-in starts at 12:00. Adjustments may be made when agreed in advance with the property.
+
+Check-out must be completed by 10:00.`,
+        houseRulesBody: `ACCOMMODATION
+
+Cooking or eating inside the rooms is not allowed. Use of the shared kitchen is subject to the house rules.
+
+Smoking and damages: smoking is strictly prohibited inside the rooms and violations may result in fines. Guests are responsible for any damage or loss of property. Preparing meals inside the rooms or in any other area of MiKaya is expressly prohibited.
+
+Parties: parties and events are not authorised. Our environment is peaceful and quiet. We ask every guest to be considerate and respect the neighbours so that everyone can enjoy a pleasant, relaxing and noise-free stay.
+
+Pets: guests may not bring pets of any kind to the guest house.
+
+SERVICES AND CLEANING
+
+MiKaya is committed to environmental preservation and resource conservation; we thank you for your support. Cleaning is provided daily, unless otherwise agreed with the property.`,
         bookingRequest: 'Send booking request',
         ownerArea: 'Owner area',
     },
@@ -297,8 +351,16 @@ export default function Property({ property, booking }) {
                 </section>
 
                 <section id="politicas" className="mx-auto grid max-w-7xl scroll-mt-28 gap-6 px-6 py-20 lg:grid-cols-2">
-                    <Policy title={text.cancellationPolicy} text={property.cancellation_policy} fallback={text.fallbackPolicy} />
-                    <Policy title={text.houseRules} text={property.house_rules} fallback={text.fallbackPolicy} />
+                    <Policy
+                        title={text.cancellationPolicy}
+                        text={text.cancellationPolicyBody}
+                        fallback={text.fallbackPolicy}
+                    />
+                    <Policy
+                        title={text.houseRules}
+                        text={text.houseRulesBody}
+                        fallback={text.fallbackPolicy}
+                    />
                 </section>
 
                 <section id="contactos" className="scroll-mt-28 border-t border-white/10 bg-black px-6 py-14">
