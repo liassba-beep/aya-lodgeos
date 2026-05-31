@@ -76,7 +76,7 @@ class User extends Authenticatable implements FilamentUser
     public function canAccessPanel(Panel $panel): bool
     {
         if ($this->role === 'super_admin') {
-            return true;
+            return $this->isCentralAdminHost();
         }
 
         return $this->web_access_enabled
@@ -92,5 +92,18 @@ class User extends Authenticatable implements FilamentUser
     public function properties(): BelongsToMany
     {
         return $this->belongsToMany(Property::class)->withPivot(['role', 'permissions'])->withTimestamps();
+    }
+
+    private function isCentralAdminHost(): bool
+    {
+        $host = request()->getHost();
+        $centralHost = parse_url((string) config('app.url'), PHP_URL_HOST);
+
+        return in_array($host, array_filter([
+            $centralHost,
+            'app.lodgesos.com',
+            'localhost',
+            '127.0.0.1',
+        ]), true);
     }
 }
