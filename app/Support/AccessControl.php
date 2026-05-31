@@ -12,6 +12,10 @@ class AccessControl
             return false;
         }
 
+        if (in_array($module, self::masterOnlyModules(), true)) {
+            return $user->role === 'super_admin';
+        }
+
         if ($user->role === 'super_admin') {
             return true;
         }
@@ -38,6 +42,15 @@ class AccessControl
         ];
     }
 
+    private static function masterOnlyModules(): array
+    {
+        return [
+            'saas-plan',
+            'subscription',
+            'tenant-account',
+        ];
+    }
+
     private static function matrix(): array
     {
         $manage = ['view', 'create', 'update', 'delete'];
@@ -52,7 +65,7 @@ class AccessControl
                 'property' => $view,
                 'room' => $view,
                 'guest' => $view,
-                'reservation' => $view,
+                'reservation' => ['view', 'update'],
                 'payment' => $view,
                 'invoice' => ['view', 'update'],
                 'expense' => ['view', 'update'],
@@ -67,7 +80,7 @@ class AccessControl
                 'product-requisition' => $view,
                 'cash-closure' => $view,
                 'remote-approval' => $view,
-                'operational-alert' => $view,
+                'operational-alert' => ['view', 'update'],
                 'room-inventory' => $view,
                 'damage-charge' => $view,
                 'stock-count' => $view,

@@ -6,7 +6,7 @@
         <meta name="theme-color" content="#09090b">
         <link rel="manifest" href="/manifest.webmanifest">
 
-        <title inertia>{{ config('app.name', 'Laravel') }}</title>
+        <title inertia>{{ config('app.name') === 'Laravel' ? 'AYA LodgeOS' : config('app.name', 'AYA LodgeOS') }}</title>
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">

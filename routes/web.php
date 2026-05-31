@@ -522,6 +522,28 @@ Route::get('/mobile', function () {
 })->middleware(['auth', 'verified'])->name('mobile');
 
 Route::middleware('auth')->group(function () {
+    Route::get('/operational-alerts/latest', function () {
+        $propertyId = TenantContext::propertyId();
+        $query = OperationalAlert::query()
+            ->when($propertyId, fn ($query) => $query->where('property_id', $propertyId))
+            ->where('status', 'open');
+
+        $latest = (clone $query)
+            ->latest()
+            ->first(['id', 'severity', 'title', 'message', 'created_at']);
+
+        return response()->json([
+            'count' => (clone $query)->count(),
+            'latest' => $latest ? [
+                'id' => $latest->id,
+                'severity' => $latest->severity,
+                'title' => $latest->title,
+                'message' => $latest->message,
+                'created_at' => $latest->created_at?->toIso8601String(),
+            ] : null,
+        ]);
+    })->name('operational-alerts.latest');
+
     Route::get('/invoices/{invoice}/pdf', function (Invoice $invoice) {
         $propertyId = TenantContext::propertyId();
 

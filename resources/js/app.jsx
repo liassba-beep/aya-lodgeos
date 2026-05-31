@@ -5,7 +5,10 @@ import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createRoot } from 'react-dom/client';
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+const appName =
+    import.meta.env.VITE_APP_NAME && import.meta.env.VITE_APP_NAME !== 'Laravel'
+        ? import.meta.env.VITE_APP_NAME
+        : 'AYA LodgeOS';
 
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,

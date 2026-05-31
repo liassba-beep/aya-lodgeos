@@ -8,15 +8,28 @@ class TenantContext
 {
     public static function propertyId(): ?int
     {
-        $userPropertyId = auth()->user()?->property_id;
+        $user = auth()->user();
+
+        if (! $user) {
+            return Property::query()
+                ->where('status', 'active')
+                ->orderBy('id')
+                ->value('id') ?? Property::query()->orderBy('id')->value('id');
+        }
+
+        if ($user->role === 'super_admin') {
+            return null;
+        }
+
+        $userPropertyId = $user->property_id;
 
         if ($userPropertyId) {
             return (int) $userPropertyId;
         }
 
-        return Property::query()
+        return $user->properties()
             ->where('status', 'active')
-            ->orderBy('id')
-            ->value('id') ?? Property::query()->orderBy('id')->value('id');
+            ->orderBy('properties.id')
+            ->value('properties.id');
     }
 }

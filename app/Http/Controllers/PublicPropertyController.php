@@ -2,14 +2,17 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Property;
 use App\Models\DirectBookingRequest;
+use App\Models\Guest;
 use App\Models\OperationalAlert;
+use App\Models\Property;
+use App\Models\Reservation;
 use App\Models\Room;
 use App\Models\TenantAccount;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -136,38 +139,67 @@ class PublicPropertyController extends Controller
             ]);
         }
 
-        $requestRecord = DirectBookingRequest::query()->create([
-            'property_id' => $property->id,
-            'guest_name' => $validated['guest_name'],
-            'guest_phone' => $validated['guest_phone'],
-            'guest_email' => $validated['guest_email'] ?? null,
-            'check_in' => $validated['check_in'],
-            'check_out' => $validated['check_out'],
-            'adults' => $validated['adults'],
-            'children' => $validated['children'],
-            'status' => 'new',
-            'message' => trim(implode("\n", array_filter([
+        [$requestRecord, $reservation] = DB::transaction(function () use ($property, $validated, $offer): array {
+            $message = trim(implode("\n", array_filter([
                 $validated['message'] ?? null,
                 'Quarto sugerido: '.$offer['room']['name'],
                 'Noites: '.$offer['nights'],
                 'Preço por noite: '.number_format($offer['nightly_rate'], 2, '.', ',').' MZN',
                 'Total estimado: '.number_format($offer['total'], 2, '.', ',').' MZN',
-            ]))),
-        ]);
+            ])));
 
-        OperationalAlert::query()->create([
-            'property_id' => $property->id,
-            'source_type' => DirectBookingRequest::class,
-            'source_id' => $requestRecord->id,
-            'severity' => 'info',
-            'title' => 'Novo pedido de reserva directa',
-            'message' => $validated['guest_name'].' pediu disponibilidade de '.$validated['check_in'].' a '.$validated['check_out'].'; total estimado '.number_format($offer['total'], 2, '.', ',').' MZN.',
-            'status' => 'open',
-        ]);
+            $requestRecord = DirectBookingRequest::query()->create([
+                'property_id' => $property->id,
+                'guest_name' => $validated['guest_name'],
+                'guest_phone' => $validated['guest_phone'],
+                'guest_email' => $validated['guest_email'] ?? null,
+                'check_in' => $validated['check_in'],
+                'check_out' => $validated['check_out'],
+                'adults' => $validated['adults'],
+                'children' => $validated['children'],
+                'status' => 'converted',
+                'message' => $message,
+            ]);
+
+            $guest = $this->guestFromBookingRequest($property, $validated);
+
+            $reservation = Reservation::query()->create([
+                'property_id' => $property->id,
+                'room_id' => $offer['room']['id'],
+                'guest_id' => $guest->id,
+                'check_in' => $validated['check_in'],
+                'check_out' => $validated['check_out'],
+                'adults' => $validated['adults'],
+                'children' => $validated['children'],
+                'breakfast_included' => true,
+                'nightly_rate' => $offer['nightly_rate'],
+                'discount_amount' => 0,
+                'total_amount' => $offer['total'],
+                'status' => 'pending',
+                'source' => 'direct',
+                'notes' => trim(implode("\n\n", array_filter([
+                    'Pedido online #'.$requestRecord->id.' recebido pela página pública.',
+                    $message,
+                ]))),
+            ]);
+
+            OperationalAlert::query()->create([
+                'property_id' => $property->id,
+                'source_type' => Reservation::class,
+                'source_id' => $reservation->id,
+                'severity' => 'info',
+                'title' => 'Nova reserva online para confirmar',
+                'message' => $validated['guest_name'].' pediu '.$offer['room']['name'].' de '.$validated['check_in'].' a '.$validated['check_out'].'; total estimado '.number_format($offer['total'], 2, '.', ',').' MZN.',
+                'status' => 'open',
+            ]);
+
+            return [$requestRecord, $reservation];
+        });
 
         return response()->json([
             'ok' => true,
-            'message' => 'Pedido enviado. A equipa da MiKaya vai entrar em contacto consigo.',
+            'message' => 'Pedido recebido. A equipa da MiKaya vai confirmar a reserva consigo.',
+            'reservation_code' => $reservation->code,
             'total' => $offer['total'],
         ], 201);
     }
@@ -220,6 +252,33 @@ class PublicPropertyController extends Controller
             'nightly_rate' => $nightlyRate,
             'total' => $nightlyRate * $nights,
         ];
+    }
+
+    private function guestFromBookingRequest(Property $property, array $validated): Guest
+    {
+        $name = trim($validated['guest_name']);
+        $parts = preg_split('/\s+/', $name, 2) ?: [$name];
+
+        $guest = Guest::query()
+            ->where('property_id', $property->id)
+            ->where(function ($query) use ($validated) {
+                $query->where('phone', $validated['guest_phone']);
+
+                if (filled($validated['guest_email'] ?? null)) {
+                    $query->orWhere('email', $validated['guest_email']);
+                }
+            })
+            ->first() ?? new Guest(['property_id' => $property->id]);
+
+        $guest->forceFill([
+            'first_name' => $parts[0] ?: $name,
+            'last_name' => $parts[1] ?? '-',
+            'phone' => $validated['guest_phone'],
+            'email' => $validated['guest_email'] ?? $guest->email,
+            'country' => $guest->country ?: 'Mozambique',
+        ])->save();
+
+        return $guest;
     }
 
     private function publicPath(Request $request, string $tenant, string $path): string

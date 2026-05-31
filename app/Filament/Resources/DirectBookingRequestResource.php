@@ -24,14 +24,14 @@ class DirectBookingRequestResource extends Resource
 
     protected static bool $shouldRegisterNavigation = false;
 
-    protected static ?string $modelLabel = 'Pedido direto';
+    protected static ?string $modelLabel = 'Pedido directo';
 
-    protected static ?string $pluralModelLabel = 'Pedidos diretos';
+    protected static ?string $pluralModelLabel = 'Pedidos directos';
 
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\Section::make('Pedido de reserva direta')
+            Forms\Components\Section::make('Pedido de reserva directa')
                 ->columns(3)
                 ->schema([
                     Forms\Components\Hidden::make('property_id')

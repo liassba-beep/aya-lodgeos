@@ -149,7 +149,7 @@ class ReservationResource extends Resource
                         Forms\Components\Select::make('source')
                             ->label('Origem')
                             ->options([
-                                'direct' => 'Direta',
+                                'direct' => 'Directa',
                                 'phone' => 'Telefone',
                                 'walk_in' => 'Entrada sem reserva prévia',
                                 'booking' => 'Booking',
@@ -231,6 +231,21 @@ class ReservationResource extends Resource
                     ]),
             ])
             ->actions([
+                Tables\Actions\Action::make('confirm')
+                    ->label('Confirmar')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->visible(fn (Reservation $record): bool => $record->status === 'pending')
+                    ->requiresConfirmation()
+                    ->action(function (Reservation $record): void {
+                        $record->forceFill(['status' => 'confirmed'])->save();
+
+                        Notification::make()
+                            ->title('Reserva confirmada')
+                            ->body($record->code.' já está visível no calendário.')
+                            ->success()
+                            ->send();
+                    }),
                 Tables\Actions\EditAction::make()->label('Editar'),
             ])
             ->bulkActions([

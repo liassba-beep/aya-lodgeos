@@ -50,6 +50,12 @@
                             @foreach ($calendar['days'] as $day)
                                 @php
                                     $reservation = collect($room['reservations'])->first(fn ($reservation) => $reservation['check_in'] <= $day['key'] && $reservation['check_out'] > $day['key']);
+                                    $reservationColor = match ($reservation['status'] ?? null) {
+                                        'confirmed', 'checked_in' => 'bg-emerald-500 text-white',
+                                        'checked_out' => 'bg-sky-500 text-white',
+                                        'pending' => 'bg-amber-500 text-gray-950',
+                                        default => 'bg-gray-500 text-white',
+                                    };
                                 @endphp
                                 <td
                                     class="border-l border-gray-100 px-1 py-2 text-center dark:border-gray-800"
@@ -58,7 +64,7 @@
                                 >
                                     @if ($reservation)
                                         <div
-                                            class="cursor-move rounded-md bg-amber-500 px-2 py-1 text-xs font-semibold text-gray-950"
+                                            class="cursor-move rounded-md px-2 py-1 text-xs font-semibold {{ $reservationColor }}"
                                             draggable="true"
                                             data-reservation-id="{{ $reservation['id'] }}"
                                             data-nights="{{ $reservation['nights'] }}"
