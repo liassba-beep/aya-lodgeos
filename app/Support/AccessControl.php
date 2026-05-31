@@ -50,6 +50,7 @@ class AccessControl
     {
         return [
             'property' => 'Alojamentos',
+            'user' => 'Utilizadores e permissões',
             'room' => 'Quartos',
             'guest' => 'Hóspedes',
             'reservation' => 'Reservas',
@@ -111,6 +112,7 @@ class AccessControl
             ],
             'owner' => [
                 'property' => $view,
+                'user' => ['view', 'create', 'update'],
                 'room' => $view,
                 'guest' => $view,
                 'reservation' => ['view', 'update'],

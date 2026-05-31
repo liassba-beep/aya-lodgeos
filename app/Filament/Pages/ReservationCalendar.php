@@ -31,7 +31,10 @@ class ReservationCalendar extends Page
     public function calendarData(): array
     {
         try {
-            $month = Carbon::createFromFormat('Y-m', (string) request()->query('month', now()->format('Y-m')))->startOfMonth();
+            $requestedMonth = (string) request()->query('month', now()->format('Y-m'));
+            $month = preg_match('/^\d{4}-\d{2}$/', $requestedMonth)
+                ? Carbon::createFromFormat('Y-m-d', $requestedMonth.'-01')->startOfMonth()
+                : now()->startOfMonth();
         } catch (\Throwable) {
             $month = now()->startOfMonth();
         }

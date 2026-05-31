@@ -162,10 +162,7 @@ export default function Property({ property, booking }) {
                         </div>
                         <div className="grid gap-4 sm:grid-cols-2">
                             <Info label="Depósito de reserva" value={`${property.deposit_percent || 50}%`} />
-                            <Info
-                                label="Limpeza"
-                                value={`A cada ${property.cleaning_interval_days || 3} dias`}
-                            />
+                            <Info label="Limpeza" value="Diária" />
                             {highlightServices.map((service) => (
                                 <Info
                                     key={service.name}

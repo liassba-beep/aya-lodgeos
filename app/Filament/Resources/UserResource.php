@@ -47,13 +47,15 @@ class UserResource extends Resource
                         ->helperText('Usado no login mobile dos trabalhadores operacionais.'),
                     Forms\Components\Select::make('property_id')
                         ->label('Alojamento')
-                        ->options(fn (): array => Property::query()->orderBy('name')->pluck('name', 'id')->all())
+                        ->options(fn (): array => self::propertyOptions())
                         ->searchable()
                         ->preload()
-                        ->default(fn (): ?int => TenantContext::propertyId()),
+                        ->default(fn (): ?int => TenantContext::propertyId())
+                        ->disabled(fn (): bool => auth()->user()?->role !== 'super_admin')
+                        ->dehydrated(),
                     Forms\Components\Select::make('role')
                         ->label('Perfil')
-                        ->options(AccessControl::roleLabels())
+                        ->options(fn (): array => self::roleOptions())
                         ->default('manager')
                         ->live()
                         ->required(),
@@ -85,6 +87,7 @@ class UserResource extends Resource
                         ->label('Língua')
                         ->options([
                             'pt_PT' => 'Português',
+                            'en' => 'Inglês',
                         ])
                         ->default('pt_PT')
                         ->required(),
@@ -139,6 +142,28 @@ class UserResource extends Resource
     {
         return parent::getEloquentQuery()
             ->when(TenantContext::propertyId(), fn ($query, int $propertyId) => $query->where('property_id', $propertyId));
+    }
+
+    public static function propertyOptions(): array
+    {
+        return Property::query()
+            ->when(TenantContext::propertyId(), fn ($query, int $propertyId) => $query->whereKey($propertyId))
+            ->orderBy('name')
+            ->pluck('name', 'id')
+            ->all();
+    }
+
+    public static function roleOptions(): array
+    {
+        $roles = AccessControl::roleLabels();
+
+        if (auth()->user()?->role === 'super_admin') {
+            return $roles;
+        }
+
+        return collect($roles)
+            ->only(['owner', 'manager', 'staff', 'security'])
+            ->all();
     }
 
     public static function getPages(): array
