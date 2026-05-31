@@ -136,7 +136,7 @@ TEXT;
                     'Geleira' => 'Apoio prático para estadias curtas ou prolongadas.',
                     'CCTV' => 'Câmaras nas áreas públicas.',
                     'Localização estratégica' => 'A poucos minutos do centro da cidade e das praias do Tofo e Barra.',
-                    'Idiomas' => 'Português.',
+                    'Idiomas' => 'Português e Inglês.',
                 ] : null,
             ],
         );
