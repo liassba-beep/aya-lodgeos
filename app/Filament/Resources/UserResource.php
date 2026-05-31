@@ -98,6 +98,18 @@ class UserResource extends Resource
                         ->default('system')
                         ->required(),
                 ]),
+            Forms\Components\Section::make('Módulos permitidos')
+                ->description('Deixe vazio para usar as permissões padrão do perfil. Marque apenas quando quiser personalizar o acesso deste utilizador.')
+                ->columns(3)
+                ->collapsed()
+                ->schema(collect(AccessControl::moduleLabels())
+                    ->map(fn (string $label, string $module) => Forms\Components\CheckboxList::make('permissions.'.$module)
+                        ->label($label)
+                        ->options(AccessControl::actionLabels())
+                        ->columns(2)
+                        ->bulkToggleable())
+                    ->values()
+                    ->all()),
         ]);
     }
 

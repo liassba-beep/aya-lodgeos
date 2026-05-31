@@ -544,6 +544,48 @@ Route::middleware('auth')->group(function () {
         ]);
     })->name('operational-alerts.latest');
 
+    Route::get('/admin/reservations/{reservation}/check-in-form.pdf', function (Reservation $reservation) {
+        $propertyId = TenantContext::propertyId();
+
+        abort_unless(! $propertyId || (int) $reservation->property_id === $propertyId, 403);
+
+        $reservation->load(['property', 'guest', 'room']);
+
+        $property = $reservation->property;
+        $guest = $reservation->guest;
+
+        $pdf = SimplePdf::checkInForm([
+            'issued_at' => now()->format('d/m/Y H:i'),
+            'property_name' => $property?->legal_name ?: ($property?->name ?? 'AYA LodgeOS'),
+            'property_address' => trim(collect([$property?->address, $property?->city, $property?->country])->filter()->implode(', ')) ?: '-',
+            'property_contacts' => trim(collect([$property?->invoice_phone ?: $property?->phone, $property?->invoice_email ?: $property?->email])->filter()->implode(' | ')) ?: '-',
+            'reservation_code' => $reservation->code,
+            'guest_name' => $guest?->full_name ?: '-',
+            'guest_phone' => $guest?->phone ?: '-',
+            'guest_email' => $guest?->email ?: '-',
+            'guest_nuit' => $guest?->nuit ?: '-',
+            'document_type' => $guest?->document_type ?: '-',
+            'document_number' => $guest?->document_number ?: '-',
+            'guest_country' => $guest?->country ?: '-',
+            'room' => $reservation->room?->name ?: '-',
+            'check_in' => $reservation->check_in?->format('d/m/Y') ?: '-',
+            'check_out' => $reservation->check_out?->format('d/m/Y') ?: '-',
+            'adults' => $reservation->adults,
+            'children' => $reservation->children,
+            'breakfast_included' => $reservation->breakfast_included ? 'Sim' : 'Nao',
+            'source' => $reservation->source,
+            'status' => $reservation->status,
+            'total' => number_format((float) $reservation->total_amount, 2).' MZN',
+        ]);
+
+        $filename = str($reservation->code)->replaceMatches('/[^A-Za-z0-9_-]/', '-')->lower();
+
+        return response($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="ficha-check-in-'.$filename.'.pdf"',
+        ]);
+    })->name('reservations.check-in-form');
+
     Route::get('/invoices/{invoice}/pdf', function (Invoice $invoice) {
         $propertyId = TenantContext::propertyId();
 

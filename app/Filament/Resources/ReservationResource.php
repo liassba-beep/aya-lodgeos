@@ -246,6 +246,12 @@ class ReservationResource extends Resource
                             ->success()
                             ->send();
                     }),
+                Tables\Actions\Action::make('checkInForm')
+                    ->label('Ficha check-in')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->color('gray')
+                    ->url(fn (Reservation $record): string => route('reservations.check-in-form', $record))
+                    ->openUrlInNewTab(),
                 Tables\Actions\EditAction::make()->label('Editar'),
             ])
             ->bulkActions([

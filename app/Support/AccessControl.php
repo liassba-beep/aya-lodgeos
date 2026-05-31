@@ -23,8 +23,12 @@ class AccessControl
         $permissions = is_array($user->permissions) ? $user->permissions : [];
         $customPermissions = $permissions[$module] ?? null;
 
-        if (is_array($customPermissions) && in_array($action, $customPermissions, true)) {
-            return true;
+        $hasCustomPermissions = collect($permissions)
+            ->filter(fn ($actions): bool => is_array($actions) && count($actions) > 0)
+            ->isNotEmpty();
+
+        if ($hasCustomPermissions) {
+            return is_array($customPermissions) && in_array($action, $customPermissions, true);
         }
 
         return in_array($action, self::matrix()[$user->role][$module] ?? [], true);
@@ -39,6 +43,50 @@ class AccessControl
             'manager' => 'Gerente',
             'staff' => 'Staff',
             'security' => 'Guarda',
+        ];
+    }
+
+    public static function moduleLabels(): array
+    {
+        return [
+            'property' => 'Alojamentos',
+            'room' => 'Quartos',
+            'guest' => 'Hóspedes',
+            'reservation' => 'Reservas',
+            'direct-booking-request' => 'Pedidos directos',
+            'payment' => 'Pagamentos',
+            'invoice' => 'Facturação',
+            'expense' => 'Despesas',
+            'operational-task' => 'Tarefas operacionais',
+            'daily-checklist' => 'Checklists diárias',
+            'staff-member' => 'Colaboradores',
+            'staff-schedule' => 'Escalas',
+            'stock-item' => 'Artigos de stock',
+            'stock-movement' => 'Movimentos de stock',
+            'maintenance-report' => 'Avarias reportadas',
+            'utility-reading' => 'Controlo Credelec',
+            'product-requisition' => 'Requisições de produtos',
+            'cash-closure' => 'Fecho de caixa',
+            'remote-approval' => 'Aprovações remotas',
+            'operational-alert' => 'Alertas',
+            'room-inventory' => 'Inventário por quarto',
+            'damage-charge' => 'Danos e perdas',
+            'stock-count' => 'Contagens físicas',
+            'staff-attendance' => 'Presenças',
+            'staff-leave' => 'Ausências e férias',
+            'owner-daily-report' => 'Relatório diário',
+            'knowledge-guide' => 'Guia operacional',
+            'feedback-entry' => 'Bugs e opiniões',
+        ];
+    }
+
+    public static function actionLabels(): array
+    {
+        return [
+            'view' => 'Ver',
+            'create' => 'Criar',
+            'update' => 'Editar/confirmar',
+            'delete' => 'Apagar',
         ];
     }
 

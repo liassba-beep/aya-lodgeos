@@ -13,6 +13,39 @@ use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
+    private const MIKAYA_CANCELLATION_POLICY = <<<'TEXT'
+RESERVAS E PAGAMENTOS
+
+Registo: Todos os hóspedes devem fornecer identificação válida emitida pelo governo, por exemplo passaporte ou ID, e registar os seus dados de contacto na chegada.
+
+Pagamentos: O pagamento completo ou um depósito, normalmente 50%, é necessário para garantir a reserva.
+
+Cancelamentos: O reembolso pós-cancelamento seguirá a percentagem abaixo:
+7 dias: 75% do valor da reserva.
+3 dias: 35% do valor da reserva.
+24h: sem reembolso.
+
+Check-in inicia às 12:00 horas. Ajustes podem ser efectuados caso a reserva tenha sido combinada antecipadamente.
+
+Check-out deverá ser efectuado até às 10:00 horas.
+TEXT;
+
+    private const MIKAYA_HOUSE_RULES = <<<'TEXT'
+ACOMODAÇÃO
+
+Não é permitido cozinhar ou comer nos quartos, sendo o uso da cozinha comum regulamentado.
+
+Fumar e danos: Fumar é estritamente proibido no interior dos quartos, com multas por violações. Os hóspedes são responsáveis por qualquer dano ou perda de propriedade. É expressamente proibida a confecção de refeições no interior dos quartos ou em qualquer outra área da MiKaya.
+
+Festas: Festas e eventos não são autorizados. O nosso ambiente é de paz e tranquilidade. Apelamos para que cada hóspede seja consciente e respeite os vizinhos, para que todos possam ter uma estadia agradável, relaxante e sem barulho.
+
+Animais de estimação: Os hóspedes não podem trazer animais de estimação de qualquer tipo para a guest house.
+
+SERVIÇOS E LIMPEZA
+
+A MiKaya está comprometida com a preservação ambiental e conservação de recursos; agradecemos desde já o seu suporte. Normalmente, os lençóis e toalhas são trocados a cada 3 dias, a não ser que este procedimento seja solicitado antes.
+TEXT;
+
     /**
      * Seed the application's database.
      */
@@ -66,6 +99,18 @@ class DatabaseSeeder extends Seeder
                 'address' => $city.', Mozambique',
                 'deposit_percent' => 50,
                 'cleaning_interval_days' => 3,
+                'cancellation_policy' => $slug === 'mikaya' ? self::MIKAYA_CANCELLATION_POLICY : null,
+                'house_rules' => $slug === 'mikaya' ? self::MIKAYA_HOUSE_RULES : null,
+                'meals_and_services' => $slug === 'mikaya' ? [
+                    'Café da manhã' => 'Disponível para começar o dia com calma.',
+                    '4 quartos' => 'Com casa de banho privativa e kitnet.',
+                    'DSTV' => 'Entretenimento disponível nos quartos.',
+                    'Starlink Wi-Fi gratuito' => 'Internet estável para hóspedes.',
+                    'Ar condicionado' => 'Conforto térmico durante a estadia.',
+                    'Geleira' => 'Apoio prático para estadias curtas ou prolongadas.',
+                    'CCTV' => 'Câmaras nas áreas públicas.',
+                    'Localização estratégica' => 'A poucos minutos do centro da cidade e das praias do Tofo e Barra.',
+                ] : null,
             ],
         );
 

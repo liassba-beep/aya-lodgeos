@@ -91,6 +91,54 @@ class SimplePdf
         return self::render($content, $logoObject);
     }
 
+    public static function checkInForm(array $data): string
+    {
+        $content = '';
+        $content .= self::rect(0, 792, 595, 50, 0.06, 0.06, 0.07);
+        $content .= self::rect(0, 735, 595, 57, 0.98, 0.72, 0.14);
+        $content .= self::text(48, 805, 19, 'FICHA DE CHECK-IN', 'F2', 1, 1, 1);
+        $content .= self::text(48, 764, 10, 'Documento para confirmacao dos dados do hospede no momento da chegada', 'F2', 0.08, 0.08, 0.09);
+        $content .= self::text(420, 805, 10, 'Reserva: '.$data['reservation_code'], 'F2', 1, 1, 1);
+        $content .= self::text(420, 785, 9, 'Emissao: '.$data['issued_at'], 'F1', 1, 1, 1);
+
+        $content .= self::text(48, 705, 16, $data['property_name'], 'F2');
+        $content .= self::text(48, 687, 9, $data['property_address'], 'F1', 0.25, 0.25, 0.25);
+        $content .= self::text(48, 673, 9, $data['property_contacts'], 'F1', 0.25, 0.25, 0.25);
+
+        $content .= self::rect(48, 610, 500, 34, 0.06, 0.06, 0.07);
+        $content .= self::text(64, 623, 11, 'DADOS DO HOSPEDE', 'F2', 1, 1, 1);
+        $content .= self::field('Nome completo', $data['guest_name'], 48, 575, 240);
+        $content .= self::field('Contacto', $data['guest_phone'], 308, 575, 240);
+        $content .= self::field('Email', $data['guest_email'], 48, 530, 240);
+        $content .= self::field('NUIT', $data['guest_nuit'], 308, 530, 240);
+        $content .= self::field('Tipo de documento', $data['document_type'], 48, 485, 240);
+        $content .= self::field('Numero do documento', $data['document_number'], 308, 485, 240);
+        $content .= self::field('Pais', $data['guest_country'], 48, 440, 240);
+
+        $content .= self::rect(48, 385, 500, 34, 0.06, 0.06, 0.07);
+        $content .= self::text(64, 398, 11, 'DADOS DA RESERVA', 'F2', 1, 1, 1);
+        $content .= self::field('Quarto', $data['room'], 48, 350, 155);
+        $content .= self::field('Entrada', $data['check_in'], 220, 350, 155);
+        $content .= self::field('Saida', $data['check_out'], 393, 350, 155);
+        $content .= self::field('Adultos', $data['adults'], 48, 305, 155);
+        $content .= self::field('Criancas', $data['children'], 220, 305, 155);
+        $content .= self::field('Pequeno-almoco', $data['breakfast_included'], 393, 305, 155);
+        $content .= self::field('Origem', $data['source'], 48, 260, 155);
+        $content .= self::field('Estado', $data['status'], 220, 260, 155);
+        $content .= self::field('Total', $data['total'], 393, 260, 155);
+
+        $content .= self::rect(48, 175, 500, 44, 0.96, 0.96, 0.97);
+        $content .= self::text(64, 198, 9, 'Confirmo que os dados acima estao correctos e declaro ter recebido e aceite as politicas de reserva, pagamento, cancelamento, check-in, check-out, limpeza, danos e convivencia do alojamento.', 'F1', 0.2, 0.2, 0.2);
+
+        $content .= self::line(48, 115, 250, 115, 0.1, 0.1, 0.1);
+        $content .= self::line(345, 115, 548, 115, 0.1, 0.1, 0.1);
+        $content .= self::text(48, 95, 9, 'Assinatura do hospede', 'F2', 0.25, 0.25, 0.25);
+        $content .= self::text(345, 95, 9, 'Assinatura da recepcao', 'F2', 0.25, 0.25, 0.25);
+        $content .= self::text(48, 72, 8, 'Documento gerado pelo AYA LodgeOS para arquivo operacional do alojamento.', 'F1', 0.42, 0.42, 0.42);
+
+        return self::render($content);
+    }
+
     private static function render(string $content, ?array $logoObject = null): string
     {
         $resources = '<< /Font << /F1 4 0 R /F2 5 0 R >>';
@@ -135,6 +183,15 @@ class SimplePdf
     private static function text(float $x, float $y, int $size, mixed $text, string $font = 'F1', float $r = 0, float $g = 0, float $b = 0): string
     {
         return "BT\n{$r} {$g} {$b} rg\n/{$font} {$size} Tf\n{$x} {$y} Td\n(".self::escape($text).") Tj\nET\n";
+    }
+
+    private static function field(string $label, mixed $value, float $x, float $y, float $width): string
+    {
+        $content = self::text($x, $y + 24, 8, $label, 'F2', 0.45, 0.45, 0.45);
+        $content .= self::strokeRect($x, $y, $width, 24, 0.82, 0.82, 0.84);
+        $content .= self::text($x + 8, $y + 8, 9, filled($value) ? $value : '-', 'F1', 0.1, 0.1, 0.1);
+
+        return $content;
     }
 
     private static function rect(float $x, float $y, float $w, float $h, float $r, float $g, float $b): string

@@ -21,16 +21,40 @@ const xsrfToken = () => {
 
 const highlightServices = [
     {
+        name: '4 quartos',
+        description: 'Com casa de banho privativa e kitnet.',
+    },
+    {
         name: 'Café da manhã',
         description: 'Disponível para começar o dia com calma.',
     },
     {
-        name: 'Wi-Fi',
-        description: 'Internet disponível para hóspedes.',
+        name: 'Starlink Wi-Fi gratuito',
+        description: 'Internet estável para trabalho e lazer.',
     },
     {
         name: 'Parque privativo',
         description: 'Estacionamento reservado no alojamento.',
+    },
+    {
+        name: 'DSTV',
+        description: 'Entretenimento disponível nos quartos.',
+    },
+    {
+        name: 'Ar condicionado',
+        description: 'Conforto térmico durante a estadia.',
+    },
+    {
+        name: 'Geleira',
+        description: 'Apoio prático para estadias curtas ou prolongadas.',
+    },
+    {
+        name: 'CCTV',
+        description: 'Câmaras nas áreas públicas.',
+    },
+    {
+        name: 'Localização estratégica',
+        description: 'A poucos minutos do centro da cidade e das praias do Tofo e Barra.',
     },
 ];
 
@@ -132,8 +156,8 @@ export default function Property({ property, booking }) {
                             </p>
                             <h2 className="mt-3 text-3xl font-bold">Conforto simples, claro e bem localizado</h2>
                             <p className="mt-5 leading-7 text-stone-600">
-                                Café da manhã, Wi-Fi e parque privativo fazem parte da experiência preparada para
-                                estadias tranquilas entre a cidade e as praias de Inhambane.
+                                Estendemos as boas-vindas para que desfrute da melhor estadia. A MiKaya reúne
+                                comodidades essenciais para quem procura tranquilidade entre as praias e a cidade.
                             </p>
                         </div>
                         <div className="grid gap-4 sm:grid-cols-2">
