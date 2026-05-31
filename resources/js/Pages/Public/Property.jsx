@@ -1,5 +1,5 @@
 import { Head } from '@inertiajs/react';
-import { useEffect, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
 const money = (value) =>
     new Intl.NumberFormat('pt-MZ', {
@@ -25,14 +25,14 @@ const phoneHref = (phone) => {
     return digits ? `tel:${digits}` : null;
 };
 
-const cleaningIntervalText = (days) => {
+const cleaningIntervalText = (days, text) => {
     const interval = Number(days || 0);
 
     if (interval === 1) {
         return text.daily;
     }
 
-    return interval > 1 ? `A cada ${interval} dias` : text.daily;
+    return interval > 1 ? text.everyDays(interval) : text.daily;
 };
 
 const imageUrl = (path) => {
@@ -47,77 +47,227 @@ const imageUrl = (path) => {
     return `/storage/${path}`;
 };
 
-const text = {
-    reserve: 'Reservar',
-    gallery: 'Galeria',
-    rooms: 'Quartos',
-    location: 'Localização',
-    contacts: 'Contactos',
-    heroFallback: 'Reservas directas, contacto próximo e informação clara para planear a estadia.',
-    checkAvailability: 'Consultar disponibilidade',
-    from: 'Desde',
-    directBookings: 'Reservas directas',
-    photosTitle: 'Veja antes de reservar',
-    photosBody: 'As fotos são geridas pelo proprietário e ajudam o hóspede a perceber exactamente o que vai encontrar.',
-    roomsTitle: 'Quartos e expectativas',
-    roomsBody: 'Tipos de quarto configurados pelo alojamento, com preço base, capacidade e comodidades incluídas.',
-    includes: 'Inclui',
-    guests: 'hóspedes',
-    services: 'Serviços e condições',
-    deposit: 'Depósito de reserva',
-    cleaning: 'Limpeza',
-    daily: 'Diária',
-    policies: 'Políticas',
-    fallbackPolicy: 'Informação a confirmar directamente com o alojamento.',
-    locationBody: 'Use o mapa e os pontos de referência para confirmar a zona antes de viajar.',
-    nearby: 'Perto de',
-    openInGoogleMaps: 'Abrir no Google Maps',
-    call: 'Ligar',
-    whatsapp: 'WhatsApp',
-    ownerArea: 'Área do proprietário',
-    testimonials: 'Testemunhos',
+const publicText = {
+    pt: {
+        reserve: 'Reservar',
+        gallery: 'Galeria',
+        rooms: 'Quartos',
+        location: 'Localização',
+        contacts: 'Contactos',
+        heroFallback: 'Reservas directas, contacto próximo e informação clara para planear a estadia.',
+        checkAvailability: 'Consultar disponibilidade',
+        from: 'Desde',
+        directBookings: 'Reservas directas',
+        onRequest: 'Sob consulta',
+        photosTitle: 'Veja antes de reservar',
+        photosBody: 'As fotos são geridas pelo proprietário e ajudam o hóspede a perceber exactamente o que vai encontrar.',
+        roomsTitle: 'Quartos e expectativas',
+        roomsBody: 'Tipos de quarto configurados pelo alojamento, com preço base, capacidade e comodidades incluídas.',
+        includes: 'Inclui',
+        guests: 'hóspedes',
+        services: 'Serviços e condições',
+        servicesTitle: 'Informação útil antes da chegada',
+        servicesBody: 'Condições configuradas pelo alojamento para alinhar expectativas antes da reserva.',
+        deposit: 'Depósito de reserva',
+        cleaning: 'Limpeza',
+        daily: 'Diária',
+        policies: 'Políticas',
+        cancellationPolicy: 'Política de cancelamento',
+        houseRules: 'Regras da casa',
+        fallbackPolicy: 'Informação a confirmar directamente com o alojamento.',
+        locationBody: 'Use o mapa e os pontos de referência para confirmar a zona antes de viajar.',
+        nearby: 'Perto de',
+        openInGoogleMaps: 'Abrir no Google Maps',
+        call: 'Ligar',
+        whatsapp: 'WhatsApp',
+        ownerArea: 'Área do proprietário',
+        testimonials: 'Testemunhos',
+        accommodation: 'Alojamento',
+        languages: 'Idiomas',
+        available: 'Disponível',
+        close: 'Fechar',
+        depositGuarantee: (percent) => `Depósito de ${percent}% para garantir.`,
+        bookingGuarantee: (percent) => `A reserva só fica garantida após confirmação do alojamento e depósito de ${percent}%.`,
+        everyDays: (days) => `A cada ${days} dias`,
+    },
+    en: {
+        reserve: 'Book',
+        gallery: 'Gallery',
+        rooms: 'Rooms',
+        location: 'Location',
+        contacts: 'Contacts',
+        heroFallback: 'Direct bookings, close support and clear information to plan your stay.',
+        checkAvailability: 'Check availability',
+        from: 'From',
+        directBookings: 'Direct bookings',
+        onRequest: 'On request',
+        photosTitle: 'See before you book',
+        photosBody: 'Photos are managed by the property owner and help guests understand what to expect.',
+        roomsTitle: 'Rooms and expectations',
+        roomsBody: 'Room types configured by the property, with base price, capacity and included amenities.',
+        includes: 'Includes',
+        guests: 'guests',
+        services: 'Services and conditions',
+        servicesTitle: 'Useful information before arrival',
+        servicesBody: 'Conditions configured by the property to align expectations before booking.',
+        deposit: 'Booking deposit',
+        cleaning: 'Cleaning',
+        daily: 'Daily',
+        policies: 'Policies',
+        cancellationPolicy: 'Cancellation policy',
+        houseRules: 'House rules',
+        fallbackPolicy: 'Information to be confirmed directly with the property.',
+        locationBody: 'Use the map and nearby references to confirm the area before travelling.',
+        nearby: 'Nearby',
+        openInGoogleMaps: 'Open in Google Maps',
+        call: 'Call',
+        whatsapp: 'WhatsApp',
+        ownerArea: 'Owner area',
+        testimonials: 'Testimonials',
+        accommodation: 'Property',
+        languages: 'Languages',
+        available: 'Available',
+        close: 'Close',
+        depositGuarantee: (percent) => `${percent}% deposit to guarantee the booking.`,
+        bookingGuarantee: (percent) => `The booking is only guaranteed after property confirmation and a ${percent}% deposit.`,
+        everyDays: (days) => `Every ${days} days`,
+    },
 };
 
-const bookingText = {
-    eyebrow: 'Reservas directas',
-    title: 'Confirme disponibilidade antes de enviar o pedido',
-    body: 'Escolha as datas e informe os seus contactos. O preço estimado aparece automaticamente antes do envio.',
-    estimatedPrice: 'Preço estimado',
-    checking: 'A verificar...',
-    nights: 'noite(s)',
-    perNight: 'por noite',
-    selectDates: 'Seleccione entrada e saída.',
-    unavailable: 'Não foi possível verificar a disponibilidade. Tente novamente.',
-    submitError: 'Não foi possível enviar o pedido.',
-    name: 'Nome',
-    phone: 'Telemóvel',
-    email: 'Email',
-    adults: 'Adultos',
-    children: 'Crianças',
-    checkIn: 'Entrada',
-    checkOut: 'Saída',
-    message: 'Mensagem',
-    sending: 'A enviar...',
-    submit: 'Enviar pedido de reserva',
-    continueWhatsapp: 'Continuar no WhatsApp',
+const bookingCopy = {
+    pt: {
+        eyebrow: 'Reservas directas',
+        title: 'Confirme disponibilidade antes de enviar o pedido',
+        body: 'Escolha as datas e informe os seus contactos. O preço estimado aparece automaticamente antes do envio.',
+        estimatedPrice: 'Preço estimado',
+        checking: 'A verificar...',
+        nights: 'noite(s)',
+        perNight: 'por noite',
+        selectDates: 'Seleccione entrada e saída.',
+        unavailable: 'Não foi possível verificar a disponibilidade. Tente novamente.',
+        submitError: 'Não foi possível enviar o pedido.',
+        name: 'Nome',
+        phone: 'Telemóvel',
+        email: 'Email',
+        adults: 'Adultos',
+        children: 'Crianças',
+        checkIn: 'Entrada',
+        checkOut: 'Saída',
+        message: 'Mensagem',
+        sending: 'A enviar...',
+        submit: 'Enviar pedido de reserva',
+        continueWhatsapp: 'Continuar no WhatsApp',
+    },
+    en: {
+        eyebrow: 'Direct bookings',
+        title: 'Check availability before sending your request',
+        body: 'Choose your dates and share your contact details. The estimated price appears automatically before sending.',
+        estimatedPrice: 'Estimated price',
+        checking: 'Checking...',
+        nights: 'night(s)',
+        perNight: 'per night',
+        selectDates: 'Select check-in and check-out.',
+        unavailable: 'Could not check availability. Please try again.',
+        submitError: 'Could not send the request.',
+        name: 'Name',
+        phone: 'Phone',
+        email: 'Email',
+        adults: 'Adults',
+        children: 'Children',
+        checkIn: 'Check-in',
+        checkOut: 'Check-out',
+        message: 'Message',
+        sending: 'Sending...',
+        submit: 'Send booking request',
+        continueWhatsapp: 'Continue on WhatsApp',
+    },
+};
+
+const tenantTextTranslations = {
+    'Alojamento': 'Property',
+    'Quarto 1': 'Room 1',
+    'Quarto 2': 'Room 2',
+    'Quarto 3': 'Room 3',
+    'Quarto 4': 'Room 4',
+    'WC privativo': 'Private bathroom',
+    'Kitnet': 'Kitchenette',
+    'Café da manhã': 'Breakfast',
+    'Limpeza diária': 'Daily cleaning',
+    'Depósito de 50%': '50% deposit',
+    'O seu refúgio entre as praias e a cidade': 'Your refuge between the beaches and the city',
+    'Estendemos as boas-vindas para que desfrute da melhor estadia.': 'We welcome you to enjoy your best stay.',
+    '4 quartos': '4 rooms',
+    'Com casa de banho privativa e kitnet.': 'With private bathroom and kitchenette.',
+    'Entretenimento disponível nos quartos.': 'Entertainment available in the rooms.',
+    'Starlink Wi-Fi gratuito': 'Free Starlink Wi-Fi',
+    'Internet estável para hóspedes.': 'Stable internet for guests.',
+    'Ar condicionado': 'Air conditioning',
+    'Conforto térmico durante a estadia.': 'Thermal comfort during your stay.',
+    'Geleira': 'Fridge',
+    'Apoio prático para estadias curtas ou prolongadas.': 'Practical support for short or longer stays.',
+    'Câmaras nas áreas públicas.': 'Cameras in public areas.',
+    'Localização estratégica': 'Strategic location',
+    'A poucos minutos do centro da cidade e das praias do Tofo e Barra.': 'A few minutes from the city centre and the Tofo and Barra beaches.',
+    'Idiomas': 'Languages',
+    'Português e Inglês.': 'Portuguese and English.',
+    'Quarto com WC privativo, kitnet e comodidades essenciais para estadias em Inhambane.': 'Room with private bathroom, kitchenette and essential amenities for stays in Inhambane.',
+    'Praia do Tofo': 'Tofo Beach',
+    'Praia da Barra': 'Barra Beach',
+    'Aeroporto de Inhambane': 'Inhambane Airport',
+    'Centro de Inhambane': 'Inhambane City Centre',
+};
+
+const PublicLanguageContext = createContext({
+    locale: 'pt',
+    setLocale: () => {},
+    text: publicText.pt,
+    bookingText: bookingCopy.pt,
+});
+
+const usePublicLanguage = () => useContext(PublicLanguageContext);
+
+const translateTenantText = (value, locale) => {
+    if (locale !== 'en' || !value) {
+        return value;
+    }
+
+    if (/^aprox\. (\d+) minutos$/i.test(value)) {
+        return value.replace(/^aprox\. (\d+) minutos$/i, 'approx. $1 minutes');
+    }
+
+    return tenantTextTranslations[value] || value;
 };
 
 export default function Property({ tenant, property, website = {}, booking }) {
+    const [locale, setLocale] = useState(() => {
+        if (typeof window === 'undefined') {
+            return 'pt';
+        }
+
+        return window.localStorage.getItem('public-site-locale') || 'pt';
+    });
     const phone = property.phone || null;
     const email = property.email || null;
     const heroImage = imageUrl(website.hero_image) || imageUrl(website.photos?.[0]?.src);
     const roomRates = (website.room_types || []).map((room) => Number(room.price_from || 0)).filter(Boolean);
     const lowestRate = roomRates.length ? Math.min(...roomRates) : property.lowest_rate;
-    const languages = (property.services || []).find((service) => service.name === 'Idiomas')?.description;
+    const text = publicText[locale] || publicText.pt;
+    const bookingText = bookingCopy[locale] || bookingCopy.pt;
+    const languages = translateTenantText((property.services || []).find((service) => service.name === 'Idiomas')?.description, locale);
+
+    useEffect(() => {
+        window.localStorage.setItem('public-site-locale', locale);
+        document.documentElement.lang = locale === 'en' ? 'en' : 'pt';
+    }, [locale]);
 
     return (
-        <>
+        <PublicLanguageContext.Provider value={{ locale, setLocale, text, bookingText }}>
             <Head title={website.title || property.name}>
                 {website.description && <meta name="description" content={website.description} />}
                 {website.canonical_url && <link rel="canonical" href={website.canonical_url} />}
                 {website.favicon && <link rel="icon" href={website.favicon} />}
                 <meta property="og:type" content="business.business" />
-                <meta property="og:locale" content="pt_PT" />
+                <meta property="og:locale" content={locale === 'en' ? 'en_US' : 'pt_PT'} />
                 <meta property="og:title" content={website.title || property.name} />
                 {website.description && <meta property="og:description" content={website.description} />}
                 {website.og_image && <meta property="og:image" content={website.og_image} />}
@@ -175,7 +325,7 @@ export default function Property({ tenant, property, website = {}, booking }) {
                                 {property.legal_name || property.name}
                             </h1>
                             <p className="mt-6 max-w-2xl text-lg leading-8 text-white/82">
-                                {website.description || property.notes || text.heroFallback}
+                                {locale === 'pt' ? (website.description || property.notes || text.heroFallback) : text.heroFallback}
                             </p>
                             <div className="mt-8 flex flex-wrap gap-3">
                                 <a href="#reservar" className="rounded-full bg-amber-400 px-6 py-3 font-semibold text-black transition hover:bg-amber-300">
@@ -193,10 +343,10 @@ export default function Property({ tenant, property, website = {}, booking }) {
 
                 <section className="border-y border-white/10 bg-black px-6 py-6">
                     <div className="mx-auto grid max-w-7xl gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                        <Metric label="Alojamento" value={property.legal_name || property.name} />
+                        <Metric label={text.accommodation} value={property.legal_name || property.name} />
                         <Metric label={text.directBookings} value={property.city || tenant?.name} />
-                        <Metric label={text.from} value={lowestRate ? money(lowestRate) : 'Sob consulta'} />
-                        {languages && <Metric label="Idiomas" value={languages} />}
+                        <Metric label={text.from} value={lowestRate ? money(lowestRate) : text.onRequest} />
+                        {languages && <Metric label={text.languages} value={languages} />}
                     </div>
                 </section>
 
@@ -210,11 +360,13 @@ export default function Property({ tenant, property, website = {}, booking }) {
                 <Policies property={property} />
                 <Contact property={property} website={website} phone={phone} email={email} />
             </main>
-        </>
+        </PublicLanguageContext.Provider>
     );
 }
 
 function Header({ property }) {
+    const { locale, setLocale, text } = usePublicLanguage();
+
     return (
         <div className="absolute inset-x-0 top-0 z-30 border-b border-white/10 bg-black/35 backdrop-blur">
             <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
@@ -228,15 +380,32 @@ function Header({ property }) {
                     <a href="#localizacao" className="hover:text-white">{text.location}</a>
                     <a href="#contactos" className="hover:text-white">{text.contacts}</a>
                 </nav>
-                <a href="#reservar" className="rounded-full bg-amber-400 px-4 py-2 text-sm font-semibold text-black transition hover:bg-amber-300">
-                    {text.reserve}
-                </a>
+                <div className="flex items-center gap-3">
+                    <div className="flex rounded-full border border-white/20 bg-black/30 p-1 text-xs font-bold">
+                        {['pt', 'en'].map((option) => (
+                            <button
+                                key={option}
+                                type="button"
+                                onClick={() => setLocale(option)}
+                                className={`rounded-full px-3 py-1 uppercase transition ${
+                                    locale === option ? 'bg-white text-stone-950' : 'text-white/70 hover:text-white'
+                                }`}
+                            >
+                                {option}
+                            </button>
+                        ))}
+                    </div>
+                    <a href="#reservar" className="rounded-full bg-amber-400 px-4 py-2 text-sm font-semibold text-black transition hover:bg-amber-300">
+                        {text.reserve}
+                    </a>
+                </div>
             </div>
         </div>
     );
 }
 
 function BookingSection({ property, booking }) {
+    const { bookingText, text } = usePublicLanguage();
     const [form, setForm] = useState({
         guest_name: '',
         guest_phone: '',
@@ -377,7 +546,7 @@ function BookingSection({ property, booking }) {
                         )}
                     </div>
                     <p className="mt-4 text-sm leading-6 text-white/52">
-                        A reserva só fica garantida após confirmação do alojamento e depósito de {property.deposit_percent || 50}%.
+                        {text.bookingGuarantee(property.deposit_percent || 50)}
                     </p>
                 </div>
 
@@ -438,6 +607,7 @@ function BookingSection({ property, booking }) {
 }
 
 function Gallery({ photos }) {
+    const { text } = usePublicLanguage();
     const [active, setActive] = useState(null);
 
     if (!photos.length) {
@@ -464,7 +634,7 @@ function Gallery({ photos }) {
             {active !== null && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-5" role="dialog" aria-modal="true">
                     <button type="button" onClick={() => setActive(null)} className="absolute right-5 top-5 rounded-full border border-white/30 px-4 py-2 text-white">
-                        Fechar
+                        {text.close}
                     </button>
                     <ResponsiveImage image={photos[active]} alt={photos[active].alt} className="max-h-[82vh] max-w-[92vw] rounded-lg object-contain" eager />
                 </div>
@@ -474,6 +644,8 @@ function Gallery({ photos }) {
 }
 
 function RoomTypes({ rooms, depositPercent }) {
+    const { locale, text } = usePublicLanguage();
+
     if (!rooms.length) {
         return null;
     }
@@ -490,18 +662,18 @@ function RoomTypes({ rooms, depositPercent }) {
                     <article key={room.id || room.name} className="overflow-hidden rounded-lg border border-white/10 bg-white/[0.05]">
                         {room.photo && <ResponsiveImage image={{ src: room.photo, srcset: room.srcset }} alt={room.name} className="aspect-[4/3] w-full object-cover" />}
                         <div className="p-5">
-                            <h3 className="text-xl font-bold">{room.name}</h3>
+                            <h3 className="text-xl font-bold">{translateTenantText(room.name, locale)}</h3>
                             <p className="mt-2 text-sm text-white/60">{room.capacity} {text.guests}</p>
-                            {room.description && <p className="mt-4 text-sm leading-6 text-white/70">{room.description}</p>}
+                            {room.description && <p className="mt-4 text-sm leading-6 text-white/70">{translateTenantText(room.description, locale)}</p>}
                             <p className="mt-5 text-2xl font-bold text-amber-300">{money(room.price_from)}</p>
-                            <p className="mt-1 text-xs text-white/45">Depósito de {depositPercent}% para garantir.</p>
+                            <p className="mt-1 text-xs text-white/45">{text.depositGuarantee(depositPercent)}</p>
                             {!!room.amenities?.length && (
                                 <div className="mt-5">
                                     <p className="text-sm font-semibold text-white/78">{text.includes}</p>
                                     <div className="mt-3 flex flex-wrap gap-2">
                                         {room.amenities.map((amenity) => (
                                             <span key={amenity} className="rounded-full border border-white/15 px-3 py-1 text-xs text-white/70">
-                                                {amenity}
+                                                {translateTenantText(amenity, locale)}
                                             </span>
                                         ))}
                                     </div>
@@ -516,6 +688,7 @@ function RoomTypes({ rooms, depositPercent }) {
 }
 
 function Services({ property }) {
+    const { locale, text } = usePublicLanguage();
     const services = property.services || [];
 
     return (
@@ -523,16 +696,20 @@ function Services({ property }) {
             <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.9fr_1.1fr]">
                 <div>
                     <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-600">{text.services}</p>
-                    <h2 className="mt-3 text-3xl font-bold">Informação útil antes da chegada</h2>
+                    <h2 className="mt-3 text-3xl font-bold">{text.servicesTitle}</h2>
                     <p className="mt-5 leading-7 text-stone-600">
-                        Condições configuradas pelo alojamento para alinhar expectativas antes da reserva.
+                        {text.servicesBody}
                     </p>
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                     <Info label={text.deposit} value={`${property.deposit_percent || 50}%`} />
-                    <Info label={text.cleaning} value={cleaningIntervalText(property.cleaning_interval_days)} />
+                    <Info label={text.cleaning} value={cleaningIntervalText(property.cleaning_interval_days, text)} />
                     {services.map((service) => (
-                        <Info key={service.name} label={service.name} value={service.description || 'Disponível'} />
+                        <Info
+                            key={service.name}
+                            label={translateTenantText(service.name, locale)}
+                            value={translateTenantText(service.description || text.available, locale)}
+                        />
                     ))}
                 </div>
             </div>
@@ -541,6 +718,8 @@ function Services({ property }) {
 }
 
 function Location({ property, website }) {
+    const { locale, text } = usePublicLanguage();
+
     useEffect(() => {
         if (!website.latitude || !website.longitude || !document.getElementById('tenant-map')) {
             return;
@@ -608,8 +787,8 @@ function Location({ property, website }) {
                             <h3 className="font-semibold">{text.nearby}</h3>
                             {website.nearby.map((item) => (
                                 <div key={item.name} className="flex items-center justify-between border-b border-stone-200 pb-3">
-                                    <span>{item.name}</span>
-                                    <span className="text-stone-500">{item.distance}</span>
+                                    <span>{translateTenantText(item.name, locale)}</span>
+                                    <span className="text-stone-500">{translateTenantText(item.distance, locale)}</span>
                                 </div>
                             ))}
                         </div>
@@ -621,6 +800,8 @@ function Location({ property, website }) {
 }
 
 function Testimonials({ testimonials }) {
+    const { text } = usePublicLanguage();
+
     if (!testimonials.length) {
         return null;
     }
@@ -642,15 +823,19 @@ function Testimonials({ testimonials }) {
 }
 
 function Policies({ property }) {
+    const { text } = usePublicLanguage();
+
     return (
         <section id="politicas" className="mx-auto grid max-w-7xl scroll-mt-28 gap-6 px-6 py-20 lg:grid-cols-2">
-            <Policy title="Política de cancelamento" text={property.cancellation_policy} fallback={text.fallbackPolicy} />
-            <Policy title="Regras da casa" text={property.house_rules} fallback={text.fallbackPolicy} />
+            <Policy title={text.cancellationPolicy} text={property.cancellation_policy} fallback={text.fallbackPolicy} />
+            <Policy title={text.houseRules} text={property.house_rules} fallback={text.fallbackPolicy} />
         </section>
     );
 }
 
 function Contact({ property, website, phone, email }) {
+    const { text } = usePublicLanguage();
+
     return (
         <section id="contactos" className="scroll-mt-28 border-t border-white/10 bg-black px-6 py-14">
             <div className="mx-auto flex max-w-7xl flex-col justify-between gap-8 md:flex-row md:items-center">
