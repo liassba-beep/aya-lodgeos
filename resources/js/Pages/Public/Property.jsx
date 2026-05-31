@@ -25,6 +25,16 @@ const phoneHref = (phone) => {
     return digits ? `tel:${digits}` : null;
 };
 
+const cleaningIntervalText = (days) => {
+    const interval = Number(days || 0);
+
+    if (interval === 1) {
+        return text.daily;
+    }
+
+    return interval > 1 ? `A cada ${interval} dias` : text.daily;
+};
+
 const imageUrl = (path) => {
     if (!path) {
         return null;
@@ -61,6 +71,7 @@ const text = {
     fallbackPolicy: 'Informação a confirmar directamente com o alojamento.',
     locationBody: 'Use o mapa e os pontos de referência para confirmar a zona antes de viajar.',
     nearby: 'Perto de',
+    openInGoogleMaps: 'Abrir no Google Maps',
     call: 'Ligar',
     whatsapp: 'WhatsApp',
     ownerArea: 'Área do proprietário',
@@ -517,7 +528,7 @@ function Services({ property }) {
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                     <Info label={text.deposit} value={`${property.deposit_percent || 50}%`} />
-                    <Info label={text.cleaning} value={property.cleaning_interval_days ? `A cada ${property.cleaning_interval_days} dias` : text.daily} />
+                    <Info label={text.cleaning} value={cleaningIntervalText(property.cleaning_interval_days)} />
                     {services.map((service) => (
                         <Info key={service.name} label={service.name} value={service.description || 'Disponível'} />
                     ))}
@@ -580,6 +591,16 @@ function Location({ property, website }) {
                     <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-600">{text.location}</p>
                     <h2 className="mt-3 text-3xl font-bold">{website.address_label || property.address || property.city}</h2>
                     <p className="mt-5 leading-7 text-stone-600">{website.directions_note || text.locationBody}</p>
+                    {website.google_maps_url && (
+                        <a
+                            href={website.google_maps_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="mt-5 inline-flex rounded-full bg-amber-400 px-5 py-3 text-sm font-semibold text-black transition hover:bg-amber-300"
+                        >
+                            {text.openInGoogleMaps}
+                        </a>
+                    )}
                     {!!website.nearby?.length && (
                         <div className="mt-8 space-y-3">
                             <h3 className="font-semibold">{text.nearby}</h3>

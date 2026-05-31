@@ -45,7 +45,7 @@ Animais de estimação: Os hóspedes não podem trazer animais de estimação de
 
 SERVIÇOS E LIMPEZA
 
-A MiKaya está comprometida com a preservação ambiental e conservação de recursos; agradecemos desde já o seu suporte. Normalmente, os lençóis e toalhas são trocados a cada 3 dias, a não ser que este procedimento seja solicitado antes.
+A MiKaya está comprometida com a preservação ambiental e conservação de recursos; agradecemos desde já o seu suporte. A limpeza é diária. A troca de lençóis e toalhas pode ser ajustada conforme a necessidade da estadia.
 TEXT;
 
     /**
@@ -88,17 +88,17 @@ TEXT;
                 'billing_email' => $ownerEmail,
                 'billing_phone' => $slug === 'mikaya' ? '+258 84 299 0406' : '+258 84 000 0000',
                 'whatsapp_number' => $slug === 'mikaya' ? '258842990406' : '258840000000',
-                'latitude' => $slug === 'mikaya' ? -23.8655000 : -25.9662000,
-                'longitude' => $slug === 'mikaya' ? 35.3834000 : 32.5832000,
-                'address_label' => $slug === 'mikaya' ? 'Inhambane, perto das praias do Tofo e Barra' : $city.', Mozambique',
+                'latitude' => $slug === 'mikaya' ? -23.8803125 : -25.9662000,
+                'longitude' => $slug === 'mikaya' ? 35.4183125 : 32.5832000,
+                'address_label' => $slug === 'mikaya' ? '4C99+V8V, Inhambane' : $city.', Moçambique',
                 'directions_note' => $slug === 'mikaya'
-                    ? 'Peça a localização exacta no WhatsApp antes da chegada. A equipa confirma o melhor trajecto conforme o ponto de partida.'
+                    ? 'Use o código 4C99+V8V no Google Maps ou peça a localização exacta no WhatsApp antes da chegada. A equipa confirma o melhor trajecto conforme o ponto de partida.'
                     : 'Substitua esta nota pela orientação real de chegada do alojamento.',
                 'nearby_json' => $slug === 'mikaya' ? [
                     'Praia do Tofo' => 'aprox. 25 minutos',
                     'Praia da Barra' => 'aprox. 30 minutos',
-                    'Aeroporto de Inhambane' => 'aprox. 15 minutos',
-                    'Centro de Inhambane' => 'aprox. 10 minutos',
+                    'Aeroporto de Inhambane' => 'aprox. 10 minutos',
+                    'Centro de Inhambane' => 'aprox. 15 minutos',
                 ] : [
                     'Centro da cidade' => 'a confirmar',
                     'Aeroporto' => 'a confirmar',
@@ -121,10 +121,10 @@ TEXT;
                 'status' => 'active',
                 'email' => $ownerEmail,
                 'city' => $city,
-                'country' => 'Mozambique',
-                'address' => $city.', Mozambique',
+                'country' => 'Moçambique',
+                'address' => $city.', Moçambique',
                 'deposit_percent' => 50,
-                'cleaning_interval_days' => 3,
+                'cleaning_interval_days' => $slug === 'mikaya' ? 1 : 3,
                 'cancellation_policy' => $slug === 'mikaya' ? self::MIKAYA_CANCELLATION_POLICY : null,
                 'house_rules' => $slug === 'mikaya' ? self::MIKAYA_HOUSE_RULES : null,
                 'meals_and_services' => $slug === 'mikaya' ? [
@@ -136,6 +136,7 @@ TEXT;
                     'Geleira' => 'Apoio prático para estadias curtas ou prolongadas.',
                     'CCTV' => 'Câmaras nas áreas públicas.',
                     'Localização estratégica' => 'A poucos minutos do centro da cidade e das praias do Tofo e Barra.',
+                    'Idiomas' => 'Português.',
                 ] : null,
             ],
         );

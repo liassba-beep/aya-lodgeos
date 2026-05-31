@@ -121,6 +121,10 @@ class PublicPropertyController extends Controller
         $seoTitle = $tenantAccount->seo_title ?: trim(($tenantAccount->name ?: $property->name).' - '.($property->city ?: 'Moçambique').' | Reservas directas');
         $seoDescription = $tenantAccount->seo_description ?: 'Reserve directamente em '.$property->name.'. Consulte disponibilidade, contactos, localização e quartos disponíveis.';
         $canonicalUrl = $request->url();
+        $mapsQuery = $tenantAccount->address_label
+            ?: ($tenantAccount->latitude && $tenantAccount->longitude
+                ? ((float) $tenantAccount->latitude).','.((float) $tenantAccount->longitude)
+                : null);
 
         return Inertia::render('Public/Property', [
             'tenant' => [
@@ -160,6 +164,9 @@ class PublicPropertyController extends Controller
                 'longitude' => $tenantAccount->longitude ? (float) $tenantAccount->longitude : null,
                 'address_label' => $tenantAccount->address_label,
                 'directions_note' => $tenantAccount->directions_note,
+                'google_maps_url' => $mapsQuery
+                    ? 'https://www.google.com/maps/search/?api=1&query='.rawurlencode($mapsQuery)
+                    : null,
                 'nearby' => $nearby,
                 'photos' => $photos,
                 'room_types' => $roomTypes,
