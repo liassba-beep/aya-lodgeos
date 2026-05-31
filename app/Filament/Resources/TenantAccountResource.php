@@ -100,6 +100,45 @@ class TenantAccountResource extends Resource
                             $component->state($state ?? AccessControl::tenantModuleKeys());
                         }),
                 ]),
+            Forms\Components\Section::make('Website público')
+                ->description('Configuração do website público do tenant: SEO, WhatsApp e mapa.')
+                ->columns(2)
+                ->schema([
+                    Forms\Components\TextInput::make('whatsapp_number')
+                        ->label('WhatsApp')
+                        ->helperText('Use o formato internacional sem +, por exemplo 258842990406.')
+                        ->tel()
+                        ->maxLength(32),
+                    Forms\Components\TextInput::make('address_label')
+                        ->label('Morada pública')
+                        ->maxLength(255),
+                    Forms\Components\TextInput::make('latitude')->label('Latitude')->numeric(),
+                    Forms\Components\TextInput::make('longitude')->label('Longitude')->numeric(),
+                    Forms\Components\Textarea::make('directions_note')->label('Nota de direcção')->columnSpanFull(),
+                    Forms\Components\KeyValue::make('nearby_json')
+                        ->label('Pontos próximos')
+                        ->keyLabel('Ponto')
+                        ->valueLabel('Distância')
+                        ->columnSpanFull(),
+                    Forms\Components\TextInput::make('seo_title')->label('Título SEO')->maxLength(255),
+                    Forms\Components\Textarea::make('seo_description')->label('Descrição SEO')->rows(3),
+                    Forms\Components\FileUpload::make('og_image')
+                        ->label('Imagem de partilha')
+                        ->image()
+                        ->directory('website-og')
+                        ->visibility('public')
+                        ->downloadable()
+                        ->openable()
+                        ->columnSpanFull(),
+                    Forms\Components\FileUpload::make('favicon_path')
+                        ->label('Favicon')
+                        ->image()
+                        ->directory('website-favicons')
+                        ->visibility('public')
+                        ->downloadable()
+                        ->openable()
+                        ->columnSpanFull(),
+                ]),
             Forms\Components\Section::make('Primeiro acesso ao APP')
                 ->description('Opcional na criação: cria o alojamento inicial e o utilizador proprietário já com acesso web.')
                 ->columns(2)
