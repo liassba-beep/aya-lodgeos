@@ -92,7 +92,7 @@ class TenantAccountResource extends Resource
                 ->schema([
                     Forms\Components\CheckboxList::make('enabled_modules')
                         ->label('Módulos activos')
-                        ->options(AccessControl::tenantModuleGroupOptions())
+                        ->options(AccessControl::tenantModuleFlatOptions())
                         ->columns(2)
                         ->bulkToggleable()
                         ->default(AccessControl::tenantModuleKeys())

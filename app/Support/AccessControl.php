@@ -115,6 +115,15 @@ class AccessControl
             ->all();
     }
 
+    public static function tenantModuleFlatOptions(): array
+    {
+        return collect(self::tenantModuleGroupOptions())
+            ->flatMap(fn (array $modules, string $group): array => collect($modules)
+                ->mapWithKeys(fn (string $label, string $module): array => [$module => "{$group} - {$label}"])
+                ->all())
+            ->all();
+    }
+
     public static function tenantModuleKeys(): array
     {
         return array_keys(self::tenantModuleLabels());
