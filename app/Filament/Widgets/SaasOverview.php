@@ -38,15 +38,20 @@ class SaasOverview extends BaseWidget
             ->whereNotIn('status', ['done', 'rejected'])
             ->count();
 
-        $tenantsWithoutOwner = TenantAccount::query()
-            ->whereDoesntHave('properties.users', fn ($query) => $query->whereIn('role', ['owner', 'manager']))
+        $tenants = TenantAccount::query()
+            ->with(['properties.users:id,role'])
+            ->get(['id', 'enabled_modules']);
+
+        $tenantsWithoutOwner = $tenants
+            ->filter(function (TenantAccount $tenant): bool {
+                $users = $tenant->properties->flatMap(fn (Property $property) => $property->users);
+
+                return $users->whereIn('role', ['owner', 'manager'])->isEmpty();
+            })
             ->count();
 
-        $tenantsWithoutModules = TenantAccount::query()
-            ->whereNotNull('enabled_modules')
-            ->where(function ($query): void {
-                $query->whereJsonLength('enabled_modules', 0);
-            })
+        $tenantsWithoutModules = $tenants
+            ->filter(fn (TenantAccount $tenant): bool => is_array($tenant->enabled_modules) && count($tenant->enabled_modules) === 0)
             ->count();
 
         return [
