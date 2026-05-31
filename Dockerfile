@@ -34,9 +34,11 @@ RUN apt-get update \
         libpq-dev \
         libzip-dev \
         curl \
+        libavif-bin \
         nginx \
         supervisor \
         unzip \
+        webp \
     && docker-php-ext-install intl opcache pcntl pdo_pgsql zip \
     && pecl install redis \
     && docker-php-ext-enable redis \

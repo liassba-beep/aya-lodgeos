@@ -13,5 +13,8 @@ if [ "$RUN_MIGRATIONS" = "true" ]; then
     php artisan migrate --force
 fi
 
-exec "$@"
+if [ -n "$APP_KEY" ]; then
+    php artisan website:generate-images --quiet || true
+fi
 
+exec "$@"
