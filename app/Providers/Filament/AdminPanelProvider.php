@@ -7,6 +7,7 @@ use App\Filament\Pages\MobileAccess;
 use App\Filament\Pages\ReservationCalendar;
 use App\Filament\Pages\StaffScheduleCalendar;
 use App\Filament\Widgets\OwnerOverview;
+use App\Filament\Widgets\SaasOverview;
 use App\Http\Middleware\AdminIpAllowlist;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -57,6 +58,7 @@ class AdminPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
                 Widgets\AccountWidget::class,
+                SaasOverview::class,
                 OwnerOverview::class,
             ])
             ->renderHook(

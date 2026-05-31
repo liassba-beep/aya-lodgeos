@@ -14,6 +14,11 @@ use Illuminate\Support\Carbon;
 
 class OwnerOverview extends BaseWidget
 {
+    public static function canView(): bool
+    {
+        return auth()->user()?->role !== 'super_admin';
+    }
+
     protected function getStats(): array
     {
         $today = Carbon::today();
