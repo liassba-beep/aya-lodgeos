@@ -14,6 +14,11 @@ class ListRooms extends ListRecords
     {
         return [
             Actions\CreateAction::make()->label('Novo'),
+            Actions\Action::make('qrLabels')
+                ->label('Imprimir QRs')
+                ->icon('heroicon-o-qr-code')
+                ->url(fn (): string => route('rooms.qr-labels'))
+                ->openUrlInNewTab(),
         ];
     }
 }

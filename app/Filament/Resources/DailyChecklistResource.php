@@ -37,12 +37,14 @@ class DailyChecklistResource extends Resource
                     Forms\Components\Hidden::make('property_id')
                         ->default(fn (): ?int => TenantContext::propertyId()),
                     Forms\Components\Select::make('staff_member_id')->label('Responsavel')->relationship('staffMember', 'name', modifyQueryUsing: fn ($query) => $query->where('property_id', TenantContext::propertyId()))->searchable()->preload(),
+                    Forms\Components\Select::make('room_id')->label('Quarto')->relationship('room', 'name', modifyQueryUsing: fn ($query) => $query->where('property_id', TenantContext::propertyId()))->searchable()->preload(),
                     Forms\Components\DatePicker::make('checklist_date')->label('Data')->default(now())->required(),
                     Forms\Components\Select::make('area')
                         ->label('Area')
                         ->options([
                             'recepcao' => 'Recepcao',
                             'limpeza' => 'Limpeza',
+                            'limpeza_quarto' => 'Limpeza de quarto',
                             'manutencao' => 'Manutencao',
                             'cozinha' => 'Cozinha',
                             'seguranca' => 'Seguranca',
@@ -83,6 +85,7 @@ class DailyChecklistResource extends Resource
                 Tables\Columns\TextColumn::make('checklist_date')->label('Data')->date()->sortable(),
                 Tables\Columns\TextColumn::make('area')->label('Area')->badge(),
                 Tables\Columns\TextColumn::make('title')->label('Item')->searchable(),
+                Tables\Columns\TextColumn::make('room.name')->label('Quarto')->toggleable(),
                 Tables\Columns\TextColumn::make('staffMember.name')->label('Responsavel')->toggleable(),
                 Tables\Columns\TextColumn::make('status')->label('Estado')->badge(),
                 Tables\Columns\TextColumn::make('completed_at')->label('Concluido')->dateTime()->toggleable(),

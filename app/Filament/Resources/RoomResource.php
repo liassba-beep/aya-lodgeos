@@ -74,6 +74,10 @@ class RoomResource extends Resource
                                 'inactive' => 'Inactivo',
                             ])
                             ->required(),
+                        Forms\Components\TextInput::make('qr_code')
+                            ->label('Código QR do quarto')
+                            ->helperText('Gerado automaticamente. Imprima o QR e coloque-o dentro do quarto para validar a limpeza.')
+                            ->maxLength(255),
                         Forms\Components\Textarea::make('notes')
                             ->label('Notas')
                             ->columnSpanFull(),
@@ -113,6 +117,10 @@ class RoomResource extends Resource
                         'maintenance' => 'danger',
                         default => 'gray',
                     }),
+                Tables\Columns\TextColumn::make('qr_code')
+                    ->label('QR')
+                    ->copyable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('status')

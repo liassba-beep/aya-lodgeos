@@ -9,6 +9,7 @@ use App\Models\MaintenanceReport;
 use App\Models\OperationalTask;
 use App\Models\Payment;
 use App\Models\ProductRequisition;
+use App\Models\Property;
 use App\Models\Reservation;
 use App\Models\Room;
 use App\Models\StaffMember;
@@ -26,6 +27,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 Route::domain('{tenant}.lodgesos.com')
@@ -140,6 +143,32 @@ Route::get('/trabalhador/app', function () {
     $today = Carbon::today();
     $propertyId = $staff->property_id;
 
+    $rooms = Room::query()
+        ->where('property_id', $propertyId)
+        ->where('status', '!=', 'inactive')
+        ->orderBy('room_number')
+        ->orderBy('name')
+        ->get(['id', 'property_id', 'name', 'room_number', 'status', 'qr_code']);
+
+    $rooms->each(function (Room $room) use ($propertyId, $today): void {
+        if (blank($room->qr_code)) {
+            $room->forceFill(['qr_code' => $room->defaultQrCode()])->save();
+        }
+
+        DailyChecklist::query()->firstOrCreate(
+            [
+                'property_id' => $propertyId,
+                'room_id' => $room->id,
+                'checklist_date' => $today->toDateString(),
+                'area' => 'limpeza_quarto',
+            ],
+            [
+                'title' => 'Limpeza - '.trim(($room->room_number ? $room->room_number.' - ' : '').$room->name),
+                'status' => 'pending',
+            ],
+        );
+    });
+
     $tasks = OperationalTask::query()
         ->with('room')
         ->where('property_id', $propertyId)
@@ -159,17 +188,21 @@ Route::get('/trabalhador/app', function () {
         ]);
 
     $checklists = DailyChecklist::query()
+        ->with('room')
         ->where('property_id', $propertyId)
         ->whereDate('checklist_date', $today)
         ->where(fn ($query) => $query->whereNull('staff_member_id')->orWhere('staff_member_id', $staff->id))
         ->orderBy('area')
-        ->limit(8)
+        ->orderBy('title')
+        ->limit(30)
         ->get()
         ->map(fn (DailyChecklist $checklist): array => [
             'id' => $checklist->id,
             'title' => $checklist->title,
             'area' => $checklist->area,
             'status' => $checklist->status,
+            'room' => $checklist->room ? trim(($checklist->room->room_number ? $checklist->room->room_number.' - ' : '').$checklist->room->name) : null,
+            'requires_qr' => filled($checklist->room?->qr_code),
         ]);
 
     $reservations = Reservation::query()
@@ -209,10 +242,7 @@ Route::get('/trabalhador/app', function () {
             ->limit(40)
             ->get(['id', 'name', 'unit'])
             ->map(fn (StockItem $item): array => ['id' => $item->id, 'name' => $item->name, 'unit' => $item->unit]),
-        'rooms' => Room::query()
-            ->where('property_id', $propertyId)
-            ->orderBy('room_number')
-            ->get(['id', 'name', 'room_number'])
+        'rooms' => $rooms
             ->map(fn (Room $room): array => ['id' => $room->id, 'name' => trim(($room->room_number ? $room->room_number.' - ' : '').$room->name)]),
     ]);
 })->name('worker.mobile');
@@ -271,20 +301,29 @@ Route::middleware([])->prefix('trabalhador')->name('worker.')->group(function ()
         $staff = StaffMember::findOrFail(session('worker_staff_member_id'));
         abort_unless((int) $dailyChecklist->property_id === (int) $staff->property_id, 403);
 
+        $dailyChecklist->load('room');
+
         $validated = $request->validate([
             'photo' => ['required', 'image', 'max:5120'],
             'latitude' => ['nullable', 'numeric'],
             'longitude' => ['nullable', 'numeric'],
-            'qr_code' => ['nullable', 'string', 'max:255'],
+            'qr_code' => [$dailyChecklist->room ? 'required' : 'nullable', 'string', 'max:255'],
         ]);
+
+        if ($dailyChecklist->room && ! hash_equals(trim((string) $dailyChecklist->room->qr_code), trim((string) $validated['qr_code']))) {
+            throw ValidationException::withMessages([
+                'qr_code' => 'O QR lido não corresponde a este quarto.',
+            ]);
+        }
 
         $dailyChecklist->forceFill([
             'status' => 'done',
+            'staff_member_id' => $dailyChecklist->staff_member_id ?: $staff->id,
             'completed_at' => now(),
             'evidence_photo_path' => $request->file('photo')->store('checklist-evidence', 'public'),
             'evidence_latitude' => $validated['latitude'] ?? null,
             'evidence_longitude' => $validated['longitude'] ?? null,
-            'evidence_qr_code' => $validated['qr_code'] ?? null,
+            'evidence_qr_code' => isset($validated['qr_code']) ? trim((string) $validated['qr_code']) : null,
         ])->save();
 
         OperationalAlert::create([
@@ -303,7 +342,7 @@ Route::middleware([])->prefix('trabalhador')->name('worker.')->group(function ()
     Route::post('/avarias', function (Request $request) {
         $staff = StaffMember::findOrFail(session('worker_staff_member_id'));
         $validated = $request->validate([
-            'room_id' => ['nullable', 'exists:rooms,id'],
+            'room_id' => ['nullable', Rule::exists('rooms', 'id')->where('property_id', $staff->property_id)],
             'title' => ['required', 'string', 'max:255'],
             'priority' => ['required', 'string', 'max:30'],
             'qr_code' => ['nullable', 'string', 'max:255'],
@@ -453,7 +492,7 @@ Route::get('/mobile', function () {
         ]);
 
     $checklists = DailyChecklist::query()
-        ->with('staffMember')
+        ->with(['room', 'staffMember'])
         ->where('property_id', $propertyId)
         ->whereDate('checklist_date', $today)
         ->orderBy('area')
@@ -463,6 +502,7 @@ Route::get('/mobile', function () {
             'id' => $checklist->id,
             'title' => $checklist->title,
             'area' => $checklist->area,
+            'room' => $checklist->room?->name,
             'staff' => $checklist->staffMember?->name,
             'status' => $checklist->status,
             'has_evidence' => filled($checklist->evidence_photo_path) || filled($checklist->evidence_qr_code),
@@ -543,6 +583,28 @@ Route::middleware('auth')->group(function () {
             ] : null,
         ]);
     })->name('operational-alerts.latest');
+
+    Route::get('/admin/rooms/qr-labels', function () {
+        $propertyId = TenantContext::propertyId();
+        abort_unless($propertyId, 403);
+
+        $rooms = Room::query()
+            ->where('property_id', $propertyId)
+            ->orderBy('room_number')
+            ->orderBy('name')
+            ->get();
+
+        $rooms->each(function (Room $room): void {
+            if (blank($room->qr_code)) {
+                $room->forceFill(['qr_code' => $room->defaultQrCode()])->save();
+            }
+        });
+
+        return view('rooms.qr-labels', [
+            'property' => Property::find($propertyId),
+            'rooms' => $rooms,
+        ]);
+    })->name('rooms.qr-labels');
 
     Route::get('/admin/reservations/{reservation}/check-in-form.pdf', function (Reservation $reservation) {
         $propertyId = TenantContext::propertyId();
@@ -760,12 +822,20 @@ Route::middleware('auth')->group(function () {
 
         abort_unless(! $propertyId || (int) $dailyChecklist->property_id === $propertyId, 403);
 
+        $dailyChecklist->load('room');
+
         $validated = $request->validate([
             'photo' => ['nullable', 'image', 'max:5120'],
             'latitude' => ['nullable', 'numeric'],
             'longitude' => ['nullable', 'numeric'],
-            'qr_code' => ['nullable', 'string', 'max:255'],
+            'qr_code' => [$dailyChecklist->room ? 'required' : 'nullable', 'string', 'max:255'],
         ]);
+
+        if ($dailyChecklist->room && ! hash_equals(trim((string) $dailyChecklist->room->qr_code), trim((string) $validated['qr_code']))) {
+            throw ValidationException::withMessages([
+                'qr_code' => 'O QR lido não corresponde a este quarto.',
+            ]);
+        }
 
         if ($request->hasFile('photo')) {
             $validated['evidence_photo_path'] = $request->file('photo')->store('checklist-evidence', 'public');
@@ -778,7 +848,7 @@ Route::middleware('auth')->group(function () {
             'evidence_photo_path' => $validated['evidence_photo_path'] ?? $dailyChecklist->evidence_photo_path,
             'evidence_latitude' => $validated['latitude'] ?? null,
             'evidence_longitude' => $validated['longitude'] ?? null,
-            'evidence_qr_code' => $validated['qr_code'] ?? null,
+            'evidence_qr_code' => isset($validated['qr_code']) ? trim((string) $validated['qr_code']) : null,
         ])->save();
 
         OperationalAlert::create([

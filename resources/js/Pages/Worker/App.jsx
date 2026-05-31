@@ -1,4 +1,5 @@
 import { Head, router, useForm } from '@inertiajs/react';
+import { useState } from 'react';
 
 const statusLabels = {
     pending: 'Pendente',
@@ -17,16 +18,86 @@ function Badge({ value }) {
     );
 }
 
-function CameraInput({ onChange, required = false }) {
+function CameraInput({
+    onChange,
+    required = false,
+    label = 'Fotografia de prova',
+    hint = 'No telemóvel abre a câmara; no computador permite escolher uma imagem.',
+}) {
     return (
-        <input
-            type="file"
-            accept="image/*"
-            capture="environment"
-            required={required}
-            onChange={(event) => onChange(event.target.files?.[0] || null)}
-            className="block w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs text-zinc-200 file:mr-3 file:rounded-md file:border-0 file:bg-amber-400 file:px-3 file:py-1 file:text-xs file:font-bold file:text-zinc-950"
-        />
+        <label className="block space-y-1">
+            <span className="text-xs font-semibold text-zinc-200">
+                {label}
+            </span>
+            <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                required={required}
+                onChange={(event) => onChange(event.target.files?.[0] || null)}
+                className="block w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs text-zinc-200 file:mr-3 file:rounded-md file:border-0 file:bg-amber-400 file:px-3 file:py-1 file:text-xs file:font-bold file:text-zinc-950"
+            />
+            {hint && <span className="block text-[11px] text-zinc-500">{hint}</span>}
+        </label>
+    );
+}
+
+function QrInput({ value, onChange, required = false, placeholder = 'Código QR' }) {
+    const [message, setMessage] = useState('');
+
+    const scanQr = async (event) => {
+        const file = event.target.files?.[0];
+
+        if (!file) {
+            return;
+        }
+
+        if (!('BarcodeDetector' in window)) {
+            setMessage('Este navegador não lê QR pela câmara. Escreva o código impresso no QR.');
+            return;
+        }
+
+        try {
+            const detector = new window.BarcodeDetector({ formats: ['qr_code'] });
+            const bitmap = await createImageBitmap(file);
+            const codes = await detector.detect(bitmap);
+            const rawValue = codes[0]?.rawValue || '';
+
+            if (!rawValue) {
+                setMessage('Não consegui ler o QR. Tente aproximar a câmara ou escreva o código.');
+                return;
+            }
+
+            onChange(rawValue);
+            setMessage('QR lido.');
+        } catch {
+            setMessage('Não consegui ler o QR. Escreva o código impresso no QR.');
+        }
+    };
+
+    return (
+        <div className="space-y-1">
+            <div className="grid grid-cols-[1fr_auto] gap-2">
+                <input
+                    value={value}
+                    required={required}
+                    onChange={(event) => onChange(event.target.value)}
+                    placeholder={placeholder}
+                    className="rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs"
+                />
+                <label className="cursor-pointer rounded-lg border border-zinc-700 px-3 py-2 text-xs font-bold">
+                    Ler QR
+                    <input
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        onChange={scanQr}
+                        className="sr-only"
+                    />
+                </label>
+            </div>
+            {message && <p className="text-[11px] text-zinc-500">{message}</p>}
+        </div>
     );
 }
 
@@ -53,12 +124,14 @@ function CompleteTaskForm({ task }) {
             }}
             className="mt-3 space-y-2"
         >
-            <CameraInput onChange={(file) => form.setData('photo', file)} />
-            <input
+            <CameraInput
+                label="Fotografia da tarefa"
+                onChange={(file) => form.setData('photo', file)}
+            />
+            <QrInput
                 value={form.data.qr_code}
-                onChange={(event) => form.setData('qr_code', event.target.value)}
+                onChange={(value) => form.setData('qr_code', value)}
                 placeholder="QR ou referência"
-                className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs"
             />
             <button className="w-full rounded-lg bg-amber-400 px-3 py-2 text-xs font-bold text-zinc-950">
                 Concluir tarefa
@@ -98,16 +171,20 @@ function CompleteChecklistForm({ item }) {
         >
             <CameraInput
                 required
+                label="Fotografia da limpeza concluída"
                 onChange={(file) => form.setData('photo', file)}
             />
+            {item.requires_qr && (
+                <p className="text-xs text-amber-200">
+                    QR do quarto obrigatório para validar a limpeza.
+                </p>
+            )}
             <div className="grid grid-cols-[1fr_auto] gap-2">
-                <input
+                <QrInput
                     value={form.data.qr_code}
-                    onChange={(event) =>
-                        form.setData('qr_code', event.target.value)
-                    }
-                    placeholder="QR do ponto"
-                    className="rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-xs"
+                    required={item.requires_qr}
+                    onChange={(value) => form.setData('qr_code', value)}
+                    placeholder={item.requires_qr ? 'QR do quarto' : 'QR do ponto'}
                 />
                 <button
                     type="button"
@@ -117,6 +194,12 @@ function CompleteChecklistForm({ item }) {
                     GPS
                 </button>
             </div>
+            {form.errors.qr_code && (
+                <p className="text-xs text-red-300">{form.errors.qr_code}</p>
+            )}
+            {form.errors.photo && (
+                <p className="text-xs text-red-300">{form.errors.photo}</p>
+            )}
             <button className="w-full rounded-lg bg-amber-400 px-3 py-2 text-xs font-bold text-zinc-950">
                 Concluir checklist
             </button>
@@ -179,8 +262,14 @@ function ReportForm({ rooms }) {
                     <option value="high">Urgente</option>
                     <option value="critical">Crítico</option>
                 </select>
+                <QrInput
+                    value={form.data.qr_code}
+                    onChange={(value) => form.setData('qr_code', value)}
+                    placeholder="QR do quarto ou referência"
+                />
                 <CameraInput
                     required
+                    label="Fotografia da avaria"
                     onChange={(file) => form.setData('photo', file)}
                 />
                 <textarea
@@ -248,14 +337,14 @@ function UtilityForm() {
                         className="rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
                     />
                 </div>
-                <input
+                <QrInput
                     value={form.data.qr_code}
-                    onChange={(event) => form.setData('qr_code', event.target.value)}
+                    onChange={(value) => form.setData('qr_code', value)}
                     placeholder="QR ou referência"
-                    className="rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm"
                 />
                 <CameraInput
                     required
+                    label="Fotografia do contador"
                     onChange={(file) => form.setData('photo', file)}
                 />
                 <button className="rounded-lg bg-amber-400 px-3 py-2 text-sm font-bold text-zinc-950">
@@ -351,6 +440,7 @@ function ReservationCard({ reservation }) {
                         className="mt-3 space-y-2"
                     >
                         <CameraInput
+                            label="Fotografia do hóspede/documento"
                             onChange={(file) => form.setData('photo', file)}
                         />
                         <button className="w-full rounded-lg bg-emerald-400 px-3 py-2 text-xs font-bold text-zinc-950">
@@ -414,7 +504,9 @@ export default function WorkerApp({
                 </header>
 
                 <section className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
-                    <p className="text-sm font-semibold">Ponto diário</p>
+                    <p className="text-sm font-semibold">
+                        Ponto diário com fotografia
+                    </p>
                     {staff.checked_in ? (
                         <div className="mt-3">
                             <p className="text-xs text-emerald-200">
@@ -442,12 +534,13 @@ export default function WorkerApp({
                         >
                             <CameraInput
                                 required
+                                label="Fotografia de entrada ao serviço"
                                 onChange={(file) =>
                                     checkInForm.setData('photo', file)
                                 }
                             />
                             <button className="w-full rounded-lg bg-amber-400 px-3 py-2 text-sm font-bold text-zinc-950">
-                                Fazer check-in com foto
+                                Fazer entrada com fotografia
                             </button>
                         </form>
                     )}
@@ -482,28 +575,34 @@ export default function WorkerApp({
                     )}
                 </Section>
 
-                <Section title="Checklist">
-                    {checklists.map((item) => (
-                        <article
-                            key={item.id}
-                            className="rounded-xl border border-zinc-800 bg-zinc-900 p-4"
-                        >
-                            <div className="flex items-start justify-between gap-3">
-                                <div>
-                                    <p className="text-sm font-semibold">
-                                        {item.title}
-                                    </p>
-                                    <p className="mt-1 text-xs text-zinc-400">
-                                        {item.area}
-                                    </p>
+                <Section title="Checklist e limpezas">
+                    {checklists.length === 0 ? (
+                        <p className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 text-sm text-zinc-400">
+                            Sem limpezas para hoje.
+                        </p>
+                    ) : (
+                        checklists.map((item) => (
+                            <article
+                                key={item.id}
+                                className="rounded-xl border border-zinc-800 bg-zinc-900 p-4"
+                            >
+                                <div className="flex items-start justify-between gap-3">
+                                    <div>
+                                        <p className="text-sm font-semibold">
+                                            {item.title}
+                                        </p>
+                                        <p className="mt-1 text-xs text-zinc-400">
+                                            {item.room || item.area}
+                                        </p>
+                                    </div>
+                                    <Badge value={item.status} />
                                 </div>
-                                <Badge value={item.status} />
-                            </div>
-                            {item.status !== 'done' && (
-                                <CompleteChecklistForm item={item} />
-                            )}
-                        </article>
-                    ))}
+                                {item.status !== 'done' && (
+                                    <CompleteChecklistForm item={item} />
+                                )}
+                            </article>
+                        ))
+                    )}
                 </Section>
 
                 <Section title="Check-in e check-out de hóspedes">

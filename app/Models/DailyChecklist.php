@@ -14,6 +14,7 @@ class DailyChecklist extends Model
     protected $fillable = [
         'property_id',
         'staff_member_id',
+        'room_id',
         'checklist_date',
         'area',
         'title',
@@ -48,6 +49,11 @@ class DailyChecklist extends Model
     public function staffMember(): BelongsTo
     {
         return $this->belongsTo(StaffMember::class);
+    }
+
+    public function room(): BelongsTo
+    {
+        return $this->belongsTo(Room::class);
     }
 
     public function completedBy(): BelongsTo

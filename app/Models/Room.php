@@ -20,6 +20,7 @@ class Room extends Model
         'capacity',
         'base_rate',
         'status',
+        'qr_code',
         'notes',
     ];
 
@@ -32,6 +33,17 @@ class Room extends Model
         static::saving(function (Room $room) {
             $room->property_id = $room->property_id ?: TenantContext::propertyId();
         });
+
+        static::created(function (Room $room) {
+            if (blank($room->qr_code)) {
+                $room->forceFill(['qr_code' => $room->defaultQrCode()])->saveQuietly();
+            }
+        });
+    }
+
+    public function defaultQrCode(): string
+    {
+        return 'LODGEOS-ROOM-'.$this->property_id.'-'.$this->id;
     }
 
     public function property(): BelongsTo
