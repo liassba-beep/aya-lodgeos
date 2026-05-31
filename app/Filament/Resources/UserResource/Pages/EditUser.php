@@ -18,6 +18,10 @@ class EditUser extends EditRecord
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
+        if (empty($data['password'])) {
+            unset($data['password']);
+        }
+
         if (auth()->user()?->role !== 'super_admin') {
             $data['property_id'] = TenantContext::propertyId();
 

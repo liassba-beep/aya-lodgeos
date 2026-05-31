@@ -12,6 +12,10 @@ class CreateUser extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
+        if (empty($data['password'])) {
+            $data['password'] = UserResource::fallbackPassword();
+        }
+
         if (auth()->user()?->role !== 'super_admin') {
             $data['property_id'] = TenantContext::propertyId();
 

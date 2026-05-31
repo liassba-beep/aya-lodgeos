@@ -50,7 +50,7 @@ class AccessControl
         return [
             'super_admin' => 'Super-Admin',
             'admin' => 'Admin',
-            'owner' => 'Proprietário',
+            'owner' => 'Administrador',
             'manager' => 'Gerente',
             'staff' => 'Staff',
             'security' => 'Guarda',
@@ -61,7 +61,7 @@ class AccessControl
     {
         return [
             'property' => 'Alojamentos',
-            'user' => 'Utilizadores e permissões',
+            'user' => 'Equipa e acessos',
             'room' => 'Quartos',
             'guest' => 'Hóspedes',
             'reservation' => 'Reservas',
@@ -98,6 +98,19 @@ class AccessControl
     public static function tenantModuleLabels(): array
     {
         return self::moduleLabels();
+    }
+
+    public static function currentTenantModuleLabels(): array
+    {
+        $tenant = TenantContext::tenantAccount();
+
+        if (! $tenant || $tenant->enabled_modules === null) {
+            return self::moduleLabels();
+        }
+
+        return collect(self::moduleLabels())
+            ->only($tenant->enabled_modules)
+            ->all();
     }
 
     public static function actionLabels(): array

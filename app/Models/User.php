@@ -28,6 +28,7 @@ class User extends Authenticatable implements FilamentUser
         'phone',
         'property_id',
         'role',
+        'web_access_enabled',
         'mobile_access_enabled',
         'mobile_pin',
         'mobile_pin_hash',
@@ -58,6 +59,7 @@ class User extends Authenticatable implements FilamentUser
         return [
             'email_verified_at' => 'datetime',
             'permissions' => 'array',
+            'web_access_enabled' => 'boolean',
             'mobile_access_enabled' => 'boolean',
             'last_mobile_login_at' => 'datetime',
             'password' => 'hashed',
@@ -77,7 +79,8 @@ class User extends Authenticatable implements FilamentUser
             return true;
         }
 
-        return in_array($this->role, ['admin', 'owner', 'manager', 'staff', 'security'], true)
+        return $this->web_access_enabled
+            && in_array($this->role, ['admin', 'owner', 'manager', 'staff', 'security'], true)
             && ($this->property_id || $this->properties()->exists());
     }
 

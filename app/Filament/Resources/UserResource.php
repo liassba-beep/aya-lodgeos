@@ -13,6 +13,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Str;
 
 class UserResource extends Resource
 {
@@ -24,18 +25,20 @@ class UserResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-users';
 
-    protected static ?string $navigationGroup = 'SaaS';
+    protected static ?string $navigationGroup = 'Administração';
 
     protected static ?int $navigationSort = 1;
 
-    protected static ?string $modelLabel = 'Utilizador';
+    protected static ?string $modelLabel = 'Acesso';
 
-    protected static ?string $pluralModelLabel = 'Utilizadores e permissões';
+    protected static ?string $pluralModelLabel = 'Equipa e acessos';
+
+    protected static ?string $navigationLabel = 'Equipa e acessos';
 
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\Section::make('Acesso')
+            Forms\Components\Section::make('Identificação')
                 ->columns(2)
                 ->schema([
                     Forms\Components\TextInput::make('name')->label('Nome')->required()->maxLength(255),
@@ -59,10 +62,20 @@ class UserResource extends Resource
                         ->default('manager')
                         ->live()
                         ->required(),
+                ]),
+            Forms\Components\Section::make('Autorizações de acesso')
+                ->columns(2)
+                ->schema([
+                    Forms\Components\Toggle::make('web_access_enabled')
+                        ->label('Permitir acesso web')
+                        ->helperText('Autoriza o utilizador a entrar no painel web do alojamento.')
+                        ->default(true)
+                        ->live(),
                     Forms\Components\Toggle::make('mobile_access_enabled')
                         ->label('Permitir acesso mobile por telemóvel e PIN')
                         ->helperText('Active para camareira, cozinheiro, guarda ou outro perfil operacional.')
-                        ->default(false),
+                        ->default(false)
+                        ->live(),
                     Forms\Components\TextInput::make('mobile_pin')
                         ->label('PIN mobile')
                         ->password()
@@ -70,13 +83,16 @@ class UserResource extends Resource
                         ->numeric()
                         ->minLength(4)
                         ->maxLength(8)
+                        ->required(fn (Forms\Get $get, string $operation): bool => $operation === 'create' && (bool) $get('mobile_access_enabled'))
+                        ->visible(fn (Forms\Get $get): bool => (bool) $get('mobile_access_enabled'))
                         ->dehydrated(fn (?string $state): bool => filled($state))
                         ->helperText('Deixe vazio para manter o PIN actual.'),
                     Forms\Components\TextInput::make('password')
                         ->label('Palavra-passe')
                         ->password()
                         ->revealable()
-                        ->required(fn (string $operation): bool => $operation === 'create')
+                        ->required(fn (Forms\Get $get, string $operation): bool => $operation === 'create' && (bool) $get('web_access_enabled'))
+                        ->visible(fn (Forms\Get $get): bool => (bool) $get('web_access_enabled'))
                         ->dehydrated(fn (?string $state): bool => filled($state))
                         ->maxLength(255),
                 ]),
@@ -102,10 +118,10 @@ class UserResource extends Resource
                         ->required(),
                 ]),
             Forms\Components\Section::make('Módulos permitidos')
-                ->description('Deixe vazio para usar as permissões padrão do perfil. Marque apenas quando quiser personalizar o acesso deste utilizador.')
+                ->description('Só aparecem os módulos activos para este tenant. Deixe vazio para usar as permissões padrão do perfil.')
                 ->columns(3)
                 ->collapsed()
-                ->schema(collect(AccessControl::moduleLabels())
+                ->schema(collect(self::permissionModuleOptions())
                     ->map(fn (string $label, string $module) => Forms\Components\CheckboxList::make('permissions.'.$module)
                         ->label($label)
                         ->options(AccessControl::actionLabels())
@@ -124,6 +140,7 @@ class UserResource extends Resource
                 Tables\Columns\TextColumn::make('email')->label('Email')->searchable(),
                 Tables\Columns\TextColumn::make('phone')->label('Telemóvel')->searchable()->toggleable(),
                 Tables\Columns\TextColumn::make('property.name')->label('Alojamento')->toggleable(),
+                Tables\Columns\IconColumn::make('web_access_enabled')->label('Web')->boolean()->toggleable(),
                 Tables\Columns\IconColumn::make('mobile_access_enabled')->label('Mobile')->boolean()->toggleable(),
                 Tables\Columns\TextColumn::make('role')
                     ->label('Perfil')
@@ -164,6 +181,20 @@ class UserResource extends Resource
         return collect($roles)
             ->only(['owner', 'manager', 'staff', 'security'])
             ->all();
+    }
+
+    public static function permissionModuleOptions(): array
+    {
+        if (auth()->user()?->role === 'super_admin') {
+            return AccessControl::moduleLabels();
+        }
+
+        return AccessControl::currentTenantModuleLabels();
+    }
+
+    public static function fallbackPassword(): string
+    {
+        return Str::password(32);
     }
 
     public static function getPages(): array
