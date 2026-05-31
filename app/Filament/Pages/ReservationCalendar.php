@@ -43,14 +43,14 @@ class ReservationCalendar extends Page
         $propertyId = TenantContext::propertyId();
 
         $rooms = Room::query()
-            ->where('property_id', $propertyId)
+            ->when($propertyId, fn ($query, int $propertyId) => $query->where('property_id', $propertyId))
             ->orderBy('room_number')
             ->orderBy('name')
             ->get();
 
         $reservations = Reservation::query()
             ->with(['guest', 'room'])
-            ->where('property_id', $propertyId)
+            ->when($propertyId, fn ($query, int $propertyId) => $query->where('property_id', $propertyId))
             ->where('status', '!=', 'cancelled')
             ->whereDate('check_in', '<=', $end)
             ->whereDate('check_out', '>=', $start)

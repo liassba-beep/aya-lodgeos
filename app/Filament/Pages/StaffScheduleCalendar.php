@@ -44,12 +44,12 @@ class StaffScheduleCalendar extends Page
         $propertyId = TenantContext::propertyId();
 
         $staffMembers = StaffMember::query()
-            ->where('property_id', $propertyId)
+            ->when($propertyId, fn ($query, int $propertyId) => $query->where('property_id', $propertyId))
             ->orderBy('name')
             ->get();
 
         $schedules = StaffSchedule::query()
-            ->where('property_id', $propertyId)
+            ->when($propertyId, fn ($query, int $propertyId) => $query->where('property_id', $propertyId))
             ->whereBetween('shift_date', [$start, $end])
             ->orderBy('shift_date')
             ->get()

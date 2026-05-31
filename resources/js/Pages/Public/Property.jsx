@@ -64,6 +64,10 @@ export default function Property({ property, booking }) {
     const ownerLoginUrl = 'https://app.lodgesos.com/admin/login';
     const heroImage = '/images/mikaya-hero.jpg';
 
+    const scrollToSection = (sectionId) => {
+        document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
     const goToOwnerLogin = () => {
         window.location.assign(ownerLoginUrl);
     };
@@ -83,37 +87,42 @@ export default function Property({ property, booking }) {
 
                     <div className="absolute inset-x-0 top-0 z-10 border-b border-white/10 bg-black/35 backdrop-blur">
                         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
-                            <a href="#topo" className="text-xl font-semibold tracking-wide">
+                            <button
+                                type="button"
+                                onClick={() => scrollToSection('topo')}
+                                className="text-xl font-semibold tracking-wide"
+                            >
                                 {property.name}
-                            </a>
+                            </button>
                             <nav className="hidden items-center gap-8 text-sm text-white/80 md:flex">
-                                <a href="#reservar" className="hover:text-white">
+                                <button type="button" onClick={() => scrollToSection('reservar')} className="hover:text-white">
                                     Reservar
-                                </a>
-                                <a href="#servicos" className="hover:text-white">
+                                </button>
+                                <button type="button" onClick={() => scrollToSection('servicos')} className="hover:text-white">
                                     Serviços
-                                </a>
-                                <a href="#politicas" className="hover:text-white">
+                                </button>
+                                <button type="button" onClick={() => scrollToSection('politicas')} className="hover:text-white">
                                     Políticas
-                                </a>
-                                <a href="#contactos" className="hover:text-white">
+                                </button>
+                                <button type="button" onClick={() => scrollToSection('contactos')} className="hover:text-white">
                                     Contactos
-                                </a>
+                                </button>
                             </nav>
                             <div className="flex items-center gap-2">
-                                <a
-                                    href="#reservar"
+                                <button
+                                    type="button"
+                                    onClick={() => scrollToSection('reservar')}
                                     className="rounded-full bg-amber-400 px-4 py-2 text-sm font-semibold text-black transition hover:bg-amber-300"
                                 >
                                     Reservar
-                                </a>
+                                </button>
                             </div>
                         </div>
                     </div>
 
                     <div
                         id="topo"
-                        className="relative z-10 mx-auto flex min-h-[86vh] max-w-7xl items-end px-6 pb-16 pt-36"
+                        className="relative z-10 mx-auto flex min-h-[86vh] max-w-7xl scroll-mt-28 items-end px-6 pb-16 pt-36"
                     >
                         <div className="max-w-3xl">
                             <p className="mb-4 text-sm font-semibold uppercase tracking-[0.22em] text-amber-300">
@@ -127,12 +136,13 @@ export default function Property({ property, booking }) {
                                     'Guest house em Inhambane para estadias tranquilas, reservas directas e atendimento próximo.'}
                             </p>
                             <div className="mt-8 flex flex-wrap gap-3">
-                                <a
-                                    href="#reservar"
+                                <button
+                                    type="button"
+                                    onClick={() => scrollToSection('reservar')}
                                     className="rounded-full bg-amber-400 px-6 py-3 font-semibold text-black transition hover:bg-amber-300"
                                 >
                                     Consultar disponibilidade
-                                </a>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -148,7 +158,7 @@ export default function Property({ property, booking }) {
 
                 <BookingSection property={property} booking={booking} />
 
-                <section id="servicos" className="bg-white px-6 py-20 text-stone-950">
+                <section id="servicos" className="scroll-mt-28 bg-white px-6 py-20 text-stone-950">
                     <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.9fr_1.1fr]">
                         <div>
                             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-600">
@@ -174,12 +184,12 @@ export default function Property({ property, booking }) {
                     </div>
                 </section>
 
-                <section id="politicas" className="mx-auto grid max-w-7xl gap-6 px-6 py-20 lg:grid-cols-2">
+                <section id="politicas" className="mx-auto grid max-w-7xl scroll-mt-28 gap-6 px-6 py-20 lg:grid-cols-2">
                     <Policy title="Política de cancelamento" text={property.cancellation_policy} />
                     <Policy title="Regras da casa" text={property.house_rules} />
                 </section>
 
-                <section id="contactos" className="border-t border-white/10 bg-black px-6 py-14">
+                <section id="contactos" className="scroll-mt-28 border-t border-white/10 bg-black px-6 py-14">
                     <div className="mx-auto flex max-w-7xl flex-col justify-between gap-8 md:flex-row md:items-center">
                         <div>
                             <h2 className="text-2xl font-bold">{property.name}</h2>
@@ -190,12 +200,13 @@ export default function Property({ property, booking }) {
                             <p className="mt-1 text-white/65">{email}</p>
                         </div>
                         <div className="flex w-full flex-col gap-3 sm:flex-row md:w-auto">
-                            <a
-                                href="#reservar"
+                            <button
+                                type="button"
+                                onClick={() => scrollToSection('reservar')}
                                 className="rounded-full bg-amber-400 px-6 py-3 text-center font-semibold text-black transition hover:bg-amber-300"
                             >
                                 Fazer pedido de reserva
-                            </a>
+                            </button>
                             <button
                                 type="button"
                                 onClick={goToOwnerLogin}
@@ -260,6 +271,10 @@ function BookingSection({ property, booking }) {
             } catch (error) {
                 if (error.name !== 'AbortError') {
                     setAvailability(null);
+                    setNotice({
+                        type: 'error',
+                        message: 'Não foi possível verificar a disponibilidade. Tente novamente.',
+                    });
                 }
             } finally {
                 setChecking(false);
@@ -298,7 +313,8 @@ function BookingSection({ property, booking }) {
                 },
                 body: JSON.stringify(form),
             });
-            const data = await response.json();
+            const contentType = response.headers.get('content-type') || '';
+            const data = contentType.includes('application/json') ? await response.json() : {};
 
             if (!response.ok) {
                 setErrors(data.errors || {});
@@ -324,7 +340,7 @@ function BookingSection({ property, booking }) {
     };
 
     return (
-        <section id="reservar" className="mx-auto max-w-7xl px-6 py-20">
+        <section id="reservar" className="mx-auto max-w-7xl scroll-mt-28 px-6 py-20">
             <div className="grid gap-10 lg:grid-cols-[0.85fr_1.15fr]">
                 <div>
                     <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-300">
