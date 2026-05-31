@@ -1,5 +1,15 @@
-self.CACHE_NAME = 'aya-lodgeos-mobile-v4';
-self.PRECACHE_URLS = ['/mobile', '/trabalhador/login', '/trabalhador/app', '/manifest.webmanifest'];
+self.CACHE_NAME = 'aya-lodgeos-mobile-v5';
+self.PRECACHE_URLS = [
+    '/mobile',
+    '/trabalhador/login',
+    '/trabalhador/app',
+    '/manifest.webmanifest',
+    '/worker-manifest.webmanifest',
+    '/icons/android-chrome-192x192.png',
+    '/icons/android-chrome-512x512.png',
+    '/icons/maskable-512x512.png',
+    '/icons/apple-touch-icon.png',
+];
 
 self.addEventListener('install', (event) => {
     event.waitUntil(

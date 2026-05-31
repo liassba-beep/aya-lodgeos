@@ -1,4 +1,5 @@
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import InstallAppButton from '@/Components/InstallAppButton';
 import MobileNotifier from '@/Components/MobileNotifier';
 
 const statusLabels = {
@@ -200,6 +201,10 @@ export default function MobileApp({
                         storageKey="aya-lodgeos-owner-mobile-notifications"
                         intervalMs={60000}
                     />
+
+                    <div className="mt-4">
+                        <InstallAppButton />
+                    </div>
 
                     <div className="mt-5 grid grid-cols-2 gap-3">
                         <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">

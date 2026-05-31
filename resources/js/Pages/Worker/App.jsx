@@ -1,5 +1,6 @@
 import { Head, router, useForm } from '@inertiajs/react';
 import { useState } from 'react';
+import InstallAppButton from '@/Components/InstallAppButton';
 import MobileNotifier from '@/Components/MobileNotifier';
 
 const statusLabels = {
@@ -509,6 +510,8 @@ export default function WorkerApp({
                     storageKey="aya-lodgeos-worker-notifications"
                     intervalMs={60000}
                 />
+
+                <InstallAppButton />
 
                 <section className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
                     <p className="text-sm font-semibold">

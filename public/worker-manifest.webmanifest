@@ -1,14 +1,14 @@
 {
-    "name": "AYA LodgeOS",
-    "short_name": "AYA LodgeOS",
-    "id": "/mobile",
-    "start_url": "/mobile?source=pwa",
+    "name": "AYA LodgeOS Trabalhador",
+    "short_name": "LodgeOS",
+    "id": "/trabalhador/app",
+    "start_url": "/trabalhador/app?source=pwa",
     "scope": "/",
     "display": "standalone",
     "display_override": ["standalone", "minimal-ui"],
     "background_color": "#09090b",
     "theme_color": "#09090b",
-    "description": "App mobile para operação diária de alojamentos.",
+    "description": "App simples para tarefas, limpezas, avarias e check-in.",
     "orientation": "portrait",
     "categories": ["business", "productivity"],
     "icons": [
@@ -33,15 +33,15 @@
     ],
     "shortcuts": [
         {
-            "name": "Operação diária",
-            "short_name": "Operação",
-            "url": "/mobile",
+            "name": "Entrar no trabalho",
+            "short_name": "Entrada",
+            "url": "/trabalhador/app",
             "icons": [{ "src": "/icons/android-chrome-192x192.png", "sizes": "192x192" }]
         },
         {
-            "name": "App trabalhador",
-            "short_name": "Trabalhador",
-            "url": "/trabalhador/app",
+            "name": "Painel mobile",
+            "short_name": "Painel",
+            "url": "/mobile",
             "icons": [{ "src": "/icons/android-chrome-192x192.png", "sizes": "192x192" }]
         }
     ]
