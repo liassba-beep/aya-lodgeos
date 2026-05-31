@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Concerns\HasResourcePermissions;
 use App\Filament\Resources\TenantAccountResource\Pages;
 use App\Models\TenantAccount;
+use App\Support\AccessControl;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -33,6 +34,19 @@ class TenantAccountResource extends Resource
                 Forms\Components\Select::make('status')->label('Estado')->options(['active' => 'Activo', 'suspended' => 'Suspenso'])->required(),
                 Forms\Components\Textarea::make('notes')->label('Notas')->columnSpanFull(),
             ]),
+            Forms\Components\Section::make('Módulos autorizados')
+                ->description('Seleccione os módulos que este tenant pode usar. Utilizadores e permissões continuam a aplicar-se dentro destes limites.')
+                ->schema([
+                    Forms\Components\CheckboxList::make('enabled_modules')
+                        ->label('Módulos activos')
+                        ->options(AccessControl::tenantModuleLabels())
+                        ->columns(3)
+                        ->bulkToggleable()
+                        ->default(array_keys(AccessControl::tenantModuleLabels()))
+                        ->afterStateHydrated(function (Forms\Components\CheckboxList $component, ?array $state): void {
+                            $component->state($state ?? array_keys(AccessControl::tenantModuleLabels()));
+                        }),
+                ]),
         ]);
     }
 
@@ -42,6 +56,10 @@ class TenantAccountResource extends Resource
             Tables\Columns\TextColumn::make('name')->label('Nome')->searchable()->sortable(),
             Tables\Columns\TextColumn::make('slug')->label('Slug'),
             Tables\Columns\TextColumn::make('properties_count')->label('Propriedades')->counts('properties'),
+            Tables\Columns\TextColumn::make('enabled_modules')
+                ->label('Módulos')
+                ->formatStateUsing(fn ($state): string => is_array($state) ? (string) count($state) : 'Todos')
+                ->badge(),
             Tables\Columns\TextColumn::make('status')->label('Estado')->badge(),
         ])->actions([Tables\Actions\EditAction::make()->label('Editar')]);
     }

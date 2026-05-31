@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Property;
+use App\Models\TenantAccount;
 
 class TenantContext
 {
@@ -31,5 +32,19 @@ class TenantContext
             ->where('status', 'active')
             ->orderBy('properties.id')
             ->value('properties.id');
+    }
+
+    public static function tenantAccount(): ?TenantAccount
+    {
+        $propertyId = self::propertyId();
+
+        if (! $propertyId) {
+            return null;
+        }
+
+        return Property::query()
+            ->with('tenantAccount')
+            ->find($propertyId)
+            ?->tenantAccount;
     }
 }

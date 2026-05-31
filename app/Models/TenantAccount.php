@@ -10,7 +10,20 @@ class TenantAccount extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'slug', 'status', 'billing_email', 'billing_phone', 'notes'];
+    protected $fillable = ['name', 'slug', 'status', 'enabled_modules', 'billing_email', 'billing_phone', 'notes'];
+
+    protected $casts = [
+        'enabled_modules' => 'array',
+    ];
+
+    public function hasModule(string $module): bool
+    {
+        if ($module === '*' || $this->enabled_modules === null) {
+            return true;
+        }
+
+        return in_array($module, $this->enabled_modules, true);
+    }
 
     public function properties(): HasMany
     {

@@ -12,12 +12,20 @@ class AccessControl
             return false;
         }
 
+        if ($module === '*') {
+            return $user->role === 'super_admin';
+        }
+
         if (in_array($module, self::masterOnlyModules(), true)) {
             return $user->role === 'super_admin';
         }
 
         if ($user->role === 'super_admin') {
             return true;
+        }
+
+        if (! self::tenantAllows($module)) {
+            return false;
         }
 
         $permissions = is_array($user->permissions) ? $user->permissions : [];
@@ -31,7 +39,10 @@ class AccessControl
             return is_array($customPermissions) && in_array($action, $customPermissions, true);
         }
 
-        return in_array($action, self::matrix()[$user->role][$module] ?? [], true);
+        $roleMatrix = self::matrix()[$user->role] ?? [];
+
+        return in_array($action, $roleMatrix[$module] ?? [], true)
+            || in_array($action, $roleMatrix['*'] ?? [], true);
     }
 
     public static function roleLabels(): array
@@ -57,6 +68,8 @@ class AccessControl
             'direct-booking-request' => 'Pedidos directos',
             'payment' => 'Pagamentos',
             'invoice' => 'Facturação',
+            'invoice-line' => 'Linhas de factura',
+            'receipt' => 'Recibos',
             'expense' => 'Despesas',
             'operational-task' => 'Tarefas operacionais',
             'daily-checklist' => 'Checklists diárias',
@@ -78,7 +91,13 @@ class AccessControl
             'owner-daily-report' => 'Relatório diário',
             'knowledge-guide' => 'Guia operacional',
             'feedback-entry' => 'Bugs e opiniões',
+            'audit-log' => 'Auditoria',
         ];
+    }
+
+    public static function tenantModuleLabels(): array
+    {
+        return self::moduleLabels();
     }
 
     public static function actionLabels(): array
@@ -100,6 +119,13 @@ class AccessControl
         ];
     }
 
+    private static function tenantAllows(string $module): bool
+    {
+        $tenant = TenantContext::tenantAccount();
+
+        return $tenant?->hasModule($module) ?? true;
+    }
+
     private static function matrix(): array
     {
         $manage = ['view', 'create', 'update', 'delete'];
@@ -118,6 +144,8 @@ class AccessControl
                 'reservation' => ['view', 'update'],
                 'payment' => $view,
                 'invoice' => ['view', 'update'],
+                'invoice-line' => $view,
+                'receipt' => $view,
                 'expense' => ['view', 'update'],
                 'operational-task' => $view,
                 'daily-checklist' => $view,
@@ -148,6 +176,8 @@ class AccessControl
                 'reservation' => $manage,
                 'payment' => $manage,
                 'invoice' => $manage,
+                'invoice-line' => $manage,
+                'receipt' => $manage,
                 'expense' => $manage,
                 'operational-task' => $manage,
                 'daily-checklist' => $manage,
