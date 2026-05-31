@@ -22,6 +22,11 @@ class CreateUser extends CreateRecord
             if (in_array($data['role'] ?? null, ['super_admin', 'admin'], true)) {
                 $data['role'] = 'manager';
             }
+        } elseif (in_array($data['role'] ?? null, ['super_admin', 'admin'], true)) {
+            $data['property_id'] = null;
+            $data['web_access_enabled'] = true;
+            $data['mobile_access_enabled'] = false;
+            $data['permissions'] = null;
         }
 
         return $data;

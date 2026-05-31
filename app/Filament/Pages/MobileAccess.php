@@ -23,4 +23,19 @@ class MobileAccess extends Page
     {
         return AccessControl::allows('mobile-app', 'view') || AccessControl::allows('*', 'view');
     }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return static::canAccess() && AccessControl::shouldRegisterNavigation('mobile-app');
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return AccessControl::navigationGroup('mobile-app');
+    }
+
+    public static function getNavigationSort(): ?int
+    {
+        return AccessControl::navigationSort('mobile-app');
+    }
 }

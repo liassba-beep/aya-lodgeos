@@ -13,6 +13,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
 class UserResource extends Resource
@@ -25,7 +26,7 @@ class UserResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-users';
 
-    protected static ?string $navigationGroup = 'Administração';
+    protected static ?string $navigationGroup = 'Equipa';
 
     protected static ?int $navigationSort = 1;
 
@@ -34,6 +35,18 @@ class UserResource extends Resource
     protected static ?string $pluralModelLabel = 'Equipa e acessos';
 
     protected static ?string $navigationLabel = 'Equipa e acessos';
+
+    public static function getNavigationGroup(): ?string
+    {
+        return auth()->user()?->role === 'super_admin' ? 'SaaS' : 'Equipa';
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()?->role === 'super_admin'
+            || AccessControl::allows('user', 'create')
+            || AccessControl::allows('*', 'create');
+    }
 
     public static function form(Form $form): Form
     {
@@ -54,6 +67,7 @@ class UserResource extends Resource
                         ->searchable()
                         ->preload()
                         ->default(fn (): ?int => TenantContext::propertyId())
+                        ->visible(fn (Forms\Get $get): bool => ! in_array($get('role'), ['super_admin', 'admin'], true))
                         ->disabled(fn (): bool => auth()->user()?->role !== 'super_admin')
                         ->dehydrated(),
                     Forms\Components\Select::make('role')
@@ -149,16 +163,47 @@ class UserResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')->label('Criado')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->actions([Tables\Actions\EditAction::make()->label('Editar')])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([Tables\Actions\DeleteBulkAction::make()]),
-            ]);
+            ->actions([
+                Tables\Actions\EditAction::make()->label('Editar'),
+                Tables\Actions\DeleteAction::make()
+                    ->label('Apagar')
+                    ->visible(fn (User $record): bool => self::canDelete($record)),
+            ])
+            ->bulkActions([]);
     }
 
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
+        $user = auth()->user();
+
         return parent::getEloquentQuery()
-            ->when(TenantContext::propertyId(), fn ($query, int $propertyId) => $query->where('property_id', $propertyId));
+            ->when($user?->role !== 'super_admin', function ($query) {
+                $query
+                    ->whereNotIn('role', ['super_admin', 'admin'])
+                    ->when(TenantContext::propertyId(), fn ($query, int $propertyId) => $query->where('property_id', $propertyId));
+            });
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        if (! AccessControl::allows('user', 'delete') && ! AccessControl::allows('*', 'delete')) {
+            return false;
+        }
+
+        if (! $record instanceof User) {
+            return false;
+        }
+
+        if ($record->id === auth()->id()) {
+            return false;
+        }
+
+        return ! in_array($record->role, ['super_admin', 'admin'], true);
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return false;
     }
 
     public static function propertyOptions(): array

@@ -38,10 +38,11 @@ class AdminPanelProvider extends PanelProvider
                 'primary' => Color::Amber,
             ])
             ->navigationGroups([
+                NavigationGroup::make()->label('Suporte'),
                 NavigationGroup::make()->label('Reservas'),
+                NavigationGroup::make()->label('Equipa'),
                 NavigationGroup::make()->label('Financeiro'),
-                NavigationGroup::make()->label('Operacional'),
-                NavigationGroup::make()->label('Colaboradores'),
+                NavigationGroup::make()->label('Operação'),
                 NavigationGroup::make()->label('Stock'),
                 NavigationGroup::make()->label('Administração'),
                 NavigationGroup::make()->label('SaaS'),

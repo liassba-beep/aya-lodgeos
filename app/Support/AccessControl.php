@@ -98,7 +98,26 @@ class AccessControl
 
     public static function tenantModuleLabels(): array
     {
-        return self::moduleLabels();
+        return collect(self::moduleLabels())
+            ->except(['invoice-line'])
+            ->all();
+    }
+
+    public static function tenantModuleGroupOptions(): array
+    {
+        $labels = self::tenantModuleLabels();
+
+        return collect(self::tenantNavigationGroups())
+            ->filter(fn (?string $group, string $module): bool => array_key_exists($module, $labels))
+            ->reject(fn (?string $group, string $module): bool => in_array($module, self::masterOnlyModules(), true))
+            ->mapToGroups(fn (?string $group, string $module): array => [($group ?: 'Base') => [$module => $labels[$module] ?? $module]])
+            ->map(fn ($items): array => $items->collapse()->all())
+            ->all();
+    }
+
+    public static function tenantModuleKeys(): array
+    {
+        return array_keys(self::tenantModuleLabels());
     }
 
     public static function currentTenantModuleLabels(): array
@@ -106,10 +125,10 @@ class AccessControl
         $tenant = TenantContext::tenantAccount();
 
         if (! $tenant || $tenant->enabled_modules === null) {
-            return self::moduleLabels();
+            return self::tenantModuleLabels();
         }
 
-        return collect(self::moduleLabels())
+        return collect(self::tenantModuleLabels())
             ->only($tenant->enabled_modules)
             ->all();
     }
@@ -124,12 +143,144 @@ class AccessControl
         ];
     }
 
+    public static function navigationGroup(string $module): ?string
+    {
+        if (auth()->user()?->role === 'super_admin') {
+            return self::masterNavigationGroups()[$module]
+                ?? self::tenantNavigationGroups()[$module]
+                ?? null;
+        }
+
+        return self::tenantNavigationGroups()[$module] ?? null;
+    }
+
+    public static function navigationSort(string $module): ?int
+    {
+        return self::navigationSorts()[$module] ?? null;
+    }
+
+    public static function shouldRegisterNavigation(string $module): bool
+    {
+        if ($module === 'invoice-line') {
+            return false;
+        }
+
+        if (auth()->user()?->role !== 'super_admin') {
+            return ! in_array($module, self::masterOnlyModules(), true)
+                && self::navigationGroup($module) !== 'SaaS';
+        }
+
+        return in_array($module, [
+            'tenant-account',
+            'user',
+            'property',
+            'subscription',
+            'saas-plan',
+            'audit-log',
+            'feedback-entry',
+        ], true);
+    }
+
     private static function masterOnlyModules(): array
     {
         return [
             'saas-plan',
             'subscription',
             'tenant-account',
+        ];
+    }
+
+    private static function masterNavigationGroups(): array
+    {
+        return [
+            'tenant-account' => 'SaaS',
+            'user' => 'SaaS',
+            'property' => 'SaaS',
+            'subscription' => 'SaaS',
+            'saas-plan' => 'SaaS',
+            'audit-log' => 'SaaS',
+            'feedback-entry' => 'Suporte',
+        ];
+    }
+
+    private static function tenantNavigationGroups(): array
+    {
+        return [
+            'property' => null,
+            'reservation' => 'Reservas',
+            'direct-booking-request' => 'Reservas',
+            'guest' => 'Reservas',
+            'room' => 'Reservas',
+            'user' => 'Equipa',
+            'mobile-app' => 'Equipa',
+            'staff-member' => 'Equipa',
+            'staff-schedule' => 'Equipa',
+            'staff-attendance' => 'Equipa',
+            'staff-leave' => 'Equipa',
+            'cash-closure' => 'Financeiro',
+            'invoice' => 'Financeiro',
+            'payment' => 'Financeiro',
+            'receipt' => 'Financeiro',
+            'expense' => 'Financeiro',
+            'invoice-line' => 'Financeiro',
+            'operational-task' => 'Operação',
+            'daily-checklist' => 'Operação',
+            'maintenance-report' => 'Operação',
+            'utility-reading' => 'Operação',
+            'remote-approval' => 'Operação',
+            'operational-alert' => 'Operação',
+            'owner-daily-report' => 'Operação',
+            'knowledge-guide' => 'Operação',
+            'feedback-entry' => 'Suporte',
+            'stock-item' => 'Stock',
+            'stock-movement' => 'Stock',
+            'product-requisition' => 'Stock',
+            'stock-count' => 'Stock',
+            'room-inventory' => 'Stock',
+            'damage-charge' => 'Stock',
+            'audit-log' => 'Administração',
+        ];
+    }
+
+    private static function navigationSorts(): array
+    {
+        return [
+            'tenant-account' => 1,
+            'user' => 2,
+            'subscription' => 3,
+            'saas-plan' => 4,
+            'property' => 5,
+            'audit-log' => 90,
+            'feedback-entry' => 1,
+            'reservation' => 2,
+            'direct-booking-request' => 3,
+            'guest' => 4,
+            'room' => 5,
+            'mobile-app' => 3,
+            'staff-member' => 4,
+            'staff-schedule' => 5,
+            'staff-attendance' => 6,
+            'staff-leave' => 7,
+            'cash-closure' => 1,
+            'invoice' => 2,
+            'payment' => 3,
+            'receipt' => 4,
+            'expense' => 5,
+            'invoice-line' => 6,
+            'operational-task' => 1,
+            'daily-checklist' => 2,
+            'maintenance-report' => 3,
+            'utility-reading' => 4,
+            'remote-approval' => 5,
+            'operational-alert' => 6,
+            'owner-daily-report' => 7,
+            'knowledge-guide' => 8,
+            'stock-item' => 1,
+            'stock-movement' => 2,
+            'product-requisition' => 3,
+            'stock-count' => 4,
+            'room-inventory' => 5,
+            'damage-charge' => 6,
         ];
     }
 

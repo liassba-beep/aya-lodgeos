@@ -28,6 +28,21 @@ class ReservationCalendar extends Page
         return AccessControl::allows('reservation', 'view') || AccessControl::allows('*', 'view');
     }
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return static::canAccess() && AccessControl::shouldRegisterNavigation('reservation');
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return AccessControl::navigationGroup('reservation');
+    }
+
+    public static function getNavigationSort(): ?int
+    {
+        return 1;
+    }
+
     public function calendarData(): array
     {
         try {

@@ -28,6 +28,21 @@ class StaffScheduleCalendar extends Page
         return AccessControl::allows('staff-schedule', 'view') || AccessControl::allows('*', 'view');
     }
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return static::canAccess() && AccessControl::shouldRegisterNavigation('staff-schedule');
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return AccessControl::navigationGroup('staff-schedule');
+    }
+
+    public static function getNavigationSort(): ?int
+    {
+        return 1;
+    }
+
     public function calendarData(): array
     {
         try {

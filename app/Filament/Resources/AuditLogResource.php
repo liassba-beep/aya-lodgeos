@@ -20,7 +20,7 @@ class AuditLogResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-shield-check';
 
-    protected static ?string $navigationGroup = 'SaaS';
+    protected static ?string $navigationGroup = 'Administração';
 
     protected static ?int $navigationSort = 2;
 

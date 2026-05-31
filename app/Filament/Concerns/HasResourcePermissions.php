@@ -38,12 +38,30 @@ trait HasResourcePermissions
         return static::allowsResourceAction('delete');
     }
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return static::canViewAny() && AccessControl::shouldRegisterNavigation(static::permissionModuleName());
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return AccessControl::navigationGroup(static::permissionModuleName());
+    }
+
+    public static function getNavigationSort(): ?int
+    {
+        return AccessControl::navigationSort(static::permissionModuleName());
+    }
+
     protected static function allowsResourceAction(string $action): bool
     {
-        $module = property_exists(static::class, 'permissionModule') && static::$permissionModule
+        return AccessControl::allows(static::permissionModuleName(), $action) || AccessControl::allows('*', $action);
+    }
+
+    protected static function permissionModuleName(): string
+    {
+        return property_exists(static::class, 'permissionModule') && static::$permissionModule
             ? static::$permissionModule
             : Str::of(class_basename(static::class))->beforeLast('Resource')->kebab()->toString();
-
-        return AccessControl::allows($module, $action) || AccessControl::allows('*', $action);
     }
 }
