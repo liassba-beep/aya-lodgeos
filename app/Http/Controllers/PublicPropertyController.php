@@ -13,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -26,7 +27,14 @@ class PublicPropertyController extends Controller
 
     public function show(Request $request, string $tenant): Response
     {
+        Inertia::setRootView('public');
+
         $tenantAccount = TenantAccount::query()
+            ->with([
+                'photos' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
+                'roomTypes' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
+                'testimonials' => fn ($query) => $query->orderBy('sort_order')->orderBy('id'),
+            ])
             ->where('slug', $tenant)
             ->where('status', 'active')
             ->firstOrFail();
@@ -58,6 +66,62 @@ class PublicPropertyController extends Controller
                 'status' => $room->status,
             ]);
 
+        $photos = $tenantAccount->photos
+            ->map(function ($photo): array {
+                $src = $this->publicAsset($photo->path);
+
+                return [
+                    'id' => $photo->id,
+                    'src' => $src,
+                    'srcset' => $this->imageSrcset($src),
+                    'alt' => $photo->alt,
+                    'caption' => $photo->caption,
+                    'category' => $photo->category,
+                ];
+            })
+            ->values();
+
+        $roomTypes = $tenantAccount->roomTypes
+            ->map(function ($roomType): array {
+                $photo = $this->publicAsset($roomType->photo);
+
+                return [
+                    'id' => $roomType->id,
+                    'name' => $roomType->name,
+                    'description' => $roomType->description,
+                    'capacity' => $roomType->capacity,
+                    'price_from' => (float) $roomType->price_from,
+                    'amenities' => $roomType->amenities_json ?? [],
+                    'photo' => $photo,
+                    'srcset' => $this->imageSrcset($photo),
+                ];
+            })
+            ->values();
+
+        if ($roomTypes->isEmpty()) {
+            $roomTypes = $rooms
+                ->map(fn (array $room): array => [
+                    'id' => $room['id'],
+                    'name' => $room['name'],
+                    'description' => null,
+                    'capacity' => $room['capacity'],
+                    'price_from' => $room['base_rate'],
+                    'amenities' => [],
+                    'photo' => null,
+                ])
+                ->values();
+        }
+
+        $nearby = collect($tenantAccount->nearby_json ?? [])
+            ->map(fn ($distance, $name): array => ['name' => (string) $name, 'distance' => (string) $distance])
+            ->values();
+
+        $firstPhoto = $photos->first();
+        $heroImage = $this->publicAsset($tenantAccount->og_image) ?: ($firstPhoto['src'] ?? null);
+        $seoTitle = $tenantAccount->seo_title ?: trim(($tenantAccount->name ?: $property->name).' - '.($property->city ?: 'Moçambique').' | Reservas directas');
+        $seoDescription = $tenantAccount->seo_description ?: 'Reserve directamente em '.$property->name.'. Consulte disponibilidade, contactos, localização e quartos disponíveis.';
+        $canonicalUrl = $request->url();
+
         return Inertia::render('Public/Property', [
             'tenant' => [
                 'name' => $tenantAccount->name,
@@ -82,6 +146,34 @@ class PublicPropertyController extends Controller
                 'rooms' => $rooms,
                 'services' => $services,
             ],
+            'website' => [
+                'title' => $seoTitle,
+                'description' => $seoDescription,
+                'canonical_url' => $canonicalUrl,
+                'og_image' => $this->absoluteUrl($request, $heroImage),
+                'favicon' => $this->absoluteUrl($request, $this->publicAsset($tenantAccount->favicon_path)),
+                'hero_image' => $heroImage,
+                'hero_srcset' => $this->imageSrcset($heroImage),
+                'whatsapp_number' => $tenantAccount->whatsapp_number,
+                'whatsapp_url' => $this->whatsappUrl($tenantAccount->whatsapp_number, 'Olá, quero reservar em '.$property->name.'. Datas: __ a __.'),
+                'latitude' => $tenantAccount->latitude ? (float) $tenantAccount->latitude : null,
+                'longitude' => $tenantAccount->longitude ? (float) $tenantAccount->longitude : null,
+                'address_label' => $tenantAccount->address_label,
+                'directions_note' => $tenantAccount->directions_note,
+                'nearby' => $nearby,
+                'photos' => $photos,
+                'room_types' => $roomTypes,
+                'testimonials' => $tenantAccount->testimonials
+                    ->map(fn ($testimonial): array => [
+                        'id' => $testimonial->id,
+                        'author' => $testimonial->author,
+                        'text' => $testimonial->text,
+                        'rating' => $testimonial->rating,
+                        'source' => $testimonial->source,
+                    ])
+                    ->values(),
+                'json_ld' => $this->lodgingBusinessSchema($request, $tenantAccount, $property, $heroImage, $roomTypes, $services),
+            ],
             'booking' => [
                 'availability_url' => $this->publicPath($request, $tenant, 'availability'),
                 'store_url' => $this->publicPath($request, $tenant, 'booking-requests'),
@@ -99,6 +191,7 @@ class PublicPropertyController extends Controller
         ]);
 
         $property = $this->propertyForTenant($tenant);
+        $property->load('tenantAccount');
         $offer = $this->availableOffer($property, $validated['check_in'], $validated['check_out']);
 
         if (! $offer) {
@@ -131,6 +224,7 @@ class PublicPropertyController extends Controller
         ]);
 
         $property = $this->propertyForTenant($tenant);
+        $property->load('tenantAccount');
         $offer = $this->availableOffer($property, $validated['check_in'], $validated['check_out']);
 
         if (! $offer) {
@@ -198,9 +292,21 @@ class PublicPropertyController extends Controller
 
         return response()->json([
             'ok' => true,
-            'message' => 'Pedido recebido. A equipa da MiKaya vai confirmar a reserva consigo.',
+            'message' => 'Recebemos o seu pedido. Confirmamos por WhatsApp ou email em breve. A reserva só fica garantida após o depósito de '.(float) ($property->deposit_percent ?? 50).'%.',
             'reservation_code' => $reservation->code,
             'total' => $offer['total'],
+            'whatsapp_url' => $this->whatsappUrl(
+                $property->tenantAccount?->whatsapp_number,
+                trim(implode("\n", [
+                    'Olá, enviei um pedido de reserva em '.$property->name.'.',
+                    'Nome: '.$validated['guest_name'],
+                    'Telefone: '.$validated['guest_phone'],
+                    'Datas: '.$validated['check_in'].' a '.$validated['check_out'],
+                    'Adultos: '.$validated['adults'].'; Crianças: '.$validated['children'],
+                    'Reserva: '.$reservation->code,
+                    'Total estimado: '.number_format($offer['total'], 2, '.', ',').' MZN',
+                ])),
+            ),
         ], 201);
     }
 
@@ -286,5 +392,104 @@ class PublicPropertyController extends Controller
         return $request->routeIs('public.property.preview')
             ? "/p/{$tenant}/{$path}"
             : "/{$path}";
+    }
+
+    private function publicAsset(?string $path): ?string
+    {
+        if (! $path) {
+            return null;
+        }
+
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://') || str_starts_with($path, '/')) {
+            return $path;
+        }
+
+        return Storage::url($path);
+    }
+
+    private function absoluteUrl(Request $request, ?string $path): ?string
+    {
+        if (! $path) {
+            return null;
+        }
+
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
+        return rtrim($request->getSchemeAndHttpHost(), '/').'/'.ltrim($path, '/');
+    }
+
+    private function whatsappUrl(?string $number, string $message): ?string
+    {
+        $digits = preg_replace('/\D+/', '', (string) $number);
+
+        if (! $digits) {
+            return null;
+        }
+
+        return 'https://wa.me/'.$digits.'?text='.rawurlencode($message);
+    }
+
+    private function imageSrcset(?string $image): ?array
+    {
+        if (! $image) {
+            return null;
+        }
+
+        $withoutExtension = preg_replace('/\.(jpe?g|png|webp|avif)$/i', '', $image);
+
+        if (! $withoutExtension) {
+            return null;
+        }
+
+        $srcset = ['fallback' => $image];
+
+        foreach (['avif', 'webp'] as $format) {
+            $candidate = $withoutExtension.'.'.$format;
+
+            if (str_starts_with($candidate, '/') && file_exists(public_path(ltrim($candidate, '/')))) {
+                $srcset[$format] = $candidate.' 1200w';
+            }
+        }
+
+        return $srcset;
+    }
+
+    private function lodgingBusinessSchema(Request $request, TenantAccount $tenant, Property $property, ?string $image, $roomTypes, $services): array
+    {
+        $amenities = $services
+            ->pluck('name')
+            ->merge($roomTypes->flatMap(fn (array $room): array => $room['amenities'] ?? []))
+            ->filter()
+            ->unique()
+            ->values()
+            ->map(fn (string $amenity): array => [
+                '@type' => 'LocationFeatureSpecification',
+                'name' => $amenity,
+                'value' => true,
+            ]);
+
+        return array_filter([
+            '@context' => 'https://schema.org',
+            '@type' => 'LodgingBusiness',
+            'name' => $tenant->name,
+            'url' => $request->url(),
+            'image' => $this->absoluteUrl($request, $image),
+            'telephone' => $property->phone ?: $property->invoice_phone ?: $tenant->billing_phone,
+            'priceRange' => $roomTypes->min('price_from') ? 'Desde '.number_format((float) $roomTypes->min('price_from'), 0, '.', ' ').' MZN' : null,
+            'address' => [
+                '@type' => 'PostalAddress',
+                'streetAddress' => $tenant->address_label ?: $property->address,
+                'addressLocality' => $property->city,
+                'addressCountry' => $property->country ?: 'Mozambique',
+            ],
+            'geo' => $tenant->latitude && $tenant->longitude ? [
+                '@type' => 'GeoCoordinates',
+                'latitude' => (float) $tenant->latitude,
+                'longitude' => (float) $tenant->longitude,
+            ] : null,
+            'amenityFeature' => $amenities->all(),
+        ]);
     }
 }

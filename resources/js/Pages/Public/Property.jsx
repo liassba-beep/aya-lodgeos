@@ -19,297 +19,161 @@ const xsrfToken = () => {
     return token ? decodeURIComponent(token) : null;
 };
 
-const highlightServices = [
-    {
-        name: { pt: '4 quartos', en: '4 rooms' },
-        description: { pt: 'Com casa de banho privativa e kitnet.', en: 'With private bathroom and kitchenette.' },
-    },
-    {
-        name: { pt: 'Café da manhã', en: 'Breakfast' },
-        description: { pt: 'Disponível para começar o dia com calma.', en: 'Available for an easy start to the day.' },
-    },
-    {
-        name: { pt: 'Starlink Wi-Fi gratuito', en: 'Free Starlink Wi-Fi' },
-        description: { pt: 'Internet estável para trabalho e lazer.', en: 'Stable internet for work and leisure.' },
-    },
-    {
-        name: { pt: 'Parque privativo', en: 'Private parking' },
-        description: { pt: 'Estacionamento reservado no alojamento.', en: 'Reserved parking at the property.' },
-    },
-    {
-        name: { pt: 'DSTV', en: 'DSTV' },
-        description: { pt: 'Entretenimento disponível nos quartos.', en: 'Entertainment available in the rooms.' },
-    },
-    {
-        name: { pt: 'Ar condicionado', en: 'Air conditioning' },
-        description: { pt: 'Conforto térmico durante a estadia.', en: 'Thermal comfort throughout your stay.' },
-    },
-    {
-        name: { pt: 'Geleira', en: 'Fridge' },
-        description: { pt: 'Apoio prático para estadias curtas ou prolongadas.', en: 'Practical support for short or longer stays.' },
-    },
-    {
-        name: { pt: 'CCTV', en: 'CCTV' },
-        description: { pt: 'Câmaras nas áreas públicas.', en: 'Cameras in public areas.' },
-    },
-    {
-        name: { pt: 'Localização estratégica', en: 'Strategic location' },
-        description: {
-            pt: 'A poucos minutos do centro da cidade e das praias do Tofo e Barra.',
-            en: 'A few minutes from the city centre and the Tofo and Barra beaches.',
-        },
-    },
-];
+const phoneHref = (phone) => {
+    const digits = String(phone || '').replace(/[^\d+]/g, '');
 
-const publicText = {
-    pt: {
-        navReserve: 'Reservar',
-        navServices: 'Serviços',
-        navPolicies: 'Políticas',
-        navContacts: 'Contactos',
-        heroTitle: 'O seu refúgio entre as praias de Inhambane e a cidade.',
-        heroSubtitle: 'Guest house em Inhambane para estadias tranquilas, reservas directas e atendimento próximo.',
-        checkAvailability: 'Consultar disponibilidade',
-        accommodation: 'Alojamento',
-        bookings: 'Reservas',
-        onlineDirect: 'Online e directas',
-        from: 'Desde',
-        onRequest: 'Sob consulta',
-        servicesEyebrow: 'Serviços',
-        servicesTitle: 'Conforto simples, claro e bem localizado',
-        servicesBody:
-            'Estendemos as boas-vindas para que desfrute da melhor estadia. A MiKaya reúne comodidades essenciais para quem procura tranquilidade entre as praias e a cidade.',
-        deposit: 'Depósito de reserva',
-        cleaning: 'Limpeza',
-        daily: 'Diária',
-        cancellationPolicy: 'Política de cancelamento',
-        houseRules: 'Regras da casa',
-        fallbackPolicy: 'Informação a confirmar directamente com o alojamento.',
-        cancellationPolicyBody: `RESERVAS E PAGAMENTOS
+    return digits ? `tel:${digits}` : null;
+};
 
-Registo: todos os hóspedes devem fornecer identificação válida emitida pelo governo, por exemplo passaporte ou ID, e registar os seus dados de contacto na chegada.
+const imageUrl = (path) => {
+    if (!path) {
+        return null;
+    }
 
-Pagamentos: o pagamento completo ou um depósito, normalmente 50%, é necessário para garantir a reserva.
+    if (path.startsWith('http') || path.startsWith('/')) {
+        return path;
+    }
 
-Cancelamentos: o reembolso pós-cancelamento seguirá a percentagem abaixo:
-7 dias: 75% do valor da reserva.
-3 dias: 35% do valor da reserva.
-24h: sem reembolso.
+    return `/storage/${path}`;
+};
 
-Check-in inicia às 12:00 horas. Ajustes podem ser efectuados caso a reserva tenha sido combinada antecipadamente.
-
-Check-out deverá ser efectuado até às 10:00 horas.`,
-        houseRulesBody: `ACOMODAÇÃO
-
-Não é permitido cozinhar ou comer nos quartos, sendo o uso da cozinha comum regulamentado.
-
-Fumar e danos: fumar é estritamente proibido no interior dos quartos, com multas por violações. Os hóspedes são responsáveis por qualquer dano ou perda de propriedade. É expressamente proibida a confecção de refeições no interior dos quartos ou em qualquer outra área da MiKaya.
-
-Festas: festas e eventos não são autorizados. O nosso ambiente é de paz e tranquilidade. Apelamos para que cada hóspede seja consciente e respeite os vizinhos, para que todos possam ter uma estadia agradável, relaxante e sem barulho.
-
-Animais de estimação: os hóspedes não podem trazer animais de estimação de qualquer tipo para a guest house.
-
-SERVIÇOS E LIMPEZA
-
-A MiKaya está comprometida com a preservação ambiental e conservação de recursos; agradecemos desde já o seu suporte. A limpeza é diária, salvo combinação diferente com o alojamento.`,
-        bookingRequest: 'Fazer pedido de reserva',
-        ownerArea: 'Área do proprietário',
-    },
-    en: {
-        navReserve: 'Book',
-        navServices: 'Services',
-        navPolicies: 'Policies',
-        navContacts: 'Contacts',
-        heroTitle: 'Your refuge between Inhambane’s beaches and the city.',
-        heroSubtitle: 'Guest house in Inhambane for peaceful stays, direct bookings and close hospitality.',
-        checkAvailability: 'Check availability',
-        accommodation: 'Property',
-        bookings: 'Bookings',
-        onlineDirect: 'Online and direct',
-        from: 'From',
-        onRequest: 'On request',
-        servicesEyebrow: 'Services',
-        servicesTitle: 'Simple comfort in a convenient location',
-        servicesBody:
-            'We welcome you to enjoy your best stay. MiKaya brings together essential comforts for travellers seeking calm between the beaches and the city.',
-        deposit: 'Booking deposit',
-        cleaning: 'Cleaning',
-        daily: 'Daily',
-        cancellationPolicy: 'Cancellation policy',
-        houseRules: 'House rules',
-        fallbackPolicy: 'Information to be confirmed directly with the property.',
-        cancellationPolicyBody: `BOOKINGS AND PAYMENTS
-
-Registration: all guests must provide valid government-issued identification, such as a passport or ID card, and register their contact details on arrival.
-
-Payments: full payment or a deposit, usually 50%, is required to secure a booking.
-
-Cancellations: post-cancellation refunds follow the percentages below:
-7 days: 75% of the booking value.
-3 days: 35% of the booking value.
-24h: no refund.
-
-Check-in starts at 12:00. Adjustments may be made when agreed in advance with the property.
-
-Check-out must be completed by 10:00.`,
-        houseRulesBody: `ACCOMMODATION
-
-Cooking or eating inside the rooms is not allowed. Use of the shared kitchen is subject to the house rules.
-
-Smoking and damages: smoking is strictly prohibited inside the rooms and violations may result in fines. Guests are responsible for any damage or loss of property. Preparing meals inside the rooms or in any other area of MiKaya is expressly prohibited.
-
-Parties: parties and events are not authorised. Our environment is peaceful and quiet. We ask every guest to be considerate and respect the neighbours so that everyone can enjoy a pleasant, relaxing and noise-free stay.
-
-Pets: guests may not bring pets of any kind to the guest house.
-
-SERVICES AND CLEANING
-
-MiKaya is committed to environmental preservation and resource conservation; we thank you for your support. Cleaning is provided daily, unless otherwise agreed with the property.`,
-        bookingRequest: 'Send booking request',
-        ownerArea: 'Owner area',
-    },
+const text = {
+    reserve: 'Reservar',
+    gallery: 'Galeria',
+    rooms: 'Quartos',
+    location: 'Localização',
+    contacts: 'Contactos',
+    heroFallback: 'Reservas directas, contacto próximo e informação clara para planear a estadia.',
+    checkAvailability: 'Consultar disponibilidade',
+    from: 'Desde',
+    directBookings: 'Reservas directas',
+    photosTitle: 'Veja antes de reservar',
+    photosBody: 'As fotos são geridas pelo proprietário e ajudam o hóspede a perceber exactamente o que vai encontrar.',
+    roomsTitle: 'Quartos e expectativas',
+    roomsBody: 'Tipos de quarto configurados pelo alojamento, com preço base, capacidade e comodidades incluídas.',
+    includes: 'Inclui',
+    guests: 'hóspedes',
+    services: 'Serviços e condições',
+    deposit: 'Depósito de reserva',
+    cleaning: 'Limpeza',
+    daily: 'Diária',
+    policies: 'Políticas',
+    fallbackPolicy: 'Informação a confirmar directamente com o alojamento.',
+    locationBody: 'Use o mapa e os pontos de referência para confirmar a zona antes de viajar.',
+    nearby: 'Perto de',
+    call: 'Ligar',
+    whatsapp: 'WhatsApp',
+    ownerArea: 'Área do proprietário',
+    testimonials: 'Testemunhos',
 };
 
 const bookingText = {
-    pt: {
-        eyebrow: 'Reservas directas',
-        title: 'Confirme disponibilidade antes de enviar o pedido',
-        body: 'Escolha as datas e informe os seus contactos. O preço estimado aparece automaticamente antes do envio.',
-        estimatedPrice: 'Preço estimado',
-        checking: 'A verificar...',
-        nights: 'noite(s)',
-        perNight: 'por noite',
-        selectDates: 'Seleccione entrada e saída.',
-        unavailable: 'Não foi possível verificar a disponibilidade. Tente novamente.',
-        submitError: 'Não foi possível enviar o pedido.',
-        name: 'Nome',
-        phone: 'Telemóvel',
-        email: 'Email',
-        adults: 'Adultos',
-        children: 'Crianças',
-        checkIn: 'Entrada',
-        checkOut: 'Saída',
-        message: 'Mensagem',
-        sending: 'A enviar...',
-        submit: 'Enviar pedido de reserva',
-    },
-    en: {
-        eyebrow: 'Direct bookings',
-        title: 'Check availability before sending your request',
-        body: 'Choose your dates and share your contact details. The estimated price appears automatically before sending.',
-        estimatedPrice: 'Estimated price',
-        checking: 'Checking...',
-        nights: 'night(s)',
-        perNight: 'per night',
-        selectDates: 'Select check-in and check-out.',
-        unavailable: 'Could not check availability. Please try again.',
-        submitError: 'Could not send the request.',
-        name: 'Name',
-        phone: 'Phone',
-        email: 'Email',
-        adults: 'Adults',
-        children: 'Children',
-        checkIn: 'Check-in',
-        checkOut: 'Check-out',
-        message: 'Message',
-        sending: 'Sending...',
-        submit: 'Send booking request',
-    },
+    eyebrow: 'Reservas directas',
+    title: 'Confirme disponibilidade antes de enviar o pedido',
+    body: 'Escolha as datas e informe os seus contactos. O preço estimado aparece automaticamente antes do envio.',
+    estimatedPrice: 'Preço estimado',
+    checking: 'A verificar...',
+    nights: 'noite(s)',
+    perNight: 'por noite',
+    selectDates: 'Seleccione entrada e saída.',
+    unavailable: 'Não foi possível verificar a disponibilidade. Tente novamente.',
+    submitError: 'Não foi possível enviar o pedido.',
+    name: 'Nome',
+    phone: 'Telemóvel',
+    email: 'Email',
+    adults: 'Adultos',
+    children: 'Crianças',
+    checkIn: 'Entrada',
+    checkOut: 'Saída',
+    message: 'Mensagem',
+    sending: 'A enviar...',
+    submit: 'Enviar pedido de reserva',
+    continueWhatsapp: 'Continuar no WhatsApp',
 };
 
-export default function Property({ property, booking }) {
-    const [locale, setLocale] = useState('pt');
-    const text = publicText[locale];
-    const phone = property.phone || '+258842990406';
-    const email = property.email || 'reservas@lodgesos.com';
-    const ownerLoginUrl = 'https://app.lodgesos.com/admin/login';
-    const heroImage = '/images/mikaya-hero.jpg';
-
-    const goToOwnerLogin = () => {
-        window.location.assign(ownerLoginUrl);
-    };
+export default function Property({ tenant, property, website = {}, booking }) {
+    const phone = property.phone || null;
+    const email = property.email || null;
+    const heroImage = imageUrl(website.hero_image) || imageUrl(website.photos?.[0]?.src);
+    const roomRates = (website.room_types || []).map((room) => Number(room.price_from || 0)).filter(Boolean);
+    const lowestRate = roomRates.length ? Math.min(...roomRates) : property.lowest_rate;
 
     return (
         <>
-            <Head title={`${property.name} · Reservas`} />
+            <Head title={website.title || property.name}>
+                {website.description && <meta name="description" content={website.description} />}
+                {website.canonical_url && <link rel="canonical" href={website.canonical_url} />}
+                {website.favicon && <link rel="icon" href={website.favicon} />}
+                <meta property="og:type" content="business.business" />
+                <meta property="og:locale" content="pt_PT" />
+                <meta property="og:title" content={website.title || property.name} />
+                {website.description && <meta property="og:description" content={website.description} />}
+                {website.og_image && <meta property="og:image" content={website.og_image} />}
+                {website.canonical_url && <meta property="og:url" content={website.canonical_url} />}
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content={website.title || property.name} />
+                {website.description && <meta name="twitter:description" content={website.description} />}
+                {website.og_image && <meta name="twitter:image" content={website.og_image} />}
+                {website.json_ld && (
+                    <script type="application/ld+json">
+                        {JSON.stringify(website.json_ld)}
+                    </script>
+                )}
+            </Head>
+
             <main className="min-h-screen bg-stone-950 text-white">
-                <section className="relative min-h-[86vh] overflow-hidden">
-                    <img
-                        src={heroImage}
-                        alt={`${property.name} em ${property.city || 'Moçambique'}`}
-                        className="absolute inset-0 h-full w-full object-cover object-center"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/55 to-black/10" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/76 via-transparent to-black/24" />
-
-                    <div className="absolute inset-x-0 top-0 z-30 border-b border-white/10 bg-black/35 backdrop-blur">
-                        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
-                            <a
-                                href="#topo"
-                                className="text-xl font-semibold tracking-wide"
-                            >
-                                {property.name}
-                            </a>
-                            <nav className="hidden items-center gap-8 text-sm text-white/80 md:flex">
-                                <a href="#reservar" className="hover:text-white">
-                                    {text.navReserve}
-                                </a>
-                                <a href="#servicos" className="hover:text-white">
-                                    {text.navServices}
-                                </a>
-                                <a href="#politicas" className="hover:text-white">
-                                    {text.navPolicies}
-                                </a>
-                                <a href="#contactos" className="hover:text-white">
-                                    {text.navContacts}
-                                </a>
-                            </nav>
-                            <div className="flex items-center gap-3">
-                                <div className="flex rounded-full border border-white/15 bg-white/10 p-1 text-xs font-semibold">
-                                    {['pt', 'en'].map((option) => (
-                                        <button
-                                            key={option}
-                                            type="button"
-                                            onClick={() => setLocale(option)}
-                                            className={`rounded-full px-3 py-1 uppercase transition ${
-                                                locale === option ? 'bg-white text-stone-950' : 'text-white/70 hover:text-white'
-                                            }`}
-                                        >
-                                            {option}
-                                        </button>
-                                    ))}
-                                </div>
-                                <a
-                                    href="#reservar"
-                                    className="rounded-full bg-amber-400 px-4 py-2 text-sm font-semibold text-black transition hover:bg-amber-300"
-                                >
-                                    {text.navReserve}
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div
-                        id="topo"
-                        className="relative z-10 mx-auto flex min-h-[86vh] max-w-7xl scroll-mt-28 items-end px-6 pb-16 pt-36"
+                {website.whatsapp_url && (
+                    <a
+                        href={website.whatsapp_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="fixed bottom-5 right-5 z-50 rounded-full bg-emerald-400 px-5 py-3 text-sm font-bold text-emerald-950 shadow-2xl shadow-emerald-950/40 transition hover:bg-emerald-300"
                     >
+                        {text.whatsapp}
+                    </a>
+                )}
+
+                <section className="relative min-h-[86vh] overflow-hidden">
+                    {heroImage ? (
+                        <picture>
+                            {website.hero_srcset?.avif && <source type="image/avif" srcSet={website.hero_srcset.avif} />}
+                            {website.hero_srcset?.webp && <source type="image/webp" srcSet={website.hero_srcset.webp} />}
+                            <img
+                                src={heroImage}
+                                alt={`${property.name} em ${property.city || property.country || 'Moçambique'}`}
+                                className="absolute inset-0 h-full w-full object-cover object-center"
+                                fetchPriority="high"
+                                sizes="100vw"
+                            />
+                        </picture>
+                    ) : (
+                        <div className="absolute inset-0 bg-stone-900" />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/88 via-black/58 to-black/16" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/25" />
+
+                    <Header property={property} />
+
+                    <div id="topo" className="relative z-10 mx-auto flex min-h-[86vh] max-w-7xl scroll-mt-28 items-end px-6 pb-16 pt-36">
                         <div className="max-w-3xl">
                             <p className="mb-4 text-sm font-semibold uppercase tracking-[0.22em] text-amber-300">
-                                {property.city || 'Inhambane'}, {property.country || 'Moçambique'}
+                                {[property.city, property.country].filter(Boolean).join(', ') || tenant?.name}
                             </p>
                             <h1 className="max-w-4xl text-5xl font-bold leading-tight sm:text-6xl lg:text-7xl">
-                                {text.heroTitle}
+                                {property.legal_name || property.name}
                             </h1>
                             <p className="mt-6 max-w-2xl text-lg leading-8 text-white/82">
-                                {property.notes || text.heroSubtitle}
+                                {website.description || property.notes || text.heroFallback}
                             </p>
                             <div className="mt-8 flex flex-wrap gap-3">
-                                <a
-                                    href="#reservar"
-                                    className="rounded-full bg-amber-400 px-6 py-3 font-semibold text-black transition hover:bg-amber-300"
-                                >
+                                <a href="#reservar" className="rounded-full bg-amber-400 px-6 py-3 font-semibold text-black transition hover:bg-amber-300">
                                     {text.checkAvailability}
                                 </a>
+                                {website.whatsapp_url && (
+                                    <a href={website.whatsapp_url} target="_blank" rel="noreferrer" className="rounded-full border border-white/25 px-6 py-3 font-semibold text-white transition hover:bg-white/10">
+                                        {text.whatsapp}
+                                    </a>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -317,86 +181,49 @@ export default function Property({ property, booking }) {
 
                 <section className="border-y border-white/10 bg-black px-6 py-6">
                     <div className="mx-auto grid max-w-7xl gap-4 sm:grid-cols-3">
-                        <Metric label={text.accommodation} value={property.legal_name || property.name} />
-                        <Metric label={text.bookings} value={text.onlineDirect} />
-                        <Metric label={text.from} value={property.lowest_rate ? money(property.lowest_rate) : text.onRequest} />
+                        <Metric label="Alojamento" value={property.legal_name || property.name} />
+                        <Metric label={text.directBookings} value={property.city || tenant?.name} />
+                        <Metric label={text.from} value={lowestRate ? money(lowestRate) : 'Sob consulta'} />
                     </div>
                 </section>
 
-                <BookingSection property={property} booking={booking} locale={locale} />
+                <BookingSection property={property} booking={booking} />
 
-                <section id="servicos" className="scroll-mt-28 bg-white px-6 py-20 text-stone-950">
-                    <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.9fr_1.1fr]">
-                        <div>
-                            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-600">
-                                {text.servicesEyebrow}
-                            </p>
-                            <h2 className="mt-3 text-3xl font-bold">{text.servicesTitle}</h2>
-                            <p className="mt-5 leading-7 text-stone-600">
-                                {text.servicesBody}
-                            </p>
-                        </div>
-                        <div className="grid gap-4 sm:grid-cols-2">
-                            <Info label={text.deposit} value={`${property.deposit_percent || 50}%`} />
-                            <Info label={text.cleaning} value={text.daily} />
-                            {highlightServices.map((service) => (
-                                <Info
-                                    key={service.name.pt}
-                                    label={service.name[locale]}
-                                    value={service.description[locale]}
-                                />
-                            ))}
-                        </div>
-                    </div>
-                </section>
-
-                <section id="politicas" className="mx-auto grid max-w-7xl scroll-mt-28 gap-6 px-6 py-20 lg:grid-cols-2">
-                    <Policy
-                        title={text.cancellationPolicy}
-                        text={text.cancellationPolicyBody}
-                        fallback={text.fallbackPolicy}
-                    />
-                    <Policy
-                        title={text.houseRules}
-                        text={text.houseRulesBody}
-                        fallback={text.fallbackPolicy}
-                    />
-                </section>
-
-                <section id="contactos" className="scroll-mt-28 border-t border-white/10 bg-black px-6 py-14">
-                    <div className="mx-auto flex max-w-7xl flex-col justify-between gap-8 md:flex-row md:items-center">
-                        <div>
-                            <h2 className="text-2xl font-bold">{property.name}</h2>
-                            <p className="mt-2 text-white/65">
-                                {property.address || property.city || 'Moçambique'}
-                            </p>
-                            <p className="mt-1 text-white/65">{phone}</p>
-                            <p className="mt-1 text-white/65">{email}</p>
-                        </div>
-                        <div className="flex w-full flex-col gap-3 sm:flex-row md:w-auto">
-                            <a
-                                href="#reservar"
-                                className="rounded-full bg-amber-400 px-6 py-3 text-center font-semibold text-black transition hover:bg-amber-300"
-                            >
-                                {text.bookingRequest}
-                            </a>
-                            <button
-                                type="button"
-                                onClick={goToOwnerLogin}
-                                className="rounded-full border border-white/20 px-6 py-3 text-center font-semibold text-white transition hover:bg-white/10"
-                            >
-                                {text.ownerArea}
-                            </button>
-                        </div>
-                    </div>
-                </section>
+                <Gallery photos={website.photos || []} />
+                <RoomTypes rooms={website.room_types || []} depositPercent={property.deposit_percent || 50} />
+                <Services property={property} />
+                <Location property={property} website={website} />
+                <Testimonials testimonials={website.testimonials || []} />
+                <Policies property={property} />
+                <Contact property={property} website={website} phone={phone} email={email} />
             </main>
         </>
     );
 }
 
-function BookingSection({ property, booking, locale }) {
-    const text = bookingText[locale] || bookingText.pt;
+function Header({ property }) {
+    return (
+        <div className="absolute inset-x-0 top-0 z-30 border-b border-white/10 bg-black/35 backdrop-blur">
+            <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
+                <a href="#topo" className="text-xl font-semibold tracking-wide">
+                    {property.name}
+                </a>
+                <nav className="hidden items-center gap-8 text-sm text-white/80 md:flex">
+                    <a href="#reservar" className="hover:text-white">{text.reserve}</a>
+                    <a href="#galeria" className="hover:text-white">{text.gallery}</a>
+                    <a href="#quartos" className="hover:text-white">{text.rooms}</a>
+                    <a href="#localizacao" className="hover:text-white">{text.location}</a>
+                    <a href="#contactos" className="hover:text-white">{text.contacts}</a>
+                </nav>
+                <a href="#reservar" className="rounded-full bg-amber-400 px-4 py-2 text-sm font-semibold text-black transition hover:bg-amber-300">
+                    {text.reserve}
+                </a>
+            </div>
+        </div>
+    );
+}
+
+function BookingSection({ property, booking }) {
     const [form, setForm] = useState({
         guest_name: '',
         guest_phone: '',
@@ -445,10 +272,7 @@ function BookingSection({ property, booking, locale }) {
             } catch (error) {
                 if (error.name !== 'AbortError') {
                     setAvailability(null);
-                    setNotice({
-                        type: 'error',
-                        message: text.unavailable,
-                    });
+                    setNotice({ type: 'error', message: bookingText.unavailable });
                 }
             } finally {
                 setChecking(false);
@@ -459,7 +283,7 @@ function BookingSection({ property, booking, locale }) {
             window.clearTimeout(timer);
             controller.abort();
         };
-    }, [booking.availability_url, canCheck, form.adults, form.check_in, form.check_out, form.children, text.unavailable]);
+    }, [booking.availability_url, canCheck, form.adults, form.check_in, form.check_out, form.children]);
 
     const update = (field) => (event) => {
         setForm((current) => ({ ...current, [field]: event.target.value }));
@@ -473,9 +297,7 @@ function BookingSection({ property, booking, locale }) {
         setErrors({});
 
         try {
-            const csrfToken = document
-                .querySelector('meta[name="csrf-token"]')
-                ?.getAttribute('content');
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
             const xsrf = xsrfToken();
             const response = await fetch(booking.store_url, {
                 method: 'POST',
@@ -492,11 +314,15 @@ function BookingSection({ property, booking, locale }) {
 
             if (!response.ok) {
                 setErrors(data.errors || {});
-                setNotice({ type: 'error', message: data.message || text.submitError });
+                setNotice({ type: 'error', message: data.message || bookingText.submitError });
                 return;
             }
 
-            setNotice({ type: 'success', message: data.message });
+            setNotice({
+                type: 'success',
+                message: data.message,
+                whatsappUrl: data.whatsapp_url,
+            });
             setForm({
                 guest_name: '',
                 guest_phone: '',
@@ -517,57 +343,56 @@ function BookingSection({ property, booking, locale }) {
         <section id="reservar" className="mx-auto max-w-7xl scroll-mt-28 px-6 py-20">
             <div className="grid gap-10 lg:grid-cols-[0.85fr_1.15fr]">
                 <div>
-                    <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-300">
-                        {text.eyebrow}
-                    </p>
-                    <h2 className="mt-3 text-3xl font-bold">{text.title}</h2>
-                    <p className="mt-5 leading-7 text-white/68">
-                        {text.body}
-                    </p>
+                    <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-300">{bookingText.eyebrow}</p>
+                    <h2 className="mt-3 text-3xl font-bold">{bookingText.title}</h2>
+                    <p className="mt-5 leading-7 text-white/68">{bookingText.body}</p>
                     <div className="mt-8 rounded-lg border border-white/10 bg-white/[0.05] p-5">
-                        <p className="text-sm text-white/55">{text.estimatedPrice}</p>
+                        <p className="text-sm text-white/55">{bookingText.estimatedPrice}</p>
                         {checking ? (
-                            <p className="mt-2 text-xl font-semibold text-amber-300">{text.checking}</p>
+                            <p className="mt-2 text-xl font-semibold text-amber-300">{bookingText.checking}</p>
                         ) : availability?.available ? (
                             <div className="mt-2">
                                 <p className="text-3xl font-bold text-amber-300">{money(availability.total)}</p>
                                 <p className="mt-1 text-sm text-white/60">
-                                    {availability.nights} {text.nights}, {money(availability.nightly_rate)} {text.perNight}.
+                                    {availability.nights} {bookingText.nights}, {money(availability.nightly_rate)} {bookingText.perNight}.
                                 </p>
                             </div>
                         ) : availability?.available === false ? (
                             <p className="mt-2 text-lg font-semibold text-red-300">{availability.message}</p>
                         ) : (
-                            <p className="mt-2 text-lg font-semibold text-white/65">{text.selectDates}</p>
+                            <p className="mt-2 text-lg font-semibold text-white/65">{bookingText.selectDates}</p>
                         )}
                     </div>
+                    <p className="mt-4 text-sm leading-6 text-white/52">
+                        A reserva só fica garantida após confirmação do alojamento e depósito de {property.deposit_percent || 50}%.
+                    </p>
                 </div>
 
                 <form onSubmit={submit} className="rounded-lg border border-white/10 bg-white/[0.06] p-6">
                     <div className="grid gap-4 md:grid-cols-2">
-                        <Field label={text.name} error={errors.guest_name}>
+                        <Field label={bookingText.name} error={errors.guest_name}>
                             <input value={form.guest_name} onChange={update('guest_name')} required className="input" />
                         </Field>
-                        <Field label={text.phone} error={errors.guest_phone}>
+                        <Field label={bookingText.phone} error={errors.guest_phone}>
                             <input value={form.guest_phone} onChange={update('guest_phone')} required className="input" />
                         </Field>
-                        <Field label={text.email} error={errors.guest_email}>
+                        <Field label={bookingText.email} error={errors.guest_email}>
                             <input type="email" value={form.guest_email} onChange={update('guest_email')} className="input" />
                         </Field>
-                        <Field label={text.adults} error={errors.adults}>
+                        <Field label={bookingText.adults} error={errors.adults}>
                             <input type="number" min="1" value={form.adults} onChange={update('adults')} required className="input" />
                         </Field>
-                        <Field label={text.checkIn} error={errors.check_in}>
+                        <Field label={bookingText.checkIn} error={errors.check_in}>
                             <input type="date" min={today} value={form.check_in} onChange={update('check_in')} required className="input" />
                         </Field>
-                        <Field label={text.checkOut} error={errors.check_out}>
+                        <Field label={bookingText.checkOut} error={errors.check_out}>
                             <input type="date" min={form.check_in || today} value={form.check_out} onChange={update('check_out')} required className="input" />
                         </Field>
-                        <Field label={text.children} error={errors.children}>
+                        <Field label={bookingText.children} error={errors.children}>
                             <input type="number" min="0" value={form.children} onChange={update('children')} required className="input" />
                         </Field>
                     </div>
-                    <Field label={text.message} error={errors.message} className="mt-4">
+                    <Field label={bookingText.message} error={errors.message} className="mt-4">
                         <textarea value={form.message} onChange={update('message')} rows="4" className="input resize-none" />
                     </Field>
                     {notice && (
@@ -578,7 +403,12 @@ function BookingSection({ property, booking, locale }) {
                                     : 'border-red-400/40 bg-red-400/10 text-red-100'
                             }`}
                         >
-                            {notice.message}
+                            <p>{notice.message}</p>
+                            {notice.whatsappUrl && (
+                                <a href={notice.whatsappUrl} target="_blank" rel="noreferrer" className="mt-3 inline-flex rounded-full bg-emerald-400 px-4 py-2 font-semibold text-emerald-950">
+                                    {bookingText.continueWhatsapp}
+                                </a>
+                            )}
                         </div>
                     )}
                     <button
@@ -586,9 +416,249 @@ function BookingSection({ property, booking, locale }) {
                         disabled={submitting || availability?.available === false}
                         className="mt-6 w-full rounded-full bg-amber-400 px-6 py-3 font-semibold text-black transition hover:bg-amber-300 disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                        {submitting ? text.sending : text.submit}
+                        {submitting ? bookingText.sending : bookingText.submit}
                     </button>
                 </form>
+            </div>
+        </section>
+    );
+}
+
+function Gallery({ photos }) {
+    const [active, setActive] = useState(null);
+
+    if (!photos.length) {
+        return null;
+    }
+
+    return (
+        <section id="galeria" className="scroll-mt-28 bg-white px-6 py-20 text-stone-950">
+            <div className="mx-auto max-w-7xl">
+                <div className="max-w-2xl">
+                    <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-600">{text.gallery}</p>
+                    <h2 className="mt-3 text-3xl font-bold">{text.photosTitle}</h2>
+                    <p className="mt-5 leading-7 text-stone-600">{text.photosBody}</p>
+                </div>
+                <div className="mt-10 grid gap-4 md:grid-cols-3">
+                    {photos.map((photo, index) => (
+                        <button key={photo.id || photo.src} type="button" onClick={() => setActive(index)} className={index === 0 ? 'md:col-span-2 md:row-span-2' : ''}>
+                            <ResponsiveImage image={photo} alt={photo.alt} className="aspect-[4/3] h-full w-full rounded-lg object-cover" />
+                            {photo.caption && <span className="mt-2 block text-left text-sm text-stone-500">{photo.caption}</span>}
+                        </button>
+                    ))}
+                </div>
+            </div>
+            {active !== null && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-5" role="dialog" aria-modal="true">
+                    <button type="button" onClick={() => setActive(null)} className="absolute right-5 top-5 rounded-full border border-white/30 px-4 py-2 text-white">
+                        Fechar
+                    </button>
+                    <ResponsiveImage image={photos[active]} alt={photos[active].alt} className="max-h-[82vh] max-w-[92vw] rounded-lg object-contain" eager />
+                </div>
+            )}
+        </section>
+    );
+}
+
+function RoomTypes({ rooms, depositPercent }) {
+    if (!rooms.length) {
+        return null;
+    }
+
+    return (
+        <section id="quartos" className="mx-auto max-w-7xl scroll-mt-28 px-6 py-20">
+            <div className="max-w-2xl">
+                <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-300">{text.rooms}</p>
+                <h2 className="mt-3 text-3xl font-bold">{text.roomsTitle}</h2>
+                <p className="mt-5 leading-7 text-white/68">{text.roomsBody}</p>
+            </div>
+            <div className="mt-10 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+                {rooms.map((room) => (
+                    <article key={room.id || room.name} className="overflow-hidden rounded-lg border border-white/10 bg-white/[0.05]">
+                        {room.photo && <ResponsiveImage image={{ src: room.photo, srcset: room.srcset }} alt={room.name} className="aspect-[4/3] w-full object-cover" />}
+                        <div className="p-5">
+                            <h3 className="text-xl font-bold">{room.name}</h3>
+                            <p className="mt-2 text-sm text-white/60">{room.capacity} {text.guests}</p>
+                            {room.description && <p className="mt-4 text-sm leading-6 text-white/70">{room.description}</p>}
+                            <p className="mt-5 text-2xl font-bold text-amber-300">{money(room.price_from)}</p>
+                            <p className="mt-1 text-xs text-white/45">Depósito de {depositPercent}% para garantir.</p>
+                            {!!room.amenities?.length && (
+                                <div className="mt-5">
+                                    <p className="text-sm font-semibold text-white/78">{text.includes}</p>
+                                    <div className="mt-3 flex flex-wrap gap-2">
+                                        {room.amenities.map((amenity) => (
+                                            <span key={amenity} className="rounded-full border border-white/15 px-3 py-1 text-xs text-white/70">
+                                                {amenity}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </article>
+                ))}
+            </div>
+        </section>
+    );
+}
+
+function Services({ property }) {
+    const services = property.services || [];
+
+    return (
+        <section className="bg-stone-100 px-6 py-20 text-stone-950">
+            <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.9fr_1.1fr]">
+                <div>
+                    <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-600">{text.services}</p>
+                    <h2 className="mt-3 text-3xl font-bold">Informação útil antes da chegada</h2>
+                    <p className="mt-5 leading-7 text-stone-600">
+                        Condições configuradas pelo alojamento para alinhar expectativas antes da reserva.
+                    </p>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                    <Info label={text.deposit} value={`${property.deposit_percent || 50}%`} />
+                    <Info label={text.cleaning} value={property.cleaning_interval_days ? `A cada ${property.cleaning_interval_days} dias` : text.daily} />
+                    {services.map((service) => (
+                        <Info key={service.name} label={service.name} value={service.description || 'Disponível'} />
+                    ))}
+                </div>
+            </div>
+        </section>
+    );
+}
+
+function Location({ property, website }) {
+    useEffect(() => {
+        if (!website.latitude || !website.longitude || !document.getElementById('tenant-map')) {
+            return;
+        }
+
+        const loadLeaflet = async () => {
+            if (!document.querySelector('link[data-leaflet]')) {
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+                link.dataset.leaflet = 'true';
+                document.head.appendChild(link);
+            }
+
+            if (!window.L) {
+                await new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+                    script.onload = resolve;
+                    script.onerror = reject;
+                    document.body.appendChild(script);
+                });
+            }
+
+            const node = document.getElementById('tenant-map');
+            if (!node || node.dataset.ready) {
+                return;
+            }
+
+            node.dataset.ready = 'true';
+            const map = window.L.map(node, { scrollWheelZoom: false }).setView([website.latitude, website.longitude], 13);
+            window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap',
+            }).addTo(map);
+            window.L.marker([website.latitude, website.longitude]).addTo(map).bindPopup(property.name);
+        };
+
+        loadLeaflet().catch(() => {});
+    }, [property.name, website.latitude, website.longitude]);
+
+    if (!website.latitude || !website.longitude) {
+        return null;
+    }
+
+    return (
+        <section id="localizacao" className="scroll-mt-28 bg-white px-6 py-20 text-stone-950">
+            <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1.1fr_0.9fr]">
+                <div id="tenant-map" className="min-h-[420px] rounded-lg bg-stone-200" />
+                <div>
+                    <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-600">{text.location}</p>
+                    <h2 className="mt-3 text-3xl font-bold">{website.address_label || property.address || property.city}</h2>
+                    <p className="mt-5 leading-7 text-stone-600">{website.directions_note || text.locationBody}</p>
+                    {!!website.nearby?.length && (
+                        <div className="mt-8 space-y-3">
+                            <h3 className="font-semibold">{text.nearby}</h3>
+                            {website.nearby.map((item) => (
+                                <div key={item.name} className="flex items-center justify-between border-b border-stone-200 pb-3">
+                                    <span>{item.name}</span>
+                                    <span className="text-stone-500">{item.distance}</span>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
+        </section>
+    );
+}
+
+function Testimonials({ testimonials }) {
+    if (!testimonials.length) {
+        return null;
+    }
+
+    return (
+        <section className="mx-auto max-w-7xl px-6 py-20">
+            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-amber-300">{text.testimonials}</p>
+            <div className="mt-8 grid gap-5 md:grid-cols-3">
+                {testimonials.map((testimonial) => (
+                    <article key={testimonial.id} className="rounded-lg border border-white/10 bg-white/[0.05] p-6">
+                        <p className="leading-7 text-white/75">{testimonial.text}</p>
+                        <p className="mt-5 font-semibold">{testimonial.author}</p>
+                        {testimonial.source && <p className="text-sm text-white/45">{testimonial.source}</p>}
+                    </article>
+                ))}
+            </div>
+        </section>
+    );
+}
+
+function Policies({ property }) {
+    return (
+        <section id="politicas" className="mx-auto grid max-w-7xl scroll-mt-28 gap-6 px-6 py-20 lg:grid-cols-2">
+            <Policy title="Política de cancelamento" text={property.cancellation_policy} fallback={text.fallbackPolicy} />
+            <Policy title="Regras da casa" text={property.house_rules} fallback={text.fallbackPolicy} />
+        </section>
+    );
+}
+
+function Contact({ property, website, phone, email }) {
+    return (
+        <section id="contactos" className="scroll-mt-28 border-t border-white/10 bg-black px-6 py-14">
+            <div className="mx-auto flex max-w-7xl flex-col justify-between gap-8 md:flex-row md:items-center">
+                <div>
+                    <h2 className="text-2xl font-bold">{property.name}</h2>
+                    <p className="mt-2 text-white/65">{website.address_label || property.address || property.city || property.country}</p>
+                    {phone && (
+                        <a className="mt-1 block text-white/65 hover:text-white" href={phoneHref(phone) || undefined}>
+                            {phone}
+                        </a>
+                    )}
+                    {email && <a className="mt-1 block text-white/65 hover:text-white" href={`mailto:${email}`}>{email}</a>}
+                    <a className="mt-5 inline-block text-sm text-white/35 hover:text-white/70" href="https://app.lodgesos.com/admin/login">
+                        {text.ownerArea}
+                    </a>
+                </div>
+                <div className="flex w-full flex-col gap-3 sm:flex-row md:w-auto">
+                    {phone && (
+                        <a href={phoneHref(phone) || '#'} className="rounded-full border border-white/20 px-6 py-3 text-center font-semibold text-white transition hover:bg-white/10">
+                            {text.call}
+                        </a>
+                    )}
+                    {website.whatsapp_url && (
+                        <a href={website.whatsapp_url} target="_blank" rel="noreferrer" className="rounded-full bg-emerald-400 px-6 py-3 text-center font-semibold text-emerald-950 transition hover:bg-emerald-300">
+                            {text.whatsapp}
+                        </a>
+                    )}
+                    <a href="#reservar" className="rounded-full bg-amber-400 px-6 py-3 text-center font-semibold text-black transition hover:bg-amber-300">
+                        {text.reserve}
+                    </a>
+                </div>
             </div>
         </section>
     );
@@ -604,6 +674,22 @@ function Field({ label, error, className = '', children }) {
     );
 }
 
+function ResponsiveImage({ image, alt, className, eager = false }) {
+    const src = imageUrl(image?.src);
+
+    if (!src) {
+        return null;
+    }
+
+    return (
+        <picture>
+            {image?.srcset?.avif && <source type="image/avif" srcSet={image.srcset.avif} />}
+            {image?.srcset?.webp && <source type="image/webp" srcSet={image.srcset.webp} />}
+            <img src={src} alt={alt} loading={eager ? 'eager' : 'lazy'} sizes="(min-width: 768px) 33vw, 100vw" className={className} />
+        </picture>
+    );
+}
+
 function Metric({ label, value }) {
     return (
         <div className="rounded-lg border border-white/10 bg-white/[0.04] p-5">
@@ -615,20 +701,20 @@ function Metric({ label, value }) {
 
 function Info({ label, value }) {
     return (
-        <div className="rounded-lg border border-stone-200 bg-stone-50 p-5">
+        <div className="rounded-lg border border-stone-200 bg-white p-5">
             <p className="text-sm font-semibold text-stone-500">{label}</p>
             <p className="mt-2 text-lg font-bold">{value}</p>
         </div>
     );
 }
 
-function Policy({ title, text, fallback }) {
+function Policy({ title, text: body, fallback }) {
     return (
-        <article className="rounded-lg border border-white/10 bg-white/[0.06] p-6">
-            <h3 className="text-xl font-semibold">{title}</h3>
-            <p className="mt-4 whitespace-pre-line leading-7 text-white/68">
-                {text || fallback}
-            </p>
+        <article className="rounded-lg border border-white/10 bg-white/[0.05] p-6">
+            <h3 className="text-xl font-bold">{title}</h3>
+            <div className="mt-4 whitespace-pre-line text-sm leading-7 text-white/68">
+                {body || fallback}
+            </div>
         </article>
     );
 }
