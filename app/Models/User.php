@@ -36,6 +36,9 @@ class User extends Authenticatable implements FilamentUser
         'permissions',
         'locale',
         'theme_mode',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
+        'two_factor_confirmed_at',
         'password',
     ];
 
@@ -47,6 +50,8 @@ class User extends Authenticatable implements FilamentUser
     protected $hidden = [
         'password',
         'remember_token',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
     ];
 
     /**
@@ -62,6 +67,9 @@ class User extends Authenticatable implements FilamentUser
             'web_access_enabled' => 'boolean',
             'mobile_access_enabled' => 'boolean',
             'last_mobile_login_at' => 'datetime',
+            'two_factor_secret' => 'encrypted',
+            'two_factor_recovery_codes' => 'encrypted:array',
+            'two_factor_confirmed_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
@@ -76,12 +84,22 @@ class User extends Authenticatable implements FilamentUser
     public function canAccessPanel(Panel $panel): bool
     {
         if ($this->role === 'super_admin') {
-            return $this->isCentralAdminHost();
+            return $this->isCentralAdminHost() && $this->passesSensitiveTwoFactorRequirement();
+        }
+
+        if ($this->role === 'admin') {
+            return $this->web_access_enabled && $this->isCentralAdminHost() && $this->passesSensitiveTwoFactorRequirement();
+        }
+
+        if ($this->isCentralAdminHost()) {
+            return false;
         }
 
         return $this->web_access_enabled
-            && in_array($this->role, ['admin', 'owner', 'manager', 'staff', 'security'], true)
-            && ($this->property_id || $this->properties()->exists());
+            && in_array($this->role, ['owner', 'manager', 'staff', 'security'], true)
+            && ($this->property_id || $this->properties()->exists())
+            && $this->canAccessCurrentTenantHost()
+            && $this->passesSensitiveTwoFactorRequirement();
     }
 
     public function property(): BelongsTo
@@ -105,5 +123,54 @@ class User extends Authenticatable implements FilamentUser
             'localhost',
             '127.0.0.1',
         ]), true);
+    }
+
+    private function canAccessCurrentTenantHost(): bool
+    {
+        $host = request()->getHost();
+
+        if (in_array($host, ['localhost', '127.0.0.1'], true)) {
+            return true;
+        }
+
+        if (! str_ends_with($host, '.lodgesos.com')) {
+            return true;
+        }
+
+        $tenantSlug = str($host)->before('.lodgesos.com')->toString();
+
+        return $this->tenantSlugs()->contains($tenantSlug);
+    }
+
+    private function tenantSlugs()
+    {
+        $direct = $this->property()
+            ->with('tenantAccount:id,slug')
+            ->first()
+            ?->tenantAccount?->slug;
+
+        $pivot = $this->properties()
+            ->with('tenantAccount:id,slug')
+            ->get()
+            ->pluck('tenantAccount.slug');
+
+        return collect([$direct])
+            ->merge($pivot)
+            ->filter()
+            ->unique()
+            ->values();
+    }
+
+    private function passesSensitiveTwoFactorRequirement(): bool
+    {
+        if (! config('auth.require_sensitive_2fa', false)) {
+            return true;
+        }
+
+        if (! in_array($this->role, ['super_admin', 'admin', 'owner'], true)) {
+            return true;
+        }
+
+        return filled($this->two_factor_confirmed_at);
     }
 }

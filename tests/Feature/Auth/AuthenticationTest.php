@@ -28,6 +28,10 @@ class AuthenticationTest extends TestCase
 
         $this->assertAuthenticated();
         $response->assertRedirect(route('dashboard', absolute: false));
+        $this->assertDatabaseHas('audit_logs', [
+            'user_id' => $user->id,
+            'event' => 'login',
+        ]);
     }
 
     public function test_users_can_not_authenticate_with_invalid_password(): void
@@ -50,5 +54,28 @@ class AuthenticationTest extends TestCase
 
         $this->assertGuest();
         $response->assertRedirect('/');
+        $this->assertDatabaseHas('audit_logs', [
+            'user_id' => $user->id,
+            'event' => 'logout',
+        ]);
+    }
+
+    public function test_expired_idle_web_session_requires_login_again(): void
+    {
+        config(['auth.web_idle_timeout_minutes' => 1]);
+
+        $user = User::factory()->create();
+
+        $response = $this
+            ->actingAs($user)
+            ->withSession(['auth.web_last_activity_at' => time() - 120])
+            ->get('/dashboard');
+
+        $this->assertGuest();
+        $response->assertRedirect(route('login'));
+        $this->assertDatabaseHas('audit_logs', [
+            'user_id' => $user->id,
+            'event' => 'session_timeout',
+        ]);
     }
 }

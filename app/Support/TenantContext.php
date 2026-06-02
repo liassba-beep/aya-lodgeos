@@ -12,10 +12,7 @@ class TenantContext
         $user = auth()->user();
 
         if (! $user) {
-            return Property::query()
-                ->where('status', 'active')
-                ->orderBy('id')
-                ->value('id') ?? Property::query()->orderBy('id')->value('id');
+            return null;
         }
 
         if ($user->role === 'super_admin') {

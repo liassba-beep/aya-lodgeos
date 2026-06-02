@@ -112,4 +112,10 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    'allow_public_registration' => env('ALLOW_PUBLIC_REGISTRATION', false),
+
+    'require_sensitive_2fa' => env('REQUIRE_SENSITIVE_2FA', false),
+
+    'web_idle_timeout_minutes' => env('WEB_IDLE_TIMEOUT_MINUTES', 30),
+
 ];

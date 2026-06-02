@@ -3,6 +3,7 @@
 namespace App\Filament\Concerns;
 
 use App\Support\AccessControl;
+use App\Support\TenantContext;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
@@ -20,17 +21,17 @@ trait HasResourcePermissions
 
     public static function canView(Model $record): bool
     {
-        return static::allowsResourceAction('view');
+        return static::allowsResourceAction('view') && static::canAccessTenantRecord($record);
     }
 
     public static function canEdit(Model $record): bool
     {
-        return static::allowsResourceAction('update');
+        return static::allowsResourceAction('update') && static::canAccessTenantRecord($record);
     }
 
     public static function canDelete(Model $record): bool
     {
-        return static::allowsResourceAction('delete');
+        return static::allowsResourceAction('delete') && static::canAccessTenantRecord($record);
     }
 
     public static function canDeleteAny(): bool
@@ -63,5 +64,28 @@ trait HasResourcePermissions
         return property_exists(static::class, 'permissionModule') && static::$permissionModule
             ? static::$permissionModule
             : Str::of(class_basename(static::class))->beforeLast('Resource')->kebab()->toString();
+    }
+
+    protected static function canAccessTenantRecord(Model $record): bool
+    {
+        if (auth()->user()?->role === 'super_admin') {
+            return true;
+        }
+
+        $attributes = $record->getAttributes();
+
+        if (array_key_exists('property_id', $attributes)) {
+            $propertyId = TenantContext::propertyId();
+
+            return $propertyId && (int) $record->getAttribute('property_id') === (int) $propertyId;
+        }
+
+        if (array_key_exists('tenant_id', $attributes)) {
+            $tenantId = TenantContext::tenantAccount()?->id;
+
+            return $tenantId && (int) $record->getAttribute('tenant_id') === (int) $tenantId;
+        }
+
+        return true;
     }
 }

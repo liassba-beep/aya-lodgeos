@@ -49,8 +49,32 @@ class AuditLogResource extends Resource
             ->defaultSort('created_at', 'desc')
             ->columns([
                 Tables\Columns\TextColumn::make('created_at')->label('Data')->dateTime()->sortable(),
+                Tables\Columns\TextColumn::make('property.tenantAccount.name')
+                    ->label('Tenant')
+                    ->placeholder('Master')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('property.name')
+                    ->label('Alojamento')
+                    ->placeholder('-')
+                    ->searchable()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('user.name')->label('Utilizador')->placeholder('Sistema')->searchable(),
-                Tables\Columns\TextColumn::make('event')->label('Evento')->badge()->sortable(),
+                Tables\Columns\TextColumn::make('event')
+                    ->label('Evento')
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state): string => match ($state) {
+                        'login' => 'Login web',
+                        'logout' => 'Logout web',
+                        'session_timeout' => 'Sessão expirada',
+                        'worker_login' => 'Login mobile',
+                        'worker_logout' => 'Logout mobile',
+                        'created' => 'Criado',
+                        'updated' => 'Actualizado',
+                        'deleted' => 'Apagado',
+                        default => (string) $state,
+                    })
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('auditable_type')
                     ->label('Modulo')
                     ->formatStateUsing(fn (?string $state): string => $state ? class_basename($state) : '-')
@@ -63,6 +87,7 @@ class AuditLogResource extends Resource
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
         return parent::getEloquentQuery()
+            ->with(['property.tenantAccount', 'user'])
             ->when(TenantContext::propertyId(), fn ($query, int $propertyId) => $query->where('property_id', $propertyId));
     }
 

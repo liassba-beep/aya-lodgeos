@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\AuditLog;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 
 class AuditTrail
@@ -42,6 +43,21 @@ class AuditTrail
         }
     }
 
+    public static function logAccessEvent(string $event, ?User $user = null, ?int $propertyId = null, array $metadata = []): void
+    {
+        AuditLog::create([
+            'property_id' => $propertyId,
+            'user_id' => $user?->id,
+            'event' => $event,
+            'auditable_type' => User::class,
+            'auditable_id' => $user?->id,
+            'old_values' => null,
+            'new_values' => $metadata ?: null,
+            'ip_address' => app()->runningInConsole() ? null : request()->ip(),
+            'user_agent' => app()->runningInConsole() ? null : request()->userAgent(),
+        ]);
+    }
+
     private static function log(Model $record, string $event, array $oldValues, array $newValues): void
     {
         AuditLog::create([
@@ -65,6 +81,10 @@ class AuditTrail
             $attributes['deleted_at'],
             $attributes['password'],
             $attributes['remember_token'],
+            $attributes['mobile_pin'],
+            $attributes['mobile_pin_hash'],
+            $attributes['two_factor_secret'],
+            $attributes['two_factor_recovery_codes'],
         );
 
         return $attributes;

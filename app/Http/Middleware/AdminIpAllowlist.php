@@ -10,6 +10,10 @@ class AdminIpAllowlist
 {
     public function handle(Request $request, Closure $next): Response
     {
+        if (! $this->isCentralAdminHost($request)) {
+            return $next($request);
+        }
+
         $allowlist = collect(explode(',', (string) env('ADMIN_IP_ALLOWLIST', '')))
             ->map(fn (string $entry): string => trim($entry))
             ->filter()
@@ -26,6 +30,19 @@ class AdminIpAllowlist
         }
 
         abort(404);
+    }
+
+    private function isCentralAdminHost(Request $request): bool
+    {
+        $host = $request->getHost();
+        $centralHost = parse_url((string) config('app.url'), PHP_URL_HOST);
+
+        return in_array($host, array_filter([
+            $centralHost,
+            'app.lodgesos.com',
+            'localhost',
+            '127.0.0.1',
+        ]), true);
     }
 
     private function matches(string $ip, string $entry): bool

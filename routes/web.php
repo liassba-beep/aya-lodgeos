@@ -20,6 +20,7 @@ use App\Models\OperationalAlert;
 use App\Models\Receipt;
 use App\Models\User;
 use App\Support\OperationalNotificationSummary;
+use App\Support\AuditTrail;
 use App\Support\ReservationAvailability;
 use App\Support\SimplePdf;
 use App\Support\TenantContext;
@@ -37,20 +38,35 @@ Route::domain('{tenant}.lodgesos.com')
     ->group(function () {
         Route::get('/', PublicPropertyController::class)
             ->name('public.property.subdomain');
+        Route::get('/{section}', function (string $tenant, string $section) {
+            return redirect('/#'.$section);
+        })
+            ->whereIn('section', ['reservar', 'servicos', 'politicas', 'contactos', 'quartos', 'galeria', 'localizacao'])
+            ->name('public.property.section');
         Route::get('/availability', [PublicPropertyController::class, 'availability'])
+            ->middleware('throttle:30,1')
             ->name('public.property.availability');
         Route::post('/booking-requests', [PublicPropertyController::class, 'storeBookingRequest'])
+            ->middleware('throttle:10,1')
             ->name('public.property.booking-requests.store');
     });
 
 Route::get('/p/{tenant}', PublicPropertyController::class)
     ->where('tenant', '[a-z0-9-]+')
     ->name('public.property.preview');
+Route::get('/p/{tenant}/{section}', function (string $tenant, string $section) {
+    return redirect('/p/'.$tenant.'#'.$section);
+})
+    ->where('tenant', '[a-z0-9-]+')
+    ->whereIn('section', ['reservar', 'servicos', 'politicas', 'contactos', 'quartos', 'galeria', 'localizacao'])
+    ->name('public.property.preview.section');
 Route::get('/p/{tenant}/availability', [PublicPropertyController::class, 'availability'])
     ->where('tenant', '[a-z0-9-]+')
+    ->middleware('throttle:30,1')
     ->name('public.property.preview.availability');
 Route::post('/p/{tenant}/booking-requests', [PublicPropertyController::class, 'storeBookingRequest'])
     ->where('tenant', '[a-z0-9-]+')
+    ->middleware('throttle:10,1')
     ->name('public.property.preview.booking-requests.store');
 
 Route::get('/', function () {
@@ -64,7 +80,7 @@ Route::get('/', function () {
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+})->middleware(['auth', 'verified', 'session.idle'])->name('dashboard');
 
 Route::get('/trabalhador', fn () => redirect()->route('worker.mobile'));
 
@@ -88,8 +104,14 @@ Route::post('/trabalhador/login', function (Request $request) {
         ->first();
 
     if ($staff && $staff->mobile_pin_hash && Hash::check($pin, $staff->mobile_pin_hash)) {
+        session()->regenerate();
         session(['worker_staff_member_id' => $staff->id]);
         $staff->forceFill(['last_mobile_login_at' => now()])->save();
+        AuditTrail::logAccessEvent('worker_login', null, $staff->property_id, [
+            'staff_member_id' => $staff->id,
+            'staff_member_name' => $staff->name,
+            'host' => $request->getHost(),
+        ]);
 
         return redirect()->route('worker.mobile');
     }
@@ -123,13 +145,30 @@ Route::post('/trabalhador/login', function (Request $request) {
         'last_mobile_login_at' => now(),
     ])->save();
 
+    session()->regenerate();
     session(['worker_staff_member_id' => $staff->id]);
+    AuditTrail::logAccessEvent('worker_login', $user, $staff->property_id, [
+        'staff_member_id' => $staff->id,
+        'staff_member_name' => $staff->name,
+        'host' => $request->getHost(),
+    ]);
 
     return redirect()->route('worker.mobile');
-})->name('worker.login.store');
+})->middleware('throttle:5,1')->name('worker.login.store');
 
 Route::post('/trabalhador/logout', function () {
+    $staff = StaffMember::query()->find(session('worker_staff_member_id'));
+
+    if ($staff) {
+        AuditTrail::logAccessEvent('worker_logout', null, $staff->property_id, [
+            'staff_member_id' => $staff->id,
+            'staff_member_name' => $staff->name,
+            'host' => request()->getHost(),
+        ]);
+    }
+
     session()->forget('worker_staff_member_id');
+    session()->regenerateToken();
 
     return redirect()->route('worker.login');
 })->name('worker.logout');
@@ -248,7 +287,7 @@ Route::get('/trabalhador/app', function () {
     ]);
 })->name('worker.mobile');
 
-Route::middleware([])->prefix('trabalhador')->name('worker.')->group(function () {
+Route::middleware('worker.auth')->prefix('trabalhador')->name('worker.')->group(function () {
     Route::get('/novidades', function () {
         $staff = StaffMember::query()->find(session('worker_staff_member_id'));
 
@@ -601,9 +640,9 @@ Route::get('/mobile', function () {
         'checklists' => $checklists,
         'lowStock' => $lowStock,
     ]);
-})->middleware(['auth', 'verified'])->name('mobile');
+})->middleware(['auth', 'verified', 'session.idle'])->name('mobile');
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'session.idle'])->group(function () {
     Route::get('/operational-alerts/latest', function () {
         $propertyId = TenantContext::propertyId();
         $summary = OperationalNotificationSummary::forProperty($propertyId);
@@ -626,11 +665,11 @@ Route::middleware('auth')->group(function () {
             ] : null,
             'overdue' => $summary['overdue'],
         ]);
-    })->name('operational-alerts.latest');
+    })->middleware('module:operational-alert,view')->name('operational-alerts.latest');
 
     Route::get('/mobile/novidades', function () {
         return response()->json(OperationalNotificationSummary::forProperty(TenantContext::propertyId()));
-    })->name('mobile.notifications');
+    })->middleware('module:mobile-app,view')->name('mobile.notifications');
 
     Route::get('/admin/rooms/qr-labels', function () {
         $propertyId = TenantContext::propertyId();
@@ -652,7 +691,7 @@ Route::middleware('auth')->group(function () {
             'property' => Property::find($propertyId),
             'rooms' => $rooms,
         ]);
-    })->name('rooms.qr-labels');
+    })->middleware('module:room,view')->name('rooms.qr-labels');
 
     Route::get('/admin/reservations/{reservation}/check-in-form.pdf', function (Reservation $reservation) {
         $propertyId = TenantContext::propertyId();
@@ -694,7 +733,7 @@ Route::middleware('auth')->group(function () {
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="ficha-check-in-'.$filename.'.pdf"',
         ]);
-    })->name('reservations.check-in-form');
+    })->middleware('module:reservation,view')->name('reservations.check-in-form');
 
     Route::get('/invoices/{invoice}/pdf', function (Invoice $invoice) {
         $propertyId = TenantContext::propertyId();
@@ -743,7 +782,7 @@ Route::middleware('auth')->group(function () {
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="factura-'.$filename.'.pdf"',
         ]);
-    })->name('invoices.pdf');
+    })->middleware('module:invoice,view')->name('invoices.pdf');
 
     Route::get('/admin/exports/invoices.csv', function () {
         $propertyId = TenantContext::propertyId();
@@ -772,7 +811,7 @@ Route::middleware('auth')->group(function () {
             'Content-Type' => 'text/csv',
             'Content-Disposition' => 'attachment; filename="facturas.csv"',
         ]);
-    })->name('exports.invoices');
+    })->middleware('module:invoice,view')->name('exports.invoices');
 
     Route::get('/admin/exports/reservations.csv', function () {
         $propertyId = TenantContext::propertyId();
@@ -800,14 +839,14 @@ Route::middleware('auth')->group(function () {
             'Content-Type' => 'text/csv',
             'Content-Disposition' => 'attachment; filename="reservas.csv"',
         ]);
-    })->name('exports.reservations');
+    })->middleware('module:reservation,view')->name('exports.reservations');
 
     Route::post('/admin/reservations/{reservation}/move', function (Request $request, Reservation $reservation) {
         $propertyId = TenantContext::propertyId();
         abort_unless(! $propertyId || (int) $reservation->property_id === $propertyId, 403);
 
         $validated = $request->validate([
-            'room_id' => ['required', 'exists:rooms,id'],
+            'room_id' => ['required', Rule::exists('rooms', 'id')->where('property_id', $reservation->property_id)],
             'check_in' => ['required', 'date'],
         ]);
 
@@ -820,7 +859,7 @@ Route::middleware('auth')->group(function () {
         $reservation->save();
 
         return response()->json(['ok' => true]);
-    })->name('reservations.move');
+    })->middleware('module:reservation,update')->name('reservations.move');
 
     Route::post('/admin/payments/{payment}/receipt', function (Payment $payment) {
         $payment->load('reservation');
@@ -841,7 +880,7 @@ Route::middleware('auth')->group(function () {
         );
 
         return back();
-    })->name('payments.receipt');
+    })->middleware('module:receipt,create')->name('payments.receipt');
 
     Route::get('/admin/owner-daily-report/generate', function () {
         $propertyId = TenantContext::propertyId();
@@ -863,7 +902,7 @@ Route::middleware('auth')->group(function () {
         );
 
         return back();
-    })->name('owner-daily-report.generate');
+    })->middleware('module:owner-daily-report,view')->name('owner-daily-report.generate');
 
     Route::post('/mobile/checklists/{dailyChecklist}/complete', function (Request $request, DailyChecklist $dailyChecklist) {
         $propertyId = TenantContext::propertyId();
@@ -906,7 +945,7 @@ Route::middleware('auth')->group(function () {
         ]);
 
         return back()->with('status', 'Checklist concluída com prova.');
-    })->name('mobile.checklists.complete');
+    })->middleware('module:daily-checklist,update')->name('mobile.checklists.complete');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

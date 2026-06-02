@@ -9,6 +9,7 @@ use App\Filament\Pages\StaffScheduleCalendar;
 use App\Filament\Widgets\OwnerOverview;
 use App\Filament\Widgets\SaasOverview;
 use App\Http\Middleware\AdminIpAllowlist;
+use App\Http\Middleware\EnforceWebSessionIdleTimeout;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -83,6 +84,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
+                EnforceWebSessionIdleTimeout::class,
             ]);
     }
 }
