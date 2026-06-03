@@ -875,7 +875,7 @@ function Contact({ property, website, phone, email }) {
                         </a>
                     )}
                     {email && <a className="mt-1 block text-white/65 hover:text-white" href={`mailto:${email}`}>{email}</a>}
-                    <a className="mt-5 inline-block text-sm font-medium text-white/55 underline decoration-white/20 underline-offset-4 transition hover:text-white hover:decoration-white/70" href="https://app.lodgesos.com/admin/login">
+                    <a className="mt-5 inline-block text-sm font-medium text-white/55 underline decoration-white/20 underline-offset-4 transition hover:text-white hover:decoration-white/70" href="/admin/login">
                         {text.ownerArea}
                     </a>
                 </div>
