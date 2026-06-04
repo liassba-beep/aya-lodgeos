@@ -13,6 +13,7 @@ class AuditLog extends Model
 
     protected $fillable = [
         'property_id',
+        'tenant_id',
         'user_id',
         'event',
         'auditable_type',
@@ -31,6 +32,11 @@ class AuditLog extends Model
     public function property(): BelongsTo
     {
         return $this->belongsTo(Property::class);
+    }
+
+    public function tenantAccount(): BelongsTo
+    {
+        return $this->belongsTo(TenantAccount::class, 'tenant_id');
     }
 
     public function user(): BelongsTo

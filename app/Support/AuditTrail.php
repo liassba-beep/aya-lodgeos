@@ -3,6 +3,8 @@
 namespace App\Support;
 
 use App\Models\AuditLog;
+use App\Models\Property;
+use App\Models\TenantAccount;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 
@@ -47,6 +49,7 @@ class AuditTrail
     {
         AuditLog::create([
             'property_id' => $propertyId,
+            'tenant_id' => self::tenantIdFromProperty($propertyId),
             'user_id' => $user?->id,
             'event' => $event,
             'auditable_type' => User::class,
@@ -60,8 +63,11 @@ class AuditTrail
 
     private static function log(Model $record, string $event, array $oldValues, array $newValues): void
     {
+        $propertyId = $record->getAttribute('property_id') ?? TenantContext::propertyId();
+
         AuditLog::create([
-            'property_id' => $record->property_id ?? TenantContext::propertyId(),
+            'property_id' => $propertyId,
+            'tenant_id' => self::tenantIdForRecord($record, $propertyId),
             'user_id' => auth()->id(),
             'event' => $event,
             'auditable_type' => $record::class,
@@ -71,6 +77,38 @@ class AuditTrail
             'ip_address' => app()->runningInConsole() ? null : request()->ip(),
             'user_agent' => app()->runningInConsole() ? null : request()->userAgent(),
         ]);
+    }
+
+    private static function tenantIdForRecord(Model $record, ?int $propertyId): ?int
+    {
+        if ($record instanceof TenantAccount) {
+            return (int) $record->getKey();
+        }
+
+        $attributes = $record->getAttributes();
+
+        if (array_key_exists('tenant_id', $attributes) && $record->getAttribute('tenant_id')) {
+            return (int) $record->getAttribute('tenant_id');
+        }
+
+        if (array_key_exists('tenant_account_id', $attributes) && $record->getAttribute('tenant_account_id')) {
+            return (int) $record->getAttribute('tenant_account_id');
+        }
+
+        return self::tenantIdFromProperty($propertyId);
+    }
+
+    private static function tenantIdFromProperty(?int $propertyId): ?int
+    {
+        if (! $propertyId) {
+            return null;
+        }
+
+        $tenantId = Property::query()
+            ->whereKey($propertyId)
+            ->value('tenant_account_id');
+
+        return $tenantId ? (int) $tenantId : null;
     }
 
     private static function filteredAttributes(array $attributes): array

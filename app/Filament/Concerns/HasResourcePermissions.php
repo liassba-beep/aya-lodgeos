@@ -74,16 +74,22 @@ trait HasResourcePermissions
 
         $attributes = $record->getAttributes();
 
-        if (array_key_exists('property_id', $attributes)) {
+        if (array_key_exists('property_id', $attributes) && $record->getAttribute('property_id')) {
             $propertyId = TenantContext::propertyId();
 
-            return $propertyId && (int) $record->getAttribute('property_id') === (int) $propertyId;
+            if ($propertyId && (int) $record->getAttribute('property_id') === (int) $propertyId) {
+                return true;
+            }
         }
 
-        if (array_key_exists('tenant_id', $attributes)) {
+        if (array_key_exists('tenant_id', $attributes) && $record->getAttribute('tenant_id')) {
             $tenantId = TenantContext::tenantAccount()?->id;
 
             return $tenantId && (int) $record->getAttribute('tenant_id') === (int) $tenantId;
+        }
+
+        if (array_key_exists('property_id', $attributes)) {
+            return false;
         }
 
         return true;

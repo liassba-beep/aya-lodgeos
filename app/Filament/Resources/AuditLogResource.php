@@ -49,7 +49,7 @@ class AuditLogResource extends Resource
             ->defaultSort('created_at', 'desc')
             ->columns([
                 Tables\Columns\TextColumn::make('created_at')->label('Data')->dateTime()->sortable(),
-                Tables\Columns\TextColumn::make('property.tenantAccount.name')
+                Tables\Columns\TextColumn::make('tenantAccount.name')
                     ->label('Tenant')
                     ->placeholder('Master')
                     ->searchable()
@@ -86,9 +86,23 @@ class AuditLogResource extends Resource
 
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
+        $propertyId = TenantContext::propertyId();
+        $tenantId = TenantContext::tenantAccount()?->id;
+
         return parent::getEloquentQuery()
-            ->with(['property.tenantAccount', 'user'])
-            ->when(TenantContext::propertyId(), fn ($query, int $propertyId) => $query->where('property_id', $propertyId));
+            ->with(['tenantAccount', 'property', 'user'])
+            ->when($propertyId || $tenantId, function ($query) use ($propertyId, $tenantId) {
+                $query->where(function ($scope) use ($propertyId, $tenantId) {
+                    if ($propertyId) {
+                        $scope->where('property_id', $propertyId);
+                    }
+
+                    if ($tenantId) {
+                        $method = $propertyId ? 'orWhere' : 'where';
+                        $scope->{$method}('tenant_id', $tenantId);
+                    }
+                });
+            });
     }
 
     public static function getPages(): array
